@@ -16,6 +16,7 @@ use GoSuccess\UptimeRobot\RateLimit\SystemClock;
 use InvalidArgumentException;
 use JsonException;
 use SensitiveParameter;
+use SensitiveParameterValue;
 
 /**
  * Mid-level HTTP layer: builds authenticated requests, sends them through the
@@ -52,12 +53,19 @@ final class Connection
     private ?float $resumeAt = null;
 
     /**
+     * The API key, wrapped so that neither var_export() nor dumpers that read
+     * the properties themselves, such as Symfony's VarDumper, reveal it, and
+     * serialize() refuses it.
+     */
+    private readonly SensitiveParameterValue $apiKey;
+
+    /**
      * @param string $apiKey Sent as `Authorization: Bearer <key>`.
      */
     public function __construct(
         string $baseUri,
         #[SensitiveParameter]
-        private readonly string $apiKey,
+        string $apiKey,
         private readonly ClientOptions $options,
         private readonly HttpClient $httpClient,
         private readonly RateLimiter $rateLimiter,
@@ -79,6 +87,7 @@ final class Connection
         }
 
         $this->baseUri = $baseUri;
+        $this->apiKey = new SensitiveParameterValue($apiKey);
     }
 
     /**
@@ -141,7 +150,7 @@ final class Connection
             method: $method,
             uri: $this->buildUri($path, $query),
             headers: [
-                'Authorization' => "Bearer {$this->apiKey}",
+                'Authorization' => $this->authorization(),
                 'Accept' => 'application/json',
                 'User-Agent' => $this->options->userAgent,
                 ...$headers,
@@ -248,6 +257,14 @@ final class Connection
     public function __debugInfo(): array
     {
         return ['baseUri' => $this->baseUri, 'apiKey' => '********', 'rateLimit' => $this->rateLimit];
+    }
+
+    private function authorization(): string
+    {
+        /** @var string $apiKey */
+        $apiKey = $this->apiKey->getValue();
+
+        return "Bearer {$apiKey}";
     }
 
     /**

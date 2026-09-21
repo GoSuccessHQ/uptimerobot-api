@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Tests\Unit;
 
+use Exception;
 use GoSuccess\UptimeRobot\Http\Response;
 use GoSuccess\UptimeRobot\Model\User;
 use GoSuccess\UptimeRobot\Resource\TagResource;
@@ -65,6 +66,18 @@ final class UptimeRobotTest extends TestCase
 
         self::assertSame(['baseUri' => UptimeRobot::DEFAULT_BASE_URI, 'apiKey' => '********', 'rateLimit' => null], $client->__debugInfo());
         self::assertStringNotContainsString('super-secret-key', print_r($client, true));
-        self::assertStringNotContainsString('super-secret-key', var_export($client->__debugInfo(), true));
+        // var_export() ignores __debugInfo() and reads the properties, as
+        // Symfony's VarDumper (dump(), dd()) does.
+        self::assertStringNotContainsString('super-secret-key', var_export($client, true));
+    }
+
+    public function testRefusesToSerializeTheApiKey(): void
+    {
+        $client = new UptimeRobot('super-secret-key', httpClient: new MockHttpClient());
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage("Serialization of 'SensitiveParameterValue' is not allowed");
+
+        serialize($client);
     }
 }

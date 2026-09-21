@@ -27,7 +27,8 @@ A modern, strongly-typed, **dependency-free** PHP client for the
   between specification and reality corrected by hand, each documented with
   its evidence: a live check, a message of the API's validator or UptimeRobot's
   Terraform provider.
-- **The API key stays out of** `var_dump()`, `print_r()` and stack traces.
+- **The API key stays out of** `var_dump()`, `print_r()`, `var_export()`,
+  Symfony's `dump()` and stack traces, and `serialize()` refuses the client.
 
 ## Supported resources
 

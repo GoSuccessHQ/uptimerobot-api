@@ -557,6 +557,9 @@ final class ConnectionTest extends TestCase
 
         self::assertStringNotContainsString('secret-key', print_r($connection, true));
         self::assertStringNotContainsString('secret-key', print_r($http->requests[0], true));
+        // var_export() and Symfony's VarDumper read the properties themselves;
+        // a fresh mock, since the mock keeps the requests it received.
+        self::assertStringNotContainsString('secret-key', var_export($this->connection(new MockHttpClient()), true));
     }
 
     public function testKeepsTheApiKeyOutOfExceptionTraces(): void
