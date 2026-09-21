@@ -332,6 +332,8 @@ final class KitchenSink
                         'enabled' => ['type' => 'boolean'],
                         'threshold' => ['type' => 'number'],
                         'window' => ['type' => 'string', 'enum' => ['SHORT', 'LONG']],
+                        // Any JSON value, null included.
+                        'fallback' => ['description' => 'Anything.'],
                     ],
                 ],
                 'CreatePageDto' => [
@@ -380,7 +382,7 @@ final class KitchenSink
             ],
             'integers' => ['*.id', '*Ids[]', 'WidgetsController_list.limit', 'WidgetsController_list.group_id', 'TagsController_list.cursor', 'CreateHttpWidgetDto.interval', 'SettingsDto.threshold', 'UpdateWidgetDto.weights{}', 'BulkWidgetUpdateDto.interval'],
             'floats' => ['WidgetDto.score'],
-            'mixed' => ['WidgetDto.meta'],
+            'mixed' => ['WidgetDto.meta', 'SettingsDto.fallback'],
             'additions' => [
                 'properties' => ['WidgetDto.apiKey' => ['type' => 'string', 'description' => 'Sent, but not documented.']],
             ],

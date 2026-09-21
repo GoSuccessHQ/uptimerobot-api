@@ -156,9 +156,12 @@ final class ModelWriter
             }
 
             $expression = $this->readExpression($property, $model, $file, raw: true);
-            $arguments .= $property->type->isCollection()
-                ? "            {$name}: {$expression} ?: {$undefined}::Value,\n"
-                : "            {$name}: {$expression} ?? {$undefined}::Value,\n";
+            $arguments .= match (true) {
+                $property->type->isCollection() => "            {$name}: {$expression} ?: {$undefined}::Value,\n",
+                // Any value, null included, is what the API sent; only a missing key was not.
+                $property->type->kind === PhpType::MIXED => "            {$name}: \\array_key_exists('{$key}', \$data) ? \$data['{$key}'] : {$undefined}::Value,\n",
+                default => "            {$name}: {$expression} ?? {$undefined}::Value,\n",
+            };
         }
 
         $constructorDoc = $paramDocs === [] ? '' : Doc::block([$paramDocs], '    ');

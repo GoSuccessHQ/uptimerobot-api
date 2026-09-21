@@ -273,6 +273,18 @@ final class GeneratedFeaturesTest extends TestCase
         self::assertSame(['window' => 'LONG'], $changes->toArray());
     }
 
+    public function testSharedModelsSendBackAnyValueTheyRead(): void
+    {
+        $settings = KitchenSink::class('Model\\Settings');
+
+        foreach ([['fallback' => null], ['fallback' => ['a' => 1]], ['fallback' => 0], []] as $payload) {
+            $read = $settings::fromArray($payload);
+            self::assertInstanceOf(RequestModel::class, $read);
+            // A null the API sent is sent back; a missing key is left out.
+            self::assertSame($payload, $read->toArray());
+        }
+    }
+
     public function testMapsBareArraysAndUnwrappedLists(): void
     {
         $http = new MockHttpClient(
