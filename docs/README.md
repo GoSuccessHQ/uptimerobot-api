@@ -32,6 +32,17 @@ Pause, start or change the monitors of a monitor group and/or with a tag at once
 - [`start()`](bulkMonitors/start.md) — Start the paused monitors of a group and/or with a tag
 - [`update()`](bulkMonitors/update.md) — Change settings of the monitors of a group and/or with a tag
 
+## `monitorGroups`
+
+Monitor groups: named sets of monitors. A monitor is in one group at most; the monitors in none report the groupId 0.
+
+- [`list()`](monitorGroups/list.md) — List monitor groups
+- [`all()`](monitorGroups/all.md) — Iterate lazily over every item of list(), across all pages
+- [`get()`](monitorGroups/get.md) — Get a monitor group by ID
+- [`create()`](monitorGroups/create.md) — Create a monitor group
+- [`update()`](monitorGroups/update.md) — Update a monitor group
+- [`delete()`](monitorGroups/delete.md) — Delete a monitor group
+
 ## `user`
 
 The account the API key belongs to: its plan and its alert contacts.

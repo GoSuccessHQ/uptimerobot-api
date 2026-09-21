@@ -126,6 +126,10 @@ return [
         'VisualComparisonFieldsDto' => 'VisualComparisonSettings',
         // Without its selection, which BulkMonitorResource::update() takes.
         'PublicBulkUpdateDto' => 'BulkMonitorUpdate',
+
+        // Monitor groups; MonitorGroupDto is MonitorGroup.
+        'CreateMonitorGroupDto' => 'MonitorGroupCreate',
+        'UpdateMonitorGroupDto' => 'MonitorGroupUpdate',
     ],
 
     'properties' => [
@@ -417,6 +421,35 @@ return [
         // The API monitor enum lacks HEAD, which its description forbids; one
         // enum for all monitor types.
         'CreateApiMonitorDto.httpMethodType' => ['type' => 'string', 'enum' => $httpMethods],
+
+        // Monitor groups. The items of a page are an inline copy of
+        // MonitorGroupDto (identical, and identical to GET /monitor-groups/{id}
+        // live). A group carries neither its monitors nor their number (verified
+        // live); the monitors name it in groupId.
+        'MonitorGroupPaginationDto.data[]' => ['$ref' => '#/components/schemas/MonitorGroupDto'],
+        // GET /monitor-groups/0 answers 404 "Monitor group not found" (verified
+        // live), although the specification calls 0 the default group.
+        'MonitorGroupDto.id' => [
+            'type' => 'number',
+            'description' => 'The ID, which the monitors in the group report as groupId; the monitors in no group report 0, for which there is no group to read (verified live).',
+        ],
+        // zod's Date | string: ISO 8601 in UTC (verified live: "2026-08-18T12:57:15.000Z").
+        'MonitorGroupDto.createdAt' => $date,
+        'MonitorGroupDto.updatedAt' => $date,
+        // A monitor has one groupId, so assigning it moves it out of its group.
+        'CreateMonitorGroupDto.monitorIds' => [
+            'type' => 'array',
+            'items' => ['type' => 'number'],
+            'description' => 'The monitors to put into the group. A monitor is in one group at most (its groupId), so they leave the group they are in.',
+        ],
+        // Items from 0 (verified live: -1 is rejected with "each value in groupIds
+        // must not be less than 0"); 0 is the specification's default group, the
+        // one the monitors in no group report.
+        'CreateMonitorGroupDto.groupIds' => [
+            'type' => 'array',
+            'items' => ['type' => 'number'],
+            'description' => 'Groups whose monitors are moved into the new group; 0 stands for the monitors in no group, which the specification calls the default group.',
+        ],
     ],
 
     // The specification types every number of the request DTOs, and most of the
@@ -490,6 +523,9 @@ return [
         'MonitorsController_getUptimeStats.logLimit',
         'MonitorsController_getUptimeStats.start',
         'MonitorsController_getUptimeStats.end',
+        // The ID of the last group of the previous page (verified live: cursor=29454
+        // returned the groups after 29454).
+        'MonitorGroupsController_list.cursor',
         // Counts of the bulk operations.
         'BulkOperationResponseDto.totalSuccess',
         'BulkOperationResponseDto.totalError',
@@ -730,6 +766,40 @@ return [
                 'update' => ['operation' => 'BulkMonitorsController_bulkUpdate', 'handwritten' => true],
             ],
         ],
+        'monitorGroups' => [
+            'class' => 'MonitorGroupResource',
+            'description' => 'Monitor groups: named sets of monitors. A monitor is in one group at most; the monitors in none report the groupId 0.',
+            'methods' => [
+                'list' => [
+                    'operation' => 'MonitorGroupsController_list',
+                    'pagination' => 'nextLink',
+                    'all' => 'all',
+                    'note' => 'The groups carry neither their monitors nor their number; MonitorResource::list() with groupId lists the monitors of a group (verified live).',
+                ],
+                'get' => [
+                    'operation' => 'MonitorGroupsController_get',
+                    'note' => 'An unknown ID raises a NotFoundException, and so does 0, the groupId of the monitors in no group (verified live).',
+                ],
+                'create' => [
+                    'operation' => 'MonitorGroupsController_create',
+                    'parameters' => ['@body' => 'group'],
+                    'note' => 'The monitors of monitorIds and of the groups in groupIds are moved into the new group.',
+                ],
+                'update' => [
+                    'operation' => 'MonitorGroupsController_update',
+                    'parameters' => ['@body' => 'changes'],
+                    'note' => 'Only the name can be changed; MonitorResource::update() moves a monitor to another group with groupId.',
+                ],
+                'delete' => [
+                    'operation' => 'MonitorGroupsController_delete',
+                    // monitorsNewGroupId has a minimum of 1 (verified live: 0 is rejected
+                    // with "monitorsNewGroupId must be a positive number"); an unknown ID
+                    // answers 404 "Resource you were trying to access is not found."
+                    // (verified live).
+                    'note' => 'The monitors of the group are moved to monitorsNewGroupId, or to no group (groupId 0) without it; monitorsNewGroupId 0 is rejected with a BadRequestException. An unknown ID raises a NotFoundException (both verified live).',
+                ],
+            ],
+        ],
         'user' => [
             'class' => 'UserResource',
             'description' => 'The account the API key belongs to: its plan and its alert contacts.',
@@ -767,11 +837,6 @@ return [
         'IncidentsController_getAlerts' => 'Pending: implemented resource by resource in the following commits.',
         'IncidentsController_updateComment' => 'Pending: implemented resource by resource in the following commits.',
         'IncidentsController_deleteComment' => 'Pending: implemented resource by resource in the following commits.',
-        'MonitorGroupsController_list' => 'Pending: implemented resource by resource in the following commits.',
-        'MonitorGroupsController_create' => 'Pending: implemented resource by resource in the following commits.',
-        'MonitorGroupsController_get' => 'Pending: implemented resource by resource in the following commits.',
-        'MonitorGroupsController_update' => 'Pending: implemented resource by resource in the following commits.',
-        'MonitorGroupsController_delete' => 'Pending: implemented resource by resource in the following commits.',
         'PspController_list' => 'Pending: implemented resource by resource in the following commits.',
         'PspController_create' => 'Pending: implemented resource by resource in the following commits.',
         'PspController_get' => 'Pending: implemented resource by resource in the following commits.',
