@@ -102,6 +102,19 @@ $announcementPlan = 'Requires the plan feature psp-subscribers; without it, the 
 // of the requests; the list filter has upper-case ones.
 $announcementCasing = 'The specification documents the values in its description only; their casing in responses was not verifiable live.';
 $statusPageMonitors = 'The monitors on the page; [0] alone stands for every monitor of the account, including those added later, and an empty list removes every monitor. Wins over autoAddMonitors when both are sent.';
+// Alert contacts. The validator of the requests takes names and turns them
+// into numbers, ignoring case, as for the status pages: it rejects an unknown
+// contact type with "type must be one of the following values: 2, 8, 14, 12,
+// 13" and an unknown enableNotificationsFor with "... 0, 1, 2, 3" (verified
+// live). The official Terraform provider (uptimerobot/terraform-provider-
+// uptimerobot, internal/client/alert_contact.go) maps the numbers the same
+// way: 2 Email, 8 ProSms, 14 Voice, 12 MobileAppIOS, 13 MobileAppAndroid;
+// 0 UpAndDown, 1 Down, 2 Up, 3 None. The owner allows no contact to be
+// created, changed or deleted, so the requests were only probed with the
+// unknown ID 999999999 and with bodies the validator rejects.
+$notificationEvents = ['UpAndDown', 'Down', 'Up', 'None'];
+$contactStatus = 'Active, Paused, NotActivated or ToMigrate, the values UptimeRobot\'s guide for its MCP server (uptimerobot/ai, skills/list-integrations) and its Terraform provider name; only Active contacts deliver alerts. Verified live: Active, Paused and ToMigrate. A string, as the specification documents no values.';
+$contactType = 'The kind of contact, e.g. Email, ProSms, Voice or MobileApp (verified live). The specification announces that mobile app contacts, reported as MobileAppOld (iOS) and MobileApp (Android) through October 10, 2026, become MobileAppIOS and MobileAppAndroid after that date; UptimeRobot\'s clients name further types such as EmailToSms, so this is a string.';
 
 return [
     'title' => 'UptimeRobot API v3',
@@ -209,6 +222,11 @@ return [
         'PspAnnouncementResponseDto' => 'Announcement',
         'CreatePspAnnouncementRequestDto' => 'AnnouncementCreate',
         'UpdatePspAnnouncementRequestDto' => 'AnnouncementUpdate',
+
+        // Personal alert contacts; AlertContactDto is AlertContact, and its
+        // config shares AlertContactConfig with the create request (see 'types').
+        'CreatePersonalAlertContactDto' => 'AlertContactCreate',
+        'UpdatePersonalAlertContactDto' => 'AlertContactUpdate',
     ],
 
     'properties' => [
@@ -231,7 +249,15 @@ return [
         // derives the same names from its values.
         'StormProtectionSettingsResponseDto.thresholdType' => 'StormProtectionThresholdType',
         'UpdateStormProtectionDto.thresholdType' => 'StormProtectionThresholdType',
-        'AlertContactDto.enableNotificationsFor' => 'NotificationEvent',
+        // Alert contacts and integrations: the same four names everywhere (see
+        // 'types' for the personal contacts, whose requests the specification
+        // gives numbers).
+        '*.enableNotificationsFor' => 'NotificationEvent',
+        // Only the create request; the responses keep a string (see $contactType).
+        'CreatePersonalAlertContactDto.type' => 'AlertContactType',
+        // Verified live: "nope" is rejected with "platform must be one of the
+        // following values: ios, android".
+        'CreatePersonalAlertContactDto.platform' => 'AlertContactPlatform',
         // Monitors. The locations of MonitorDto that the specification erases get
         // their values in 'types'.
         'MonitorDto.type' => 'MonitorType',
@@ -315,22 +341,130 @@ return [
         // The x-enumNames of the response copy (MonitorDto.regionalData.REGION).
         'Region' => ['na' => 'NorthAmerica', 'eu' => 'Europe', 'as' => 'Asia', 'oc' => 'Oceania'],
         'ResponseTimeRegion' => ['na' => 'NorthAmerica', 'eu' => 'Europe', 'as' => 'Asia', 'oc' => 'Oceania', 'all' => 'All'],
+        // The acronym in the casing of the other names, as MsTeams elsewhere.
+        'AlertContactType' => [
+            'Email' => 'Email',
+            'ProSms' => 'ProSms',
+            'Voice' => 'Voice',
+            'MobileAppIOS' => 'MobileAppIos',
+            'MobileAppAndroid' => 'MobileAppAndroid',
+            'MobileAppOld' => 'MobileAppOld',
+            'MobileApp' => 'MobileApp',
+        ],
     ],
 
     'types' => [
         // The response DTOs erase these types to {}. Verified live on
-        // /user/alert-contacts: type is a string ("Email", "ProSms", "Voice",
-        // "MobileApp"; the description announces MobileAppIOS/MobileAppAndroid),
-        // status a string ("Active", "Paused", "ToMigrate"). Neither value set is
-        // documented completely, so both stay strings.
-        'AlertContactDto.type' => ['type' => 'string'],
-        'AlertContactDto.status' => ['type' => 'string'],
-        'AllAlertContactDto.alertContacts[].type' => ['type' => 'string'],
-        'AllAlertContactDto.alertContacts[].status' => ['type' => 'string'],
+        // /alert-contacts and /user/alert-contacts: type is a string ("Email",
+        // "ProSms", "Voice", "MobileApp"; the description announces
+        // MobileAppIOS/MobileAppAndroid), status a string ("Active", "Paused",
+        // "ToMigrate"). The type changes on October 10, 2026, and UptimeRobot's
+        // clients name more types and statuses than were seen (see
+        // $contactStatus), so both stay strings, with the known values in the
+        // docblock; an enum would read an unknown value as null.
+        'AlertContactDto.type' => ['type' => 'string', 'description' => $contactType],
+        'AlertContactDto.status' => ['type' => 'string', 'description' => $contactStatus],
+        'AllAlertContactDto.alertContacts[].type' => ['type' => 'string', 'description' => $contactType],
+        'AllAlertContactDto.alertContacts[].status' => ['type' => 'string', 'description' => $contactStatus],
         // Erased to {} as well. The API sends the same strings as the integration
         // DTOs define for this setting (verified live: "UpAndDown"), also for
-        // personal contacts, which are created with the numbers 0-3 instead.
-        'AlertContactDto.enableNotificationsFor' => ['type' => 'string', 'enum' => ['UpAndDown', 'Down', 'Up', 'None']],
+        // personal contacts, whose requests the specification gives the numbers
+        // 0-3 instead (see below).
+        'AlertContactDto.enableNotificationsFor' => [
+            'type' => 'string',
+            'enum' => $notificationEvents,
+            'description' => 'Which status changes of its monitors the contact is alerted of.',
+        ],
+        // The items of a page are an inline copy of AlertContactDto (identical,
+        // and identical to GET /alert-contacts/{id} live).
+        'AlertContactPaginationDto.data[]' => ['$ref' => '#/components/schemas/AlertContactDto'],
+        // The inline copy of AlertContactConfigDto, which the create request
+        // sends; verified live: {"android_push_up_channel": "default_dnd",
+        // "android_push_down_channel": "default_dnd"} on the Android app contact,
+        // null on the others.
+        'AlertContactDto.config' => [
+            '$ref' => '#/components/schemas/AlertContactConfigDto',
+            'description' => 'The notification channels of the Android app; null for the other contacts (verified live).',
+        ],
+        'AlertContactConfigDto.android_push_up_channel' => [
+            'type' => 'string',
+            'description' => 'The Android notification channel of up alerts, e.g. default_dnd (verified live); only for the Android app.',
+        ],
+        'AlertContactConfigDto.android_push_down_channel' => [
+            'type' => 'string',
+            'description' => 'The Android notification channel of down alerts, e.g. default_dnd (verified live); only for the Android app.',
+        ],
+        // Verified live: e-mail addresses, phone numbers and a device token; the
+        // provider stores value as the push token of a mobile app contact, and
+        // customValue as its OneSignal subscription ID.
+        'AlertContactDto.value' => [
+            'type' => 'string',
+            'description' => 'The address alerts go to: an e-mail address, a phone number or, for the mobile app, the device token (verified live).',
+        ],
+        'AlertContactDto.customValue' => [
+            'type' => 'string',
+            'description' => 'For the mobile app, the OneSignal subscription ID, according to the official Terraform provider; null for the other contacts (verified live).',
+        ],
+        // A boolean in the specification, unlike the authType of monitors.
+        'AlertContactDto.authType' => ['type' => 'boolean', 'description' => 'true on every contact read (verified live); it tells nothing about a personal contact.'],
+        // Numbers 0-3 in the specification (see $notificationEvents). The
+        // validator takes the names too, ignoring case: PATCH
+        // /alert-contacts/999999999 with "Down" or "upanddown" reached the
+        // lookup (404), while "Nope" and 7 were rejected with
+        // "enableNotificationsFor must be one of the following values: 0, 1, 2,
+        // 3" (verified live). The Terraform provider sends the names in both
+        // requests, so the requests share NotificationEvent with the responses.
+        // POST /alert-contacts did not object to 9 either (verified live, next to
+        // an invalid type): the create validator presumably does not check it,
+        // and the provider sets it again with an update after the create.
+        'CreatePersonalAlertContactDto.enableNotificationsFor' => [
+            'type' => 'string',
+            'enum' => $notificationEvents,
+            'description' => 'Which status changes of its monitors the contact is alerted of; sent by name, which the API turns into its number. The create request did not object to an invalid value (verified live), and the official Terraform provider sets it again with update() right after the create.',
+        ],
+        'UpdatePersonalAlertContactDto.enableNotificationsFor' => [
+            'type' => 'string',
+            'enum' => $notificationEvents,
+            'description' => 'Which status changes of its monitors the contact is alerted of; sent by name, which the API turns into its number (verified live).',
+        ],
+        // The values of the validator (verified live: 2, 8, 14, 12 and 13, the
+        // numbers of Email, ProSms, Voice, MobileAppIOS and MobileAppAndroid);
+        // MobileAppOld and MobileApp are the old names of the last two, which
+        // the specification deprecates with a date.
+        'CreatePersonalAlertContactDto.type' => [
+            'type' => 'string',
+            'oneOf' => [
+                ['type' => 'string', 'enum' => ['Email'], 'description' => 'An e-mail address, given as value.'],
+                ['type' => 'string', 'enum' => ['ProSms'], 'description' => 'Text messages; cannot be created here, as the phone number must be verified in the dashboard (the specification).'],
+                ['type' => 'string', 'enum' => ['Voice'], 'description' => 'Voice calls; cannot be created here, as the phone number must be verified in the dashboard (the specification).'],
+                ['type' => 'string', 'enum' => ['MobileAppIOS'], 'description' => 'Push notifications to the iOS app.'],
+                ['type' => 'string', 'enum' => ['MobileAppAndroid'], 'description' => 'Push notifications to the Android app.'],
+                [
+                    'type' => 'string',
+                    'enum' => ['MobileAppOld'],
+                    'deprecated' => true,
+                    'description' => 'Use MobileAppIos: the API accepts MobileAppOld for the iOS app through October 10, 2026, and rejects it after that date.',
+                ],
+                [
+                    'type' => 'string',
+                    'enum' => ['MobileApp'],
+                    'deprecated' => true,
+                    'description' => 'Use MobileAppAndroid: the API accepts MobileApp for the Android app through October 10, 2026, and rejects it after that date.',
+                ],
+            ],
+            'description' => 'The kind of contact. E-mail and mobile app contacts can be created here; text message and voice contacts need a phone number verified in the dashboard.',
+        ],
+        // "required for Email contacts" in prose only; the provider sends it for
+        // e-mail contacts only and identifies a device by the push fields.
+        'CreatePersonalAlertContactDto.value' => [
+            'type' => 'string',
+            'description' => 'The e-mail address; required for Email contacts. Mobile app contacts are identified by the push fields instead.',
+        ],
+        'CreatePersonalAlertContactDto.config' => ['$ref' => '#/components/schemas/AlertContactConfigDto', 'description' => 'The notification channels of the Android app.'],
+        'UpdatePersonalAlertContactDto.isActive' => [
+            'type' => 'boolean',
+            'description' => 'true activates the contact (status Active), false pauses it (status Paused), so that it receives no alerts.',
+        ],
         // A plain string in the specification; an ISO 8601 date in UTC
         // (verified live: "2027-08-18T12:14:17Z").
         'UserDto.activeSubscription.expirationDate' => ['type' => 'string', 'format' => 'date-time'],
@@ -991,6 +1125,9 @@ return [
         // The ID of the last announcement of the previous page, presumably, as
         // for the other lists (not verifiable live, see $announcementPlan).
         'PspAnnouncementsController_list.cursor',
+        // The ID of the last contact of the previous page (verified live:
+        // cursor=8733402 returned the contacts with greater IDs).
+        'AlertContactsController_list.cursor',
     ],
 
     'floats' => [
@@ -1493,6 +1630,40 @@ return [
                 ],
             ],
         ],
+        'alertContacts' => [
+            'class' => 'AlertContactResource',
+            'description' => 'Personal alert contacts: the e-mail addresses, phone numbers and mobile app devices of the account that monitors alert. Team channels such as Slack are integrations.',
+            'methods' => [
+                'list' => [
+                    'operation' => 'AlertContactsController_list',
+                    'pagination' => 'nextLink',
+                    'all' => 'all',
+                    // Verified live: /alert-contacts listed 6 contacts without
+                    // the two ToMigrate ones; /user/alert-contacts listed those
+                    // two but not two older phone contacts; /integrations?
+                    // includeOrgMembers=true listed all 8.
+                    'note' => 'Ascending by ID; the cursor is the ID of the last contact of the previous page, and the contacts with greater IDs follow. The page size is not documented: all 6 contacts of the test account came on one page without nextLink. The lists of contacts differ: this one left out the mobile app contacts awaiting migration (status ToMigrate), which UserResource::alertContacts() lists, while IntegrationResource::list() with includeOrgMembers listed every contact (all verified live).',
+                ],
+                'get' => [
+                    'operation' => 'AlertContactsController_get',
+                    'note' => 'An unknown ID raises a NotFoundException (verified live).',
+                ],
+                'create' => [
+                    'operation' => 'AlertContactsController_create',
+                    'parameters' => ['@body' => 'contact'],
+                    'note' => 'Email contacts need value. Mobile app contacts need platform, oneSignalSubscriptionId, oneSignalUserId and deviceFingerprint, which the official Terraform provider checks before it sends them along with deviceName and pushToken. sslExpirationReminder and isActive can only be set with update(). Not verified live beyond the validator: the owner of the test account allows no contacts to be created.',
+                ],
+                'update' => [
+                    'operation' => 'AlertContactsController_update',
+                    'parameters' => ['@body' => 'changes'],
+                    'note' => 'Only the properties that are set are sent. The validator runs before the contact is looked up, so an invalid change to an unknown ID raises a BadRequestException, a valid one a NotFoundException (verified live). Not verified live beyond that: the owner of the test account allows no contacts to be changed.',
+                ],
+                'delete' => [
+                    'operation' => 'AlertContactsController_delete',
+                    'note' => 'An unknown ID raises a NotFoundException (verified live).',
+                ],
+            ],
+        ],
         'user' => [
             'class' => 'UserResource',
             'description' => 'The account the API key belongs to: its plan and its alert contacts.',
@@ -1527,10 +1698,5 @@ return [
         'IntegrationsController_get' => 'Pending: implemented resource by resource in the following commits.',
         'IntegrationsController_update' => 'Pending: implemented resource by resource in the following commits.',
         'IntegrationsController_delete' => 'Pending: implemented resource by resource in the following commits.',
-        'AlertContactsController_list' => 'Pending: implemented resource by resource in the following commits.',
-        'AlertContactsController_create' => 'Pending: implemented resource by resource in the following commits.',
-        'AlertContactsController_get' => 'Pending: implemented resource by resource in the following commits.',
-        'AlertContactsController_update' => 'Pending: implemented resource by resource in the following commits.',
-        'AlertContactsController_delete' => 'Pending: implemented resource by resource in the following commits.',
     ],
 ];

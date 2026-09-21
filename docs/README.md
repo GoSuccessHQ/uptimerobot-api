@@ -97,6 +97,17 @@ Announcements on status pages: information, maintenance and issue notices, which
 - [`pin()`](announcements/pin.md) — Pin an announcement
 - [`unpin()`](announcements/unpin.md) — Unpin an announcement
 
+## `alertContacts`
+
+Personal alert contacts: the e-mail addresses, phone numbers and mobile app devices of the account that monitors alert. Team channels such as Slack are integrations.
+
+- [`list()`](alertContacts/list.md) — List personal alert contacts
+- [`all()`](alertContacts/all.md) — Iterate lazily over every item of list(), across all pages
+- [`get()`](alertContacts/get.md) — Get a personal alert contact by ID
+- [`create()`](alertContacts/create.md) — Create a personal alert contact
+- [`update()`](alertContacts/update.md) — Update a personal alert contact
+- [`delete()`](alertContacts/delete.md) — Delete a personal alert contact
+
 ## `user`
 
 The account the API key belongs to: its plan and its alert contacts.

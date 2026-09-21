@@ -19,21 +19,33 @@ final readonly class AlertContact implements ResponseModel
         public int $id = 0,
         public ?string $friendlyName = null,
         /**
-         * Alert-contact type. Mobile push responses retain MobileAppOld (iOS) and MobileApp (Android) through October 10, 2026; consumers should also accept MobileAppIOS and MobileAppAndroid before responses switch to those canonical names after the deadline.
+         * The kind of contact, e.g. Email, ProSms, Voice or MobileApp (verified live). The specification announces that mobile app contacts, reported as MobileAppOld (iOS) and MobileApp (Android) through October 10, 2026, become MobileAppIOS and MobileAppAndroid after that date; UptimeRobot's clients name further types such as EmailToSms, so this is a string.
          */
         public string $type = '',
+        /**
+         * The address alerts go to: an e-mail address, a phone number or, for the mobile app, the device token (verified live).
+         */
         public ?string $value = null,
+        /**
+         * For the mobile app, the OneSignal subscription ID, according to the official Terraform provider; null for the other contacts (verified live).
+         */
         public ?string $customValue = null,
+        /** Which status changes of its monitors the contact is alerted of. */
         public ?NotificationEvent $enableNotificationsFor = null,
         public ?bool $sslExpirationReminder = null,
         public ?string $httpUsername = null,
         public ?string $httpPassword = null,
+        /** true on every contact read (verified live); it tells nothing about a personal contact. */
         public ?bool $authType = null,
         /** @var array<array-key, string> */
         public array $customHeaders = [],
         public ?int $mobileProviderId = null,
+        /**
+         * Active, Paused, NotActivated or ToMigrate, the values UptimeRobot's guide for its MCP server (uptimerobot/ai, skills/list-integrations) and its Terraform provider name; only Active contacts deliver alerts. Verified live: Active, Paused and ToMigrate. A string, as the specification documents no values.
+         */
         public string $status = '',
         public ?int $orgAlertContactId = null,
+        /** The notification channels of the Android app; null for the other contacts (verified live). */
         public ?AlertContactConfig $config = null,
     ) {}
 

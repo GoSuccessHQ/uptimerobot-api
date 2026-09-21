@@ -12,6 +12,7 @@ use GoSuccess\UptimeRobot\Http\HttpClient;
 use GoSuccess\UptimeRobot\RateLimit\NullRateLimiter;
 use GoSuccess\UptimeRobot\RateLimit\RateLimiter;
 use GoSuccess\UptimeRobot\RateLimit\RateLimitStatus;
+use GoSuccess\UptimeRobot\Resource\AlertContactResource;
 use GoSuccess\UptimeRobot\Resource\AnnouncementResource;
 use GoSuccess\UptimeRobot\Resource\BulkMonitorResource;
 use GoSuccess\UptimeRobot\Resource\IncidentCommentResource;
@@ -84,6 +85,13 @@ final class UptimeRobot
      */
     public private(set) AnnouncementResource $announcements {
         get => $this->announcements ??= new AnnouncementResource($this->connection);
+    }
+
+    /**
+     * Personal alert contacts: the e-mail addresses, phone numbers and mobile app devices of the account that monitors alert. Team channels such as Slack are integrations.
+     */
+    public private(set) AlertContactResource $alertContacts {
+        get => $this->alertContacts ??= new AlertContactResource($this->connection);
     }
 
     /** The account the API key belongs to: its plan and its alert contacts. */

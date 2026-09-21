@@ -6,19 +6,58 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Model;
 
-/** Schema: AlertContactDto.config */
-final readonly class AlertContactConfig implements ResponseModel
+/** Schema: AlertContactConfigDto */
+final readonly class AlertContactConfig implements RequestModel, ResponseModel
 {
+    /**
+     * The Android notification channel of up alerts, e.g. default_dnd (verified live); only for the Android app.
+     */
+    public string $androidPushUpChannel;
+
+    /**
+     * The Android notification channel of down alerts, e.g. default_dnd (verified live); only for the Android app.
+     */
+    public string $androidPushDownChannel;
+
+    /**
+     * Payload keys the caller provided; toArray() sends exactly these.
+     *
+     * @var array<string, true>
+     */
+    private array $provided;
+
     public function __construct(
-        public string $androidPushUpChannel = '',
-        public string $androidPushDownChannel = '',
-    ) {}
+        string|Undefined $androidPushUpChannel = Undefined::Value,
+        string|Undefined $androidPushDownChannel = Undefined::Value,
+    ) {
+        $this->androidPushUpChannel = $androidPushUpChannel instanceof Undefined ? '' : $androidPushUpChannel;
+        $this->androidPushDownChannel = $androidPushDownChannel instanceof Undefined ? '' : $androidPushDownChannel;
+        $this->provided = array_filter([
+            'android_push_up_channel' => !$androidPushUpChannel instanceof Undefined,
+            'android_push_down_channel' => !$androidPushDownChannel instanceof Undefined,
+        ]);
+    }
 
     public static function fromArray(array $data): static
     {
         return new self(
-            androidPushUpChannel: Cast::string($data['android_push_up_channel'] ?? null) ?? '',
-            androidPushDownChannel: Cast::string($data['android_push_down_channel'] ?? null) ?? '',
+            androidPushUpChannel: Cast::string($data['android_push_up_channel'] ?? null) ?? Undefined::Value,
+            androidPushDownChannel: Cast::string($data['android_push_down_channel'] ?? null) ?? Undefined::Value,
         );
+    }
+
+    public function toArray(): array
+    {
+        $data = [];
+
+        if (isset($this->provided['android_push_up_channel'])) {
+            $data['android_push_up_channel'] = $this->androidPushUpChannel;
+        }
+
+        if (isset($this->provided['android_push_down_channel'])) {
+            $data['android_push_down_channel'] = $this->androidPushDownChannel;
+        }
+
+        return $data;
     }
 }

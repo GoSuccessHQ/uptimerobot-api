@@ -6,7 +6,11 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Enum;
 
-/** Schema: AlertContactDto.enableNotificationsFor */
+/**
+ * Which status changes of its monitors the contact is alerted of.
+ *
+ * Schema: AlertContactDto.enableNotificationsFor, CreatePersonalAlertContactDto.enableNotificationsFor, UpdatePersonalAlertContactDto.enableNotificationsFor
+ */
 enum NotificationEvent: string
 {
     case UpAndDown = 'UpAndDown';

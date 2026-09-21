@@ -18,9 +18,12 @@ final readonly class AllAlertContactItem implements ResponseModel
         public string $name = '',
         public string $value = '',
         /**
-         * Alert-contact type. Mobile push responses retain MobileAppOld (iOS) and MobileApp (Android) through October 10, 2026; consumers should also accept MobileAppIOS and MobileAppAndroid before responses switch to those canonical names after the deadline.
+         * The kind of contact, e.g. Email, ProSms, Voice or MobileApp (verified live). The specification announces that mobile app contacts, reported as MobileAppOld (iOS) and MobileApp (Android) through October 10, 2026, become MobileAppIOS and MobileAppAndroid after that date; UptimeRobot's clients name further types such as EmailToSms, so this is a string.
          */
         public string $type = '',
+        /**
+         * Active, Paused, NotActivated or ToMigrate, the values UptimeRobot's guide for its MCP server (uptimerobot/ai, skills/list-integrations) and its Terraform provider name; only Active contacts deliver alerts. Verified live: Active, Paused and ToMigrate. A string, as the specification documents no values.
+         */
         public string $status = '',
         public int $threshold = 0,
         public int $recurrence = 0,
