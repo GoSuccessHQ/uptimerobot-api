@@ -34,5 +34,9 @@ use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-$result = $uptimeRobot->incidentComments->update(incidentId: '123456789', id: 123, changes: new IncidentCommentUpdate(/* ... */));
+$result = $uptimeRobot->incidentComments->update(
+    incidentId: '123456789',
+    id: 123,
+    changes: new IncidentCommentUpdate(content: 'Resolved.'),
+);
 ```

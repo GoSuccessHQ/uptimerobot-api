@@ -33,5 +33,8 @@ use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-$result = $uptimeRobot->monitorGroups->update(id: 123, changes: new MonitorGroupUpdate(/* ... */));
+$result = $uptimeRobot->monitorGroups->update(
+    id: 123,
+    changes: new MonitorGroupUpdate(name: 'Production'),
+);
 ```

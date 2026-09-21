@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Tests\Unit\Tools\Generator;
 
+use DateTimeImmutable;
 use GoSuccess\UptimeRobot\Tests\Support\Generator\GeneratorFixture;
 use GoSuccess\UptimeRobot\Tools\Generator\Analysis;
 use GoSuccess\UptimeRobot\Tools\Generator\Config\ApiConfig;
@@ -498,6 +499,29 @@ final class ConfigurationChecksTest extends TestCase
         $this->expectExceptionMessage("ThingsController_delete (delete): 'parameters' renames tagId, which is neither a path or query parameter nor the body or one of its flattened properties.");
 
         $this->analyze([], $resource(['tagId' => 'tag']), $paths);
+    }
+
+    public function testTakesOnlyLiteralsAsExampleArguments(): void
+    {
+        $resources = static fn(array $example): array => ['resources' => ['things' => ['class' => 'ThingResource', 'description' => 'Things.', 'methods' => [
+            'get' => ['operation' => 'ThingsController_get', 'example' => $example],
+        ]]]];
+        $schemas = ['ThingDto' => self::object(['name' => ['type' => 'string']])];
+
+        $analysis = $this->analyze($schemas, $resources(['groupId' => 5, 'changes' => ['kind' => 'small_one', 'tags' => ['a'], 'at' => null]]));
+        self::assertSame(['groupId' => 5, 'changes' => ['kind' => 'small_one', 'tags' => ['a'], 'at' => null]], $analysis->resources[0]->methods[0]->config->example);
+
+        foreach ([
+            'methods.get.example: name the parameters, e.g. [\'groupId\' => 123].' => [5],
+            'methods.get.example.changes.at: only scalars, null and arrays can be written as an example.' => ['changes' => ['at' => new DateTimeImmutable()]],
+        ] as $message => $example) {
+            try {
+                $this->analyze($schemas, $resources($example));
+                self::fail('Expected an exception.');
+            } catch (RuntimeException $e) {
+                self::assertSame($message, $e->getMessage());
+            }
+        }
     }
 
     public function testCommaSeparatedParametersMustBeLists(): void

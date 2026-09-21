@@ -32,5 +32,8 @@ use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-$result = $uptimeRobot->bulkMonitors->update(changes: new BulkMonitorUpdate(/* ... */));
+$result = $uptimeRobot->bulkMonitors->update(
+    changes: new BulkMonitorUpdate(interval: 300),
+    groupId: 123,
+);
 ```

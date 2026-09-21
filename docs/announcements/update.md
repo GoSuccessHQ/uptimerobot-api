@@ -34,5 +34,9 @@ use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-$result = $uptimeRobot->announcements->update(statusPageId: 123, id: 123, changes: new AnnouncementUpdate(/* ... */));
+$result = $uptimeRobot->announcements->update(
+    statusPageId: 123,
+    id: 123,
+    changes: new AnnouncementUpdate(title: 'Maintenance completed'),
+);
 ```

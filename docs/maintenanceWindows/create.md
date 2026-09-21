@@ -25,10 +25,19 @@ public function create(MaintenanceWindowCreate $window): MaintenanceWindow
 ## Example
 
 ```php
+use GoSuccess\UptimeRobot\Enum\MaintenanceWindowInterval;
 use GoSuccess\UptimeRobot\Model\MaintenanceWindowCreate;
 use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-$result = $uptimeRobot->maintenanceWindows->create(window: new MaintenanceWindowCreate(/* ... */));
+$result = $uptimeRobot->maintenanceWindows->create(
+    window: new MaintenanceWindowCreate(
+        name: 'Release',
+        interval: MaintenanceWindowInterval::Once,
+        time: '14:30:00',
+        duration: 60,
+        date: '2026-10-01',
+    ),
+);
 ```

@@ -36,5 +36,7 @@ use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-$result = $uptimeRobot->statusPages->create(page: new StatusPageCreate(/* ... */));
+$result = $uptimeRobot->statusPages->create(
+    page: new StatusPageCreate(friendlyName: 'Example'),
+);
 ```

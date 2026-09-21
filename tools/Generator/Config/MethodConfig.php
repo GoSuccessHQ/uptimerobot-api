@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Tools\Generator\Config;
 
+use RuntimeException;
+
 /**
  * Configuration of one resource method.
  */
@@ -39,6 +41,12 @@ final readonly class MethodConfig
      *                                             itself, unlike the names the resource
      *                                             shares with all its methods; each must
      *                                             match a parameter of the operation.
+     * @param array<string, mixed>  $example     Arguments for the example of the reference
+     *                                           page, by PHP parameter name, in addition to
+     *                                           the required ones: e.g. what the API needs
+     *                                           although the signature cannot require it.
+     *                                           Scalars, null and arrays only; see
+     *                                           {@see \GoSuccess\UptimeRobot\Tools\Generator\Docs\ExampleBuilder}.
      */
     public function __construct(
         public string $name,
@@ -56,6 +64,7 @@ final readonly class MethodConfig
         public array $required = [],
         public ?string $note = null,
         public array $ownParameters = [],
+        public array $example = [],
     ) {}
 
     /**
@@ -80,10 +89,50 @@ final readonly class MethodConfig
             required: $reader->stringList('required'),
             note: $reader->optionalString('note'),
             ownParameters: array_map(strval(...), array_keys($own)),
+            example: self::example($reader->map('example'), $name),
         );
 
         $reader->assertNoUnknownKeys();
 
         return $instance;
+    }
+
+    /**
+     * @param array<array-key, mixed> $arguments
+     *
+     * @return array<string, mixed>
+     */
+    private static function example(array $arguments, string $method): array
+    {
+        $checked = [];
+
+        foreach ($arguments as $name => $value) {
+            if (!\is_string($name)) {
+                throw new RuntimeException("methods.{$method}.example: name the parameters, e.g. ['groupId' => 123].");
+            }
+
+            self::assertPlain($value, "methods.{$method}.example.{$name}");
+            $checked[$name] = $value;
+        }
+
+        return $checked;
+    }
+
+    /**
+     * Examples are rendered as PHP code: only values with a literal.
+     */
+    private static function assertPlain(mixed $value, string $context): void
+    {
+        if (\is_array($value)) {
+            foreach ($value as $key => $item) {
+                self::assertPlain($item, "{$context}.{$key}");
+            }
+
+            return;
+        }
+
+        if ($value !== null && !\is_scalar($value)) {
+            throw new RuntimeException("{$context}: only scalars, null and arrays can be written as an example.");
+        }
     }
 }

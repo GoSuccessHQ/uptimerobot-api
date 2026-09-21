@@ -31,5 +31,8 @@ use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-$result = $uptimeRobot->alertContacts->update(id: 123, changes: new AlertContactUpdate(/* ... */));
+$result = $uptimeRobot->alertContacts->update(
+    id: 123,
+    changes: new AlertContactUpdate(isActive: false),
+);
 ```

@@ -31,5 +31,8 @@ use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-$result = $uptimeRobot->monitors->update(id: 123, changes: new MonitorUpdate(/* ... */));
+$result = $uptimeRobot->monitors->update(
+    id: 123,
+    changes: new MonitorUpdate(interval: 300),
+);
 ```

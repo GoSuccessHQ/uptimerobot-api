@@ -461,11 +461,17 @@ final class KitchenSink
                     'class' => 'WidgetResource',
                     'description' => 'Widgets.',
                     'methods' => [
-                        'list' => ['operation' => 'WidgetsController_list', 'pagination' => 'nextLink', 'all' => 'all'],
+                        // all() takes the same arguments, except the cursor.
+                        'list' => ['operation' => 'WidgetsController_list', 'pagination' => 'nextLink', 'all' => 'all', 'example' => ['cursor' => 'abc2', 'groupId' => 5]],
                         'recent' => ['operation' => 'WidgetsController_recent'],
                         'get' => ['operation' => 'WidgetsController_get'],
                         'create' => ['operation' => 'WidgetsController_create', 'parameters' => ['@body' => 'widget']],
-                        'update' => ['operation' => 'WidgetsController_update', 'parameters' => ['@body' => 'changes']],
+                        // An enum by its value, a date, a nested model and a list.
+                        'update' => [
+                            'operation' => 'WidgetsController_update',
+                            'parameters' => ['@body' => 'changes'],
+                            'example' => ['changes' => ['kind' => 'small_one', 'startsAt' => '2026-10-01T00:00:00Z', 'retry' => ['onTimeout' => true], 'groupIds' => [1, 2]]],
+                        ],
                         'delete' => ['operation' => 'WidgetsController_delete'],
                         'pause' => ['operation' => 'WidgetsController_pause'],
                         'archive' => ['operation' => 'WidgetsController_archive'],

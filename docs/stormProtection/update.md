@@ -30,5 +30,7 @@ use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-$result = $uptimeRobot->stormProtection->update(changes: new StormProtectionUpdate(/* ... */));
+$result = $uptimeRobot->stormProtection->update(
+    changes: new StormProtectionUpdate(isEnabled: true),
+);
 ```

@@ -31,5 +31,8 @@ use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-$result = $uptimeRobot->integrations->update(id: 123, changes: new SlackIntegrationUpdate(/* ... */));
+$result = $uptimeRobot->integrations->update(
+    id: 123,
+    changes: new SlackIntegrationUpdate(customValue: '#ops'),
+);
 ```

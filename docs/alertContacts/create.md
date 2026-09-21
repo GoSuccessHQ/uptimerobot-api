@@ -27,10 +27,17 @@ public function create(AlertContactCreate $contact): AlertContact
 ## Example
 
 ```php
+use GoSuccess\UptimeRobot\Enum\AlertContactType;
 use GoSuccess\UptimeRobot\Model\AlertContactCreate;
 use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-$result = $uptimeRobot->alertContacts->create(contact: new AlertContactCreate(/* ... */));
+$result = $uptimeRobot->alertContacts->create(
+    contact: new AlertContactCreate(
+        type: AlertContactType::Email,
+        friendlyName: 'Ops',
+        value: 'ops@example.com',
+    ),
+);
 ```

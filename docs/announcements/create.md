@@ -33,5 +33,11 @@ use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-$result = $uptimeRobot->announcements->create(statusPageId: 123, announcement: new AnnouncementCreate(/* ... */));
+$result = $uptimeRobot->announcements->create(
+    statusPageId: 123,
+    announcement: new AnnouncementCreate(
+        title: 'Scheduled maintenance',
+        content: 'The dashboard is read-only from 22:00 to 23:00 UTC.',
+    ),
+);
 ```

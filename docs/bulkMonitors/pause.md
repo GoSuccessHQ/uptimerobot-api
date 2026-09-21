@@ -30,5 +30,5 @@ use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-$result = $uptimeRobot->bulkMonitors->pause();
+$result = $uptimeRobot->bulkMonitors->pause(groupId: 123);
 ```

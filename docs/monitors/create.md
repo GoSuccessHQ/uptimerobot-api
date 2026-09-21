@@ -32,5 +32,12 @@ use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-$result = $uptimeRobot->monitors->create(monitor: new HttpMonitorCreate(/* ... */));
+$result = $uptimeRobot->monitors->create(
+    monitor: new HttpMonitorCreate(
+        friendlyName: 'Example',
+        interval: 300,
+        url: 'https://example.com/',
+        timeout: 30,
+    ),
+);
 ```

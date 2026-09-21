@@ -30,5 +30,10 @@ use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-$result = $uptimeRobot->integrations->create(integration: new SlackIntegrationCreate(/* ... */));
+$result = $uptimeRobot->integrations->create(
+    integration: new SlackIntegrationCreate(
+        webhookUrl: 'https://hooks.slack.com/services/T000/B000/XXXX',
+        customValue: '#alerts',
+    ),
+);
 ```

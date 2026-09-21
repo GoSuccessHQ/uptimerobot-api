@@ -26,10 +26,16 @@ public function update(int $id, MaintenanceWindowUpdate $changes): MaintenanceWi
 ## Example
 
 ```php
+use GoSuccess\UptimeRobot\Enum\MaintenanceWindowStatus;
 use GoSuccess\UptimeRobot\Model\MaintenanceWindowUpdate;
 use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-$result = $uptimeRobot->maintenanceWindows->update(id: 123, changes: new MaintenanceWindowUpdate(/* ... */));
+$result = $uptimeRobot->maintenanceWindows->update(
+    id: 123,
+    changes: new MaintenanceWindowUpdate(
+        status: MaintenanceWindowStatus::Paused,
+    ),
+);
 ```

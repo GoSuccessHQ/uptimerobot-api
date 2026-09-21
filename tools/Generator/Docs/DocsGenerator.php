@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace GoSuccess\UptimeRobot\Tools\Generator\Docs;
 
 use BackedEnum;
+use GoSuccess\UptimeRobot\Tools\Generator\Analysis;
 use ReflectionClass;
-use ReflectionEnum;
 use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionParameter;
@@ -20,7 +20,10 @@ use UnitEnum;
  *
  * Everything is read from the resource classes themselves (signatures and
  * docblocks), so hand-written methods are documented the same way as
- * generated ones and the pages cannot drift from the code.
+ * generated ones and the pages cannot drift from the code. The example of a
+ * page calls the method with every required argument, down to the required
+ * fields of the models it takes, plus the arguments the configuration gives
+ * (see {@see ExampleBuilder}); the unit tests run every example.
  */
 final class DocsGenerator
 {
@@ -28,7 +31,7 @@ final class DocsGenerator
      * @param string                $title           Human-readable API name.
      * @param string                $client          Fully qualified class name of the client.
      * @param string                $accessor        PHP expression reaching the client, e.g. `$uptimeRobot`.
-     * @param string                $setup           Code that prepares the accessor.
+     * @param string                $setup           Code that prepares the accessor; every example starts with it.
      * @param list<DocTarget>       $targets
      * @param array<string, string> $implementations Interface => a class implementing it, for examples
      *                                               of parameters typed with an interface.
@@ -36,11 +39,64 @@ final class DocsGenerator
     public function __construct(
         private readonly string $title,
         private readonly string $client,
-        private readonly string $accessor,
-        private readonly string $setup,
+        public readonly string $accessor,
+        public readonly string $setup,
         private readonly array $targets,
         private readonly array $implementations = [],
     ) {}
+
+    /**
+     * The reference of an analyzed API: one page per method of each resource,
+     * hand-written ones included, with the example arguments of the
+     * configuration. A parameter typed with the interface of a union is
+     * passed as the union's first variant.
+     *
+     * @param string $variable Name of the variable holding the client in the examples.
+     */
+    public static function forAnalysis(Analysis $analysis, string $variable = 'uptimeRobot'): self
+    {
+        $config = $analysis->config;
+        $targets = [];
+
+        foreach ($analysis->resources as $resource) {
+            $methods = [];
+            $examples = [];
+
+            foreach ($resource->config->methods as $name => $method) {
+                $methods[] = $name;
+
+                if ($method->example !== []) {
+                    $examples[$name] = ['arguments' => $method->example, 'strict' => true];
+                }
+
+                if ($method->all !== null) {
+                    $methods[] = $method->all;
+
+                    // The paginator takes the arguments of the list, except the cursor.
+                    if ($method->example !== []) {
+                        $examples[$method->all] = ['arguments' => $method->example, 'strict' => false];
+                    }
+                }
+            }
+
+            $targets[] = new DocTarget($resource->config->property, $resource->class, $resource->config->description, $methods, $examples);
+        }
+
+        $implementations = [];
+
+        foreach ($analysis->registry->unions as $union) {
+            $implementations[$union->interface] = array_values($union->variants)[0];
+        }
+
+        return new self(
+            $config->title,
+            $config->fqcn('', $config->client),
+            "\${$variable}",
+            "\${$variable} = new {$config->client}('your-api-key');",
+            $targets,
+            $implementations,
+        );
+    }
 
     /**
      * @return array<string, string> Relative path under docs/ => content.
@@ -63,7 +119,8 @@ final class DocsGenerator
             foreach ($this->methods($class, $target->methods) as $method) {
                 $doc = DocBlock::parse((string) $method->getDocComment());
                 $path = "{$target->property}/{$method->getName()}.md";
-                $files[$path] = $this->page($chain, $method, $doc);
+                $example = $target->examples[$method->getName()] ?? ['arguments' => [], 'strict' => true];
+                $files[$path] = $this->page($chain, $method, $doc, $this->example($chain, $method, $example['arguments'], $example['strict']));
                 $summary = $doc->summary === '' ? '' : ' — ' . rtrim($doc->summary, '.');
                 $index .= "- [`{$method->getName()}()`]({$path}){$summary}\n";
             }
@@ -106,7 +163,7 @@ final class DocsGenerator
         return $methods;
     }
 
-    private function page(string $chain, ReflectionMethod $method, DocBlock $doc): string
+    private function page(string $chain, ReflectionMethod $method, DocBlock $doc, string $example): string
     {
         $name = $method->getName();
         $out = "# `{$chain}->{$name}()`\n\n";
@@ -141,7 +198,7 @@ final class DocsGenerator
 
         $returns = $doc->return ?? $this->typeName($method->getReturnType());
         $out .= "## Returns\n\n`{$returns}`\n\n";
-        $out .= "## Example\n\n```php\n{$this->example($chain, $method)}```\n";
+        $out .= "## Example\n\n```php\n{$example}```\n";
 
         return $out;
     }
@@ -210,80 +267,32 @@ final class DocsGenerator
         return $type->allowsNull() && $name !== 'mixed' && $name !== 'null' ? "?{$name}" : $name;
     }
 
-    private function example(string $chain, ReflectionMethod $method): string
+    /**
+     * A call of the method with its required arguments and the configured
+     * ones, see {@see ExampleBuilder}.
+     *
+     * @param array<string, mixed> $arguments
+     */
+    private function example(string $chain, ReflectionMethod $method, array $arguments, bool $strict): string
     {
-        $uses = [$this->client];
-        $arguments = [];
-
-        foreach ($method->getParameters() as $parameter) {
-            if ($parameter->isOptional()) {
-                continue;
-            }
-
-            [$value, $class] = $this->sampleArgument($parameter);
-            $arguments[] = "{$parameter->getName()}: {$value}";
-
-            if ($class !== null) {
-                $uses[] = $class;
-            }
-        }
-
-        $call = "{$chain}->{$method->getName()}(" . implode(', ', $arguments) . ')';
+        $builder = new ExampleBuilder($this->implementations);
+        $call = new ExampleCall(
+            "{$chain}->{$method->getName()}",
+            $builder->arguments($method, $arguments, $strict, substr($chain, \strlen($this->accessor) + 2) . "->{$method->getName()}()"),
+        );
         $returns = $this->typeName($method->getReturnType());
         $statement = match (true) {
-            $returns === 'void' => "{$call};\n",
-            str_ends_with($returns, 'Paginator') => "foreach ({$call} as \$item) {\n    // ...\n}\n",
-            default => "\$result = {$call};\n",
+            $returns === 'void' => $builder->statement('', $call, ';') . "\n",
+            str_ends_with($returns, 'Paginator') => $builder->statement('foreach (', $call, ' as $item) {') . "\n    // ...\n}\n",
+            default => $builder->statement('$result = ', $call, ';') . "\n",
         };
 
         // Global classes need no import; "use DateTimeImmutable;" would even warn.
-        $uses = array_unique(array_filter($uses, static fn(string $class): bool => str_contains($class, '\\')));
+        $uses = array_unique(array_filter([$this->client, ...$builder->imports()], static fn(string $class): bool => str_contains($class, '\\')));
         sort($uses);
         $useBlock = implode('', array_map(static fn(string $class): string => "use {$class};\n", $uses));
 
         return "{$useBlock}\n{$this->setup}\n\n{$statement}";
-    }
-
-    /**
-     * @return array{string, string|null} The argument code and a class to import.
-     */
-    private function sampleArgument(ReflectionParameter $parameter): array
-    {
-        $type = $parameter->getType();
-        $name = strtolower($parameter->getName());
-        $types = $type instanceof ReflectionUnionType ? $type->getTypes() : ($type === null ? [] : [$type]);
-        $first = $types[0] ?? null;
-        $typeName = $first instanceof ReflectionNamedType ? $first->getName() : 'mixed';
-
-        if ($first instanceof ReflectionNamedType && !$first->isBuiltin()) {
-            if (enum_exists($typeName)) {
-                $case = new ReflectionEnum($typeName)->getCases()[0] ?? null;
-
-                return [$this->short($typeName) . '::' . ($case?->getName() ?? 'Value'), $typeName];
-            }
-
-            if ($typeName === 'DateTimeInterface' || $typeName === 'DateTimeImmutable') {
-                return ["new DateTimeImmutable('-7 days')", 'DateTimeImmutable'];
-            }
-
-            // An interface is passed as one of its implementations.
-            $typeName = $this->implementations[$typeName] ?? $typeName;
-
-            return ['new ' . $this->short($typeName) . '(/* ... */)', $typeName];
-        }
-
-        return [match ($typeName) {
-            'int' => '123',
-            'float' => '1.5',
-            'bool' => 'true',
-            'array' => '[/* ... */]',
-            default => match (true) {
-                str_contains($name, 'url') => "'https://example.com/'",
-                str_contains($name, 'email') => "'ops@example.com'",
-                str_ends_with($name, 'id') => "'123456789'",
-                default => "'example'",
-            },
-        }, null];
     }
 
     private function short(string $class): string

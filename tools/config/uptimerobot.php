@@ -61,6 +61,11 @@ declare(strict_types=1);
  * - additions:          schemas and properties the specification lacks
  * - extraModels:        'UptimeStatsDto'  (read by hand-written methods)
  * - extraRequestModels: 'PublicBulkUpdateDto'  (sent by hand-written methods)
+ *
+ * Methods take 'example' => ['groupId' => 123] for the example of their
+ * reference page: arguments besides the required ones, which the docs fill in
+ * by themselves. An array stands for the constructor arguments of a model, a
+ * string or int for an enum case by its value, and a string for a date.
  */
 
 // Value sets that several locations share; an enum shared by locations needs
@@ -1650,6 +1655,7 @@ return [
                 'update' => [
                     'operation' => 'MonitorsController_update',
                     'parameters' => ['@body' => 'changes'],
+                    'example' => ['changes' => ['interval' => 300]],
                     'note' => 'Only the properties that are set are sent. config is merged into the current settings key by key (see MonitorConfigUpdate; null clears them), while customHttpHeaders, customFields and successHttpResponseCodes replace the current values (verified live).',
                 ],
                 'delete' => [
@@ -1684,9 +1690,14 @@ return [
             'description' => 'Pause, start or change the monitors of a monitor group and/or with a tag at once.',
             'handwritten' => true,
             'methods' => [
-                'pause' => ['operation' => 'BulkMonitorsController_bulkPause', 'handwritten' => true],
-                'start' => ['operation' => 'BulkMonitorsController_bulkStart', 'handwritten' => true],
-                'update' => ['operation' => 'BulkMonitorsController_bulkUpdate', 'handwritten' => true],
+                // The examples select a group, without which the methods throw.
+                'pause' => ['operation' => 'BulkMonitorsController_bulkPause', 'handwritten' => true, 'example' => ['groupId' => 123]],
+                'start' => ['operation' => 'BulkMonitorsController_bulkStart', 'handwritten' => true, 'example' => ['groupId' => 123]],
+                'update' => [
+                    'operation' => 'BulkMonitorsController_bulkUpdate',
+                    'handwritten' => true,
+                    'example' => ['changes' => ['interval' => 300], 'groupId' => 123],
+                ],
             ],
         ],
         'monitorGroups' => [
@@ -1711,6 +1722,7 @@ return [
                 'update' => [
                     'operation' => 'MonitorGroupsController_update',
                     'parameters' => ['@body' => 'changes'],
+                    'example' => ['changes' => ['name' => 'Production']],
                     'note' => 'Only the name can be changed; MonitorResource::update() moves a monitor to another group with groupId.',
                 ],
                 'delete' => [
@@ -1742,12 +1754,15 @@ return [
                 'create' => [
                     'operation' => 'MaintenanceWindowsController_create',
                     'parameters' => ['@body' => 'window'],
+                    // A one-time window (the first interval), which presumably needs a date.
+                    'example' => ['window' => ['name' => 'Release', 'date' => '2026-10-01']],
                     // See 'optionalProperties' for the date.
                     'note' => 'Weekly and monthly windows need days. date may be left out of recurring windows: the specification requires it for every interval, but the API\'s validator does not ask for it (verified live), and the official Terraform provider creates daily, weekly and monthly windows without it. There is no status here; update() pauses a window.',
                 ],
                 'update' => [
                     'operation' => 'MaintenanceWindowsController_update',
                     'parameters' => ['@body' => 'changes'],
+                    'example' => ['changes' => ['status' => 'paused']],
                     'note' => 'Only the properties that are set are sent. The validator runs before the window is looked up (verified live), so an invalid change to an unknown ID raises a BadRequestException, a valid one a NotFoundException.',
                 ],
                 'delete' => [
@@ -1806,6 +1821,7 @@ return [
                 'create' => [
                     'operation' => 'IncidentsController_createComment',
                     'parameters' => ['@body' => 'comment'],
+                    'example' => ['comment' => ['content' => 'We are looking into it.']],
                     // "201: Comment created successfully" without a schema,
                     // while update returns IncidentCommentDto. UptimeRobot's
                     // incident-response skill for its MCP server
@@ -1819,6 +1835,7 @@ return [
                 'update' => [
                     'operation' => 'IncidentsController_updateComment',
                     'parameters' => ['commentId' => 'id', '@body' => 'changes'],
+                    'example' => ['changes' => ['content' => 'Resolved.']],
                     'note' => 'content is required, so the text is always replaced. ' . $commentPlan,
                 ],
                 'delete' => [
@@ -1847,7 +1864,7 @@ return [
                     'note' => 'An unknown ID raises a NotFoundException (verified live).',
                 ],
                 'create' => ['operation' => 'PspController_create', 'handwritten' => true],
-                'update' => ['operation' => 'PspController_update', 'handwritten' => true],
+                'update' => ['operation' => 'PspController_update', 'handwritten' => true, 'example' => ['changes' => ['friendlyName' => 'Status']]],
                 'delete' => [
                     'operation' => 'PspController_delete',
                     // Verified live: 404 "Resource you were trying to access is not
@@ -1872,11 +1889,13 @@ return [
                 'create' => [
                     'operation' => 'PspAnnouncementsController_create',
                     'parameters' => ['@body' => 'announcement'],
+                    'example' => ['announcement' => ['title' => 'Scheduled maintenance', 'content' => 'The dashboard is read-only from 22:00 to 23:00 UTC.']],
                     'note' => 'The specification marks no property as required, not even title and content. ' . $announcementPlan,
                 ],
                 'update' => [
                     'operation' => 'PspAnnouncementsController_update',
                     'parameters' => ['@body' => 'changes'],
+                    'example' => ['changes' => ['title' => 'Maintenance completed']],
                     'note' => 'Only the properties that are set are sent. ' . $announcementPlan,
                 ],
                 // Without a body, POST .../announcements/1/pin and .../unpin
@@ -1915,11 +1934,14 @@ return [
                 'create' => [
                     'operation' => 'AlertContactsController_create',
                     'parameters' => ['@body' => 'contact'],
+                    // An e-mail contact (the first type), which needs its address.
+                    'example' => ['contact' => ['friendlyName' => 'Ops', 'value' => 'ops@example.com']],
                     'note' => 'Email contacts need value. Mobile app contacts need platform, oneSignalSubscriptionId, oneSignalUserId and deviceFingerprint, which the official Terraform provider checks before it sends them along with deviceName and pushToken. sslExpirationReminder and isActive can only be set with update(). Not verified live beyond the validator: the owner of the test account allows no contacts to be created.',
                 ],
                 'update' => [
                     'operation' => 'AlertContactsController_update',
                     'parameters' => ['@body' => 'changes'],
+                    'example' => ['changes' => ['isActive' => false]],
                     'note' => 'Only the properties that are set are sent. The validator runs before the contact is looked up, so an invalid change to an unknown ID raises a BadRequestException, a valid one a NotFoundException (verified live). Not verified live beyond that: the owner of the test account allows no contacts to be changed.',
                 ],
                 'delete' => [
@@ -1949,11 +1971,14 @@ return [
                 'create' => [
                     'operation' => 'IntegrationsController_create',
                     'parameters' => ['@body' => 'integration'],
+                    // Slack, the first type: customValue is the channel.
+                    'example' => ['integration' => ['webhookUrl' => 'https://hooks.slack.com/services/T000/B000/XXXX', 'customValue' => '#alerts']],
                     'note' => 'Pass the model of the integration type, e.g. SlackIntegrationCreate, which sends its type. The API matches the type ignoring case; a type the plan lacks raises a ForbiddenException with the code 021-003 (verified live for update() with PagerDuty on the Solo plan). The specification gives Telegram no chat setting. Not verified live beyond the type: the owner of the test account allows no integrations to be created.',
                 ],
                 'update' => [
                     'operation' => 'IntegrationsController_update',
                     'parameters' => ['@body' => 'changes'],
+                    'example' => ['changes' => ['customValue' => '#ops']],
                     // Verified live for 999999999: "pushbullet" reached the
                     // lookup (404), "PagerDuty" answered 403 "This integration is
                     // not available for current user." (021-003).
@@ -1988,7 +2013,7 @@ return [
             'description' => 'Storm protection: the account-wide grouping of alerts when many monitors go down at once.',
             'methods' => [
                 'get' => ['operation' => 'StormProtectionController_get'],
-                'update' => ['operation' => 'StormProtectionController_update', 'parameters' => ['@body' => 'changes']],
+                'update' => ['operation' => 'StormProtectionController_update', 'parameters' => ['@body' => 'changes'], 'example' => ['changes' => ['isEnabled' => true]]],
             ],
         ],
     ],

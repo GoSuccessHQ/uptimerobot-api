@@ -30,7 +30,9 @@ use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-foreach ($uptimeRobot->incidentComments->all(incidentId: '123456789') as $item) {
+foreach ($uptimeRobot->incidentComments->all(
+    incidentId: '123456789',
+) as $item) {
     // ...
 }
 ```

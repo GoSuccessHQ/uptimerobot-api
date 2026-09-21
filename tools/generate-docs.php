@@ -13,41 +13,19 @@ declare(strict_types=1);
  */
 
 use GoSuccess\UptimeRobot\Tools\Generator\Docs\DocsGenerator;
-use GoSuccess\UptimeRobot\Tools\Generator\Docs\DocTarget;
 use GoSuccess\UptimeRobot\Tools\Generator\Generator;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$analysis = Generator::fromFile(__DIR__ . '/config/uptimerobot.php')->analyze();
-$config = $analysis->config;
-$targets = [];
+try {
+    $files = DocsGenerator::forAnalysis(Generator::fromFile(__DIR__ . '/config/uptimerobot.php')->analyze())->render();
+} catch (Throwable $e) {
+    fwrite(STDERR, "{$e->getMessage()}\n");
 
-foreach ($analysis->resources as $resource) {
-    $methods = [];
-
-    foreach ($resource->config->methods as $name => $method) {
-        $methods[] = $name;
-
-        if ($method->all !== null) {
-            $methods[] = $method->all;
-        }
-    }
-
-    $targets[] = new DocTarget($resource->config->property, $resource->class, $resource->config->description, $methods);
+    exit(1);
 }
-
-// Examples pass a parameter typed with a union's interface as its first variant.
-$implementations = [];
-
-foreach ($analysis->registry->unions as $union) {
-    $implementations[$union->interface] = array_values($union->variants)[0];
-}
-
-$client = $config->fqcn('', $config->client);
-$setup = "\$uptimeRobot = new {$config->client}('your-api-key');";
 
 $docs = dirname(__DIR__) . '/docs';
-$files = new DocsGenerator($config->title, $client, '$uptimeRobot', $setup, $targets, $implementations)->render();
 $written = 0;
 
 foreach ($files as $path => $content) {

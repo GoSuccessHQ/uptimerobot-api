@@ -32,5 +32,7 @@ use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-$result = $uptimeRobot->monitorGroups->create(group: new MonitorGroupCreate(/* ... */));
+$result = $uptimeRobot->monitorGroups->create(
+    group: new MonitorGroupCreate(name: 'Example'),
+);
 ```

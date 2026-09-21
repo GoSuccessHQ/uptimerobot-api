@@ -38,5 +38,8 @@ use GoSuccess\UptimeRobot\UptimeRobot;
 
 $uptimeRobot = new UptimeRobot('your-api-key');
 
-$result = $uptimeRobot->statusPages->update(id: 123, changes: new StatusPageUpdate(/* ... */));
+$result = $uptimeRobot->statusPages->update(
+    id: 123,
+    changes: new StatusPageUpdate(friendlyName: 'Status'),
+);
 ```
