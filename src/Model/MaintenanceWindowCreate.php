@@ -15,16 +15,16 @@ final readonly class MaintenanceWindowCreate implements RequestModel
         /** Friendly name of the maintenance window */
         public string $name,
         public MaintenanceWindowInterval $interval,
-        /**
-         * The start date as YYYY-MM-DD (years 19xx and 20xx), e.g. "2024-06-20". The specification names no time zone.
-         */
-        public string $date,
         /** The start time as HH:mm:ss, e.g. "14:30:00". The specification names no time zone. */
         public string $time,
         /** Minutes the window lasts, at least 1. */
         public int $duration,
         /** If true, all monitors are automatically added to this maintenance window */
         public bool|Undefined $autoAddMonitors = Undefined::Value,
+        /**
+         * The start date as YYYY-MM-DD (years 19xx and 20xx), e.g. "2024-06-20". The specification names no time zone. Optional: the API's validator accepts a window without it (verified live), and the official Terraform provider leaves it out of daily, weekly and monthly windows. A one-time window presumably needs it (not verified live).
+         */
+        public string|Undefined $date = Undefined::Value,
         /**
          * The days a weekly or monthly window recurs on. Weekly: 1 = Monday to 7 = Sunday according to the official Terraform provider, whose acceptance tests store 7; the specification only gives [2, 4, 5] for Tuesday, Thursday and Friday, which 0 = Sunday would fit as well. Monthly: 1 to 31, or -1 for the last day of the month. The API's validator accepts any number (verified live: 0, 8, 32 and -2); according to the provider, the API ignores invalid days.
          *
@@ -44,12 +44,15 @@ final readonly class MaintenanceWindowCreate implements RequestModel
         $data = [];
         $data['name'] = $this->name;
         $data['interval'] = $this->interval->value;
-        $data['date'] = $this->date;
         $data['time'] = $this->time;
         $data['duration'] = $this->duration;
 
         if (!$this->autoAddMonitors instanceof Undefined) {
             $data['autoAddMonitors'] = $this->autoAddMonitors;
+        }
+
+        if (!$this->date instanceof Undefined) {
+            $data['date'] = $this->date;
         }
 
         if (!$this->days instanceof Undefined) {

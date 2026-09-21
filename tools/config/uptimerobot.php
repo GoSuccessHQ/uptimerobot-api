@@ -865,9 +865,10 @@ return [
         ],
         // Neither validator checks the date: a create request without it and an
         // update with "2024-13-45" drew no message about it (verified live).
+        // Optional on create, see 'optionalProperties'.
         'CreateMaintenanceWindowDto.date' => [
             'type' => 'string',
-            'description' => 'The start date as YYYY-MM-DD (years 19xx and 20xx), e.g. "2024-06-20". The specification names no time zone.',
+            'description' => 'The start date as YYYY-MM-DD (years 19xx and 20xx), e.g. "2024-06-20". The specification names no time zone. Optional: the API\'s validator accepts a window without it (verified live), and the official Terraform provider leaves it out of daily, weekly and monthly windows. A one-time window presumably needs it (not verified live).',
         ],
         'UpdateMaintenanceWindowDto.date' => [
             'type' => 'string',
@@ -1329,6 +1330,19 @@ return [
         'ActivityLogResponseDto.data[]<STATUS_UPDATE>.incidentStatus',
     ],
 
+    'optionalProperties' => [
+        // Required by the specification for every interval, but the validator
+        // rejected every other required property of a new window when it was
+        // missing or invalid, and not the missing date (verified live). The
+        // official Terraform provider (internal/client/maintenance_window.go)
+        // sends date with omitempty and makes it an optional attribute; its
+        // acceptance tests create daily, weekly and monthly windows without one
+        // against the live API. The attribute is not computed, so a date the
+        // API filled in would fail them. A window was not created here: the
+        // owner allows none.
+        'CreateMaintenanceWindowDto.date',
+    ],
+
     'commaSeparated' => [
         'MonitorsController_list.status',
         'MonitorsController_list.tags',
@@ -1728,12 +1742,8 @@ return [
                 'create' => [
                     'operation' => 'MaintenanceWindowsController_create',
                     'parameters' => ['@body' => 'window'],
-                    // The validator rejected every other required property when
-                    // they were missing or invalid, but not the missing date
-                    // (verified live); the Terraform provider leaves date out
-                    // unless one is configured. What a window without a date
-                    // does was not observable, so date stays required.
-                    'note' => 'Weekly and monthly windows need days. The specification requires date for every interval, although the API\'s validator does not ask for it (verified live). There is no status here; update() pauses a window.',
+                    // See 'optionalProperties' for the date.
+                    'note' => 'Weekly and monthly windows need days. date may be left out of recurring windows: the specification requires it for every interval, but the API\'s validator does not ask for it (verified live), and the official Terraform provider creates daily, weekly and monthly windows without it. There is no status here; update() pauses a window.',
                 ],
                 'update' => [
                     'operation' => 'MaintenanceWindowsController_update',

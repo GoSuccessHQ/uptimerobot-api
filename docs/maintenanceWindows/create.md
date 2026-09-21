@@ -4,7 +4,7 @@
 
 Create a maintenance window
 
-Weekly and monthly windows need days. The specification requires date for every interval, although the API's validator does not ask for it (verified live). There is no status here; update() pauses a window.
+Weekly and monthly windows need days. date may be left out of recurring windows: the specification requires it for every interval, but the API's validator does not ask for it (verified live), and the official Terraform provider creates daily, weekly and monthly windows without it. There is no status here; update() pauses a window.
 
 ## Signature
 

@@ -84,12 +84,11 @@ final class MaintenanceWindowResourceTest extends TestCase
         $http = new MockHttpClient(new Response(201, self::WINDOW));
 
         $window = self::client($http)->maintenanceWindows->create(new MaintenanceWindowCreate(
-            name: 'Friday deployments',
-            interval: MaintenanceWindowInterval::Weekly,
-            date: '2026-09-25',
+            name: 'Release',
+            interval: MaintenanceWindowInterval::Once,
             time: '22:30:00',
             duration: 90,
-            days: [5],
+            date: '2026-09-25',
             monitorIds: [803767164, 803872200],
         ));
 
@@ -98,10 +97,26 @@ final class MaintenanceWindowResourceTest extends TestCase
         self::assertSame('https://api.uptimerobot.com/v3/maintenance-windows', $request->uri);
         self::assertSame('application/json', $request->headers['Content-Type'] ?? null);
         self::assertSame(
-            '{"name":"Friday deployments","interval":"weekly","date":"2026-09-25","time":"22:30:00","duration":90,"days":[5],"monitorIds":[803767164,803872200]}',
+            '{"name":"Release","interval":"once","time":"22:30:00","duration":90,"date":"2026-09-25","monitorIds":[803767164,803872200]}',
             $request->body,
         );
         self::assertSame(5501, $window->id);
+    }
+
+    public function testCreatesARecurringWindowWithoutADate(): void
+    {
+        $http = new MockHttpClient(new Response(201, self::WINDOW));
+
+        // As the official Terraform provider creates recurring windows.
+        self::client($http)->maintenanceWindows->create(new MaintenanceWindowCreate(
+            name: 'Friday deployments',
+            interval: MaintenanceWindowInterval::Weekly,
+            time: '22:30:00',
+            duration: 90,
+            days: [5],
+        ));
+
+        self::assertSame('{"name":"Friday deployments","interval":"weekly","time":"22:30:00","duration":90,"days":[5]}', $http->requests[0]->body);
     }
 
     public function testUpdatesOnlyWhatIsSet(): void
