@@ -10,6 +10,7 @@ use GoSuccess\UptimeRobot\Http\HttpClient;
 use GoSuccess\UptimeRobot\Http\Request;
 use GoSuccess\UptimeRobot\Http\Response;
 use RuntimeException;
+use SensitiveParameter;
 
 /**
  * Test double that returns a queue of predefined responses (or throws predefined
@@ -36,7 +37,7 @@ final class MockHttpClient implements HttpClient
         $this->queue = array_values($queue);
     }
 
-    public function send(Request $request): Response
+    public function send(#[SensitiveParameter] Request $request): Response
     {
         $this->requests[] = $request;
 

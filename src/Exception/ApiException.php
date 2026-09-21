@@ -7,6 +7,7 @@ namespace GoSuccess\UptimeRobot\Exception;
 use GoSuccess\UptimeRobot\Http\Request;
 use GoSuccess\UptimeRobot\Http\Response;
 use RuntimeException;
+use SensitiveParameter;
 
 /**
  * Base class for all errors reported by the UptimeRobot API as an HTTP error
@@ -38,11 +39,14 @@ class ApiException extends RuntimeException implements UptimeRobotException
     /**
      * Build the most specific exception type for an error response.
      *
-     * @param float|null $now Current Unix time, to turn an announced reset time into
-     *                        {@see RateLimitException::$retryAfter}; defaults to the
-     *                        system time.
+     * @param Request    $request The request that failed. It carries the API key, so
+     *                            it is marked sensitive: the exception is created in
+     *                            this frame, and its trace must not hold the key.
+     * @param float|null $now     Current Unix time, to turn an announced reset time into
+     *                            {@see RateLimitException::$retryAfter}; defaults to the
+     *                            system time.
      */
-    public static function fromResponse(Response $response, Request $request, ?float $now = null): self
+    public static function fromResponse(Response $response, #[SensitiveParameter] Request $request, ?float $now = null): self
     {
         $status = $response->statusCode;
         $body = $response->body;

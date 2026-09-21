@@ -15,11 +15,13 @@ use GoSuccess\UptimeRobot\Http\Multipart;
 use GoSuccess\UptimeRobot\Http\Request;
 use GoSuccess\UptimeRobot\Http\Response;
 use GoSuccess\UptimeRobot\RateLimit\NullRateLimiter;
+use GoSuccess\UptimeRobot\Tests\Support\ExceptionTrace;
 use GoSuccess\UptimeRobot\Tests\Support\FakeClock;
 use GoSuccess\UptimeRobot\Tests\Support\LocalServer;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use SensitiveParameterValue;
 
 /**
  * Exercises the real cURL transport against a local PHP web server.
@@ -192,6 +194,18 @@ final class CurlHttpClientTest extends TestCase
         } catch (TransportException $e) {
             self::assertStringNotContainsString('secret', $e->getMessage());
         }
+    }
+
+    public function testTransportErrorTraceOmitsTheApiKey(): void
+    {
+        $port = LocalServer::closedPort();
+        $request = new Request(Method::Get, "http://127.0.0.1:{$port}/", ['Authorization' => 'Bearer secret-key']);
+
+        $e = ExceptionTrace::capture(static fn(): Response => new CurlHttpClient(connectTimeout: 1.0)->send($request));
+
+        self::assertInstanceOf(TransportException::class, $e);
+        self::assertInstanceOf(SensitiveParameterValue::class, $e->getTrace()[0]['args'][0] ?? null);
+        self::assertStringNotContainsString('secret-key', ExceptionTrace::arguments($e));
     }
 
     /**

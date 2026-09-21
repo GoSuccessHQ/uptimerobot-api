@@ -6,6 +6,7 @@ namespace GoSuccess\UptimeRobot\Http;
 
 use CurlHandle;
 use GoSuccess\UptimeRobot\Exception\TransportException;
+use SensitiveParameter;
 
 /**
  * Default {@see HttpClient} built on PHP's cURL extension.
@@ -49,7 +50,7 @@ final class CurlHttpClient implements HttpClient
         private readonly bool $persistentConnections = true,
     ) {}
 
-    public function send(Request $request): Response
+    public function send(#[SensitiveParameter] Request $request): Response
     {
         $handle = $this->handle ??= curl_init();
         curl_reset($handle);

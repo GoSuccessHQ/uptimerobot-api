@@ -21,6 +21,7 @@ use GoSuccess\UptimeRobot\Http\FileUpload;
 use GoSuccess\UptimeRobot\Http\Method;
 use GoSuccess\UptimeRobot\Http\Response;
 use GoSuccess\UptimeRobot\RateLimit\RateLimitStatus;
+use GoSuccess\UptimeRobot\Tests\Support\ExceptionTrace;
 use GoSuccess\UptimeRobot\Tests\Support\FakeClock;
 use GoSuccess\UptimeRobot\Tests\Support\MockHttpClient;
 use GoSuccess\UptimeRobot\Tests\Support\SpyRateLimiter;
@@ -28,6 +29,7 @@ use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use SensitiveParameterValue;
 
 #[CoversClass(Connection::class)]
 final class ConnectionTest extends TestCase
@@ -474,6 +476,19 @@ final class ConnectionTest extends TestCase
 
         self::assertStringNotContainsString('secret-key', print_r($connection, true));
         self::assertStringNotContainsString('secret-key', print_r($http->requests[0], true));
+    }
+
+    public function testKeepsTheApiKeyOutOfExceptionTraces(): void
+    {
+        $http = new MockHttpClient(new Response(404, '{"message":"Monitor not found","code":"000-004"}'));
+        $connection = $this->connection($http);
+
+        $e = ExceptionTrace::capture(static fn(): mixed => $connection->json(Method::Get, 'monitors/1'));
+
+        self::assertInstanceOf(NotFoundException::class, $e);
+        // The exception is created in ApiException::fromResponse(), whose second argument is the request.
+        self::assertInstanceOf(SensitiveParameterValue::class, $e->getTrace()[0]['args'][1] ?? null);
+        self::assertStringNotContainsString('secret-key', ExceptionTrace::arguments($e));
     }
 
     private function connection(
