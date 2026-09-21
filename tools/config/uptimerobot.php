@@ -38,7 +38,9 @@ declare(strict_types=1);
  *                       values may share one; false keeps the plain type)
  * - enumCases:          'Region' => ['na' => 'NorthAmerica', 'eu' => 'Europe', 'as' => 'Asia', 'oc' => 'Oceania']
  * - types:              'UserDto.activeSubscription.expirationDate' => ['type' => 'string', 'format' => 'date-time']
- *                       (replaces the schema at a location; fails once the specification says the same)
+ *                       (replaces the schema at a location, but keeps its description, deprecation,
+ *                       nullable and readOnly unless the entry states them, e.g. 'nullable' => false;
+ *                       fails once the specification says the same)
  * - integers / floats:  '*.id'  (every "number" must be classified)
  * - mixed:              'MonitorDto.config.apiAssertions.checks[].target'  (a location that holds any JSON value)
  * - excludedProperties: 'CreatePsPDto.logo'  (left out of the model, e.g. a file upload)

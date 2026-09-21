@@ -243,8 +243,9 @@ final class Registry
 
     /**
      * The schema configured in 'types' for a location, or the given one. The
-     * description and deprecation of the replaced schema are kept unless the
-     * replacement states its own.
+     * description, deprecation, nullability and readOnly of the replaced
+     * schema are kept unless the replacement states its own: an override
+     * fixes the type, and a null the API sends must still be read as null.
      */
     private function override(Schema $schema, string $path): Schema
     {
@@ -257,6 +258,18 @@ final class Registry
         foreach (['description', 'deprecated'] as $key) {
             if (!\array_key_exists($key, $replacement) && \array_key_exists($key, $schema->node)) {
                 $replacement[$key] = $schema->node[$key];
+            }
+        }
+
+        // Also where a wrapper or reference carries them, as resolve() and model() read them.
+        $inherited = [
+            'nullable' => $schema->isNullable() || $schema->resolve()->isNullable(),
+            'readOnly' => $schema->isReadOnly() || $schema->resolve()->isReadOnly(),
+        ];
+
+        foreach ($inherited as $key => $value) {
+            if ($value && !\array_key_exists($key, $replacement)) {
+                $replacement[$key] = true;
             }
         }
 

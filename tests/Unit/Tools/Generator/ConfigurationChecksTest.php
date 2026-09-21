@@ -169,6 +169,35 @@ final class ConfigurationChecksTest extends TestCase
         self::assertSame(PhpType::MIXED, $model->properties[2]->type->kind);
     }
 
+    public function testTypesKeepTheNullabilityAndReadOnlyOfTheLocationTheyReplace(): void
+    {
+        $analysis = $this->analyze(
+            ['ThingDto' => self::object([
+                // Erased by zod, like MonitorDto.httpMethodType.
+                'method' => ['nullable' => true],
+                'count' => ['allOf' => [self::ref('CountDto')], 'nullable' => true],
+                'label' => ['nullable' => true],
+                'key' => ['readOnly' => true],
+            ]), 'CountDto' => ['description' => 'Erased as well.']],
+            ['types' => [
+                'ThingDto.method' => ['type' => 'string'],
+                'ThingDto.count' => ['type' => 'integer'],
+                // Stated by the entry, so it wins.
+                'ThingDto.label' => ['type' => 'string', 'nullable' => false],
+                'ThingDto.key' => ['type' => 'string'],
+            ]],
+        );
+
+        $model = array_values($analysis->registry->models)[0];
+        self::assertSame(['method', 'count', 'label', 'key'], array_map(static fn($property): string => $property->jsonName, $model->properties));
+        self::assertSame(PhpType::STRING, $model->properties[0]->type->kind);
+        self::assertTrue($model->properties[0]->nullable);
+        self::assertSame(PhpType::INT, $model->properties[1]->type->kind);
+        self::assertTrue($model->properties[1]->nullable);
+        self::assertFalse($model->properties[2]->nullable);
+        self::assertTrue($model->properties[3]->readOnly);
+    }
+
     public function testRejectsATypeTheSpecificationAlreadyHas(): void
     {
         $this->expectException(RuntimeException::class);
