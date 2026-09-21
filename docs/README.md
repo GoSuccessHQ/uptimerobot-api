@@ -108,6 +108,17 @@ Personal alert contacts: the e-mail addresses, phone numbers and mobile app devi
 - [`update()`](alertContacts/update.md) — Update a personal alert contact
 - [`delete()`](alertContacts/delete.md) — Delete a personal alert contact
 
+## `integrations`
+
+Integrations: the team channels that monitors alert, such as Slack, Microsoft Teams, PagerDuty or webhooks. Monitors assign them like personal alert contacts, by ID.
+
+- [`list()`](integrations/list.md) — List Integrations
+- [`all()`](integrations/all.md) — Iterate lazily over every item of list(), across all pages
+- [`get()`](integrations/get.md) — Get an integration by ID
+- [`create()`](integrations/create.md) — Create an Integration
+- [`update()`](integrations/update.md) — Update an Integration
+- [`delete()`](integrations/delete.md) — Delete an Integration
+
 ## `user`
 
 The account the API key belongs to: its plan and its alert contacts.

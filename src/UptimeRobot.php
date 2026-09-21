@@ -17,6 +17,7 @@ use GoSuccess\UptimeRobot\Resource\AnnouncementResource;
 use GoSuccess\UptimeRobot\Resource\BulkMonitorResource;
 use GoSuccess\UptimeRobot\Resource\IncidentCommentResource;
 use GoSuccess\UptimeRobot\Resource\IncidentResource;
+use GoSuccess\UptimeRobot\Resource\IntegrationResource;
 use GoSuccess\UptimeRobot\Resource\MaintenanceWindowResource;
 use GoSuccess\UptimeRobot\Resource\MonitorGroupResource;
 use GoSuccess\UptimeRobot\Resource\MonitorResource;
@@ -92,6 +93,13 @@ final class UptimeRobot
      */
     public private(set) AlertContactResource $alertContacts {
         get => $this->alertContacts ??= new AlertContactResource($this->connection);
+    }
+
+    /**
+     * Integrations: the team channels that monitors alert, such as Slack, Microsoft Teams, PagerDuty or webhooks. Monitors assign them like personal alert contacts, by ID.
+     */
+    public private(set) IntegrationResource $integrations {
+        get => $this->integrations ??= new IntegrationResource($this->connection);
     }
 
     /** The account the API key belongs to: its plan and its alert contacts. */

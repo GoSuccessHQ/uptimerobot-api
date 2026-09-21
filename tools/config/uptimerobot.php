@@ -114,6 +114,18 @@ $statusPageMonitors = 'The monitors on the page; [0] alone stands for every moni
 // unknown ID 999999999 and with bodies the validator rejects.
 $notificationEvents = ['UpAndDown', 'Down', 'Up', 'None'];
 $contactStatus = 'Active, Paused, NotActivated or ToMigrate, the values UptimeRobot\'s guide for its MCP server (uptimerobot/ai, skills/list-integrations) and its Terraform provider name; only Active contacts deliver alerts. Verified live: Active, Paused and ToMigrate. A string, as the specification documents no values.';
+// Integrations. The account has none, and the owner allows none to be
+// created, so the settings of each type come from the specification, read
+// with the official Terraform provider (internal/client/integration.go and
+// internal/provider/integration), which sends them to the live API in its
+// acceptance tests; the requests were only probed with the unknown ID
+// 999999999 and with bodies the validator rejects (verified live).
+$integrationEvents = 'Which status changes of its monitors the integration is alerted of.';
+// Slack, Discord and Mattermost customValue and Google Chat customMessage.
+$integrationText = 'Text added to every notification. The specification requires it on create, although its description calls it optional; an empty string sends no text. The official Terraform provider clears it with an empty string, and its acceptance test reads an empty Mattermost text back (not verified live).';
+// Slack's customValue has no description at all; the provider documents it
+// as the channel ("custom_value = \"#monitoring\" # Slack channel").
+$slackText = 'The channel, e.g. #alerts, as the official Terraform provider documents it; the specification describes it not at all, but requires it on create. The provider leaves it out when it is not configured (not verified live); an empty string names no channel.';
 $contactType = 'The kind of contact, e.g. Email, ProSms, Voice or MobileApp (verified live). The specification announces that mobile app contacts, reported as MobileAppOld (iOS) and MobileApp (Android) through October 10, 2026, become MobileAppIOS and MobileAppAndroid after that date; UptimeRobot\'s clients name further types such as EmailToSms, so this is a string.';
 
 return [
@@ -242,6 +254,21 @@ return [
         'ActivityLogResponseDto.data[]<STATUS_UPDATE>.remoteNode.IP' => 'ip',
         'ActivityLogResponseDto.data[]<STATUS_UPDATE>.remoteNode.IPv6' => 'ipv6',
         'ActivityLogResponseDto.data[]<STATUS_UPDATE>.remoteNode.privateIP' => 'privateIp',
+        // The settings of the integrations, created and changed.
+        'SlackBaseIntegrationDto.webhookURL' => 'webhookUrl',
+        'UpdateSlackIntegrationDataDto.webhookURL' => 'webhookUrl',
+        'MsTeamsBaseIntegrationDto.webhookURL' => 'webhookUrl',
+        'UpdateMsTeamsIntegrationDataDto.webhookURL' => 'webhookUrl',
+        'DiscordBaseIntegrationDto.webhookURL' => 'webhookUrl',
+        'UpdateDiscordIntegrationDataDto.webhookURL' => 'webhookUrl',
+        'MattermostBaseIntegrationDto.webhookURL' => 'webhookUrl',
+        'UpdateMattermostIntegrationDataDto.webhookURL' => 'webhookUrl',
+        'ZapierBaseIntegrationDto.hookURL' => 'hookUrl',
+        'UpdateZapierIntegrationDataDto.hookURL' => 'hookUrl',
+        'GoogleChatBaseIntegrationDto.roomURL' => 'roomUrl',
+        'PartialTypeClass.roomURL' => 'roomUrl',
+        'WebhookBaseIntegrationDto.sendAsJSON' => 'sendAsJson',
+        'UpdateWebhookIntegrationDataDto.sendAsJSON' => 'sendAsJson',
     ],
 
     'enums' => [
@@ -258,6 +285,9 @@ return [
         // Verified live: "nope" is rejected with "platform must be one of the
         // following values: ios, android".
         'CreatePersonalAlertContactDto.platform' => 'AlertContactPlatform',
+        // The settings of two integration types, created and changed.
+        '*Pushover*.priority' => 'PushoverPriority',
+        '*Pagerduty*.location' => 'PagerDutyLocation',
         // Monitors. The locations of MonitorDto that the specification erases get
         // their values in 'types'.
         'MonitorDto.type' => 'MonitorType',
@@ -351,6 +381,8 @@ return [
             'MobileAppOld' => 'MobileAppOld',
             'MobileApp' => 'MobileApp',
         ],
+        // PagerDuty's service regions.
+        'PagerDutyLocation' => ['us' => 'UnitedStates', 'eu' => 'Europe'],
     ],
 
     'types' => [
@@ -465,6 +497,102 @@ return [
             'type' => 'boolean',
             'description' => 'true activates the contact (status Active), false pauses it (status Paused), so that it receives no alerts.',
         ],
+
+        // Integrations (see $integrationEvents). The items of a page are an
+        // inline copy of IntegrationDto (identical). With includeOrgMembers the
+        // API lists the personal contacts in this shape too (verified live), and
+        // their values below were seen that way; the account has no integrations.
+        'IntegrationPaginationDto.data[]' => ['$ref' => '#/components/schemas/IntegrationDto'],
+        // Erased to {}, with the description of AlertContactDto.type. The
+        // request literals are Pagerduty and PushBullet, while the MCP guide lists
+        // PagerDuty and the provider reads PagerDuty and Pushbullet; the API
+        // matches request types ignoring case (verified live: "pushbullet"
+        // reached the lookup). A string, as the value set is not documented.
+        'IntegrationDto.type' => [
+            'type' => 'string',
+            'description' => 'The kind of integration, e.g. Slack, MSTeams or Webhook, in a spelling that may differ from the requests\' (UptimeRobot\'s clients read PagerDuty for Pagerduty); with includeOrgMembers also the types of personal contacts (verified live: Email, ProSms, Voice and MobileApp). A string, as the specification documents no values.',
+        ],
+        'IntegrationDto.status' => ['type' => 'string', 'description' => $contactStatus],
+        // Erased to {}; the names of the requests (verified live: "UpAndDown").
+        'IntegrationDto.enableNotificationsFor' => ['type' => 'string', 'enum' => $notificationEvents, 'description' => $integrationEvents],
+        // What the provider reads from these fields, per type; for personal
+        // contacts they were seen live.
+        'IntegrationDto.value' => [
+            'type' => 'string',
+            'description' => 'The destination: the URL of Slack, Microsoft Teams, Google Chat, Discord, Mattermost, Zapier, Splunk and webhook integrations, according to the official Terraform provider, which expects none for Telegram, Pushbullet, PagerDuty and Pushover; for a personal contact, its address (verified live).',
+        ],
+        'IntegrationDto.customValue' => [
+            'type' => 'string',
+            'description' => 'Settings of the type, according to the official Terraform provider: the text of Slack, Discord and Mattermost, the settings of a webhook as a JSON string (postValue, sendJSON, sendQuery and sendPost), and autoResolve of PagerDuty as "1" or "true", "0" or "false". For a personal contact, its customValue, with an empty string for null (verified live).',
+        ],
+        'IntegrationDto.customValue2' => [
+            'type' => 'string',
+            'description' => 'The location of PagerDuty (us or eu), according to the official Terraform provider; empty for the personal contacts (verified live).',
+        ],
+        'IntegrationDto.customValue3' => ['type' => 'string', 'description' => 'For a mobile app contact, an ID of the device (verified live: a UUID); empty otherwise.'],
+        'IntegrationDto.customValue4' => ['type' => 'string', 'description' => 'For a mobile app contact, a label of the device (verified live); empty otherwise.'],
+        'IntegrationDto.customHeaders' => [
+            'type' => 'object',
+            'additionalProperties' => ['type' => 'string'],
+            'description' => 'The headers a webhook integration sends, by name; empty if none (verified live for the personal contacts: null).',
+        ],
+        // The settings of the requests. The provider sends the four common
+        // settings with every type.
+        '*BaseIntegrationDto.enableNotificationsFor' => ['type' => 'string', 'enum' => $notificationEvents, 'description' => $integrationEvents],
+        'Update*IntegrationDataDto.enableNotificationsFor' => ['type' => 'string', 'enum' => $notificationEvents, 'description' => $integrationEvents],
+        'PartialTypeClass.enableNotificationsFor' => ['type' => 'string', 'enum' => $notificationEvents, 'description' => $integrationEvents],
+        // Required on create, although "Optional." (Discord, Mattermost, Google
+        // Chat) or undocumented (Slack). The provider leaves Slack's, Discord's
+        // and Mattermost's out when it is not configured and clears
+        // Mattermost's with "", which its acceptance test
+        // TestAcc_Integration_Mattermost_CustomValue_Clear reads back; whether
+        // the API rejects a missing one could not be tried, as a create that
+        // passed would add an integration. So the flags of the specification
+        // stay, and the docblock tells to send "" for no text.
+        '*Slack*Integration*.customValue' => ['type' => 'string', 'description' => $slackText],
+        '*Discord*Integration*.customValue' => ['type' => 'string', 'description' => $integrationText],
+        '*Mattermost*Integration*.customValue' => ['type' => 'string', 'description' => $integrationText],
+        'GoogleChatBaseIntegrationDto.customMessage' => ['type' => 'string', 'description' => $integrationText],
+        'PartialTypeClass.customMessage' => ['type' => 'string', 'description' => $integrationText],
+        '*Slack*Integration*.webhookURL' => ['type' => 'string', 'description' => 'The Slack incoming webhook URL.'],
+        '*Zapier*Integration*.hookURL' => ['type' => 'string', 'description' => 'The Zapier webhook URL of the Zap.'],
+        '*Splunk*Integration*.urlToNotify' => ['type' => 'string', 'description' => 'The Splunk URL the alerts are posted to.'],
+        '*Webhook*Integration*.urlToNotify' => ['type' => 'string', 'description' => 'The URL the webhook calls.'],
+        // The provider's acceptance tests send a JSON template, e.g.
+        // {"message": "Alert: $monitorURL is $alertType"}, and read it back.
+        '*Webhook*Integration*.postValue' => [
+            'type' => 'string',
+            'description' => 'The body the webhook sends, e.g. a JSON template such as {"message": "Alert: $monitorURL is $alertType"}, as the official Terraform provider\'s acceptance tests send it.',
+        ],
+        '*Webhook*Integration*.sendAsJSON' => ['type' => 'boolean', 'description' => 'Whether postValue is sent as a JSON body.'],
+        '*Webhook*Integration*.sendAsQueryString' => ['type' => 'boolean', 'description' => 'Whether postValue is sent as a query string.'],
+        '*Webhook*Integration*.sendAsPostParameters' => ['type' => 'boolean', 'description' => 'Whether postValue is sent as form parameters.'],
+        // A bare nullable object; string values as in IntegrationDto, and the
+        // provider sends a map of strings ("Set {} to clear managed custom
+        // headers").
+        '*Webhook*Integration*.customHeaders' => [
+            'type' => 'object',
+            'additionalProperties' => ['type' => 'string'],
+            'description' => 'Headers the webhook sends, by name; an empty array removes them, according to the official Terraform provider.',
+        ],
+        '*Pushover*Integration*.priority' => [
+            'type' => 'string',
+            'enum' => ['Lowest', 'Low', 'Normal', 'High', 'Emergency'],
+            'description' => 'The Pushover priority of the notifications.',
+        ],
+        // The update of a Splunk integration points to PartialTypeClass, the
+        // fields of Google Chat (roomURL, customMessage), in place of Splunk's
+        // urlToNotify: every other update names the fields of its create request
+        // (Update<X>IntegrationDataDto equals <X>BaseIntegrationDto without
+        // "required"), Google Chat's update points to PartialTypeClass as well,
+        // and the Terraform provider sends {friendlyName, urlToNotify,
+        // enableNotificationsFor, sslExpirationReminder} to create and to update
+        // a Splunk integration. Two NestJS PartialType() classes presumably got
+        // the same name, so one replaced the other. PATCH /integrations/
+        // 999999999 {"type": "Splunk", "data": {"urlToNotify": 5, "roomURL": 5}}
+        // reached the lookup (404): the API checks the settings after it found
+        // the integration, so this could not be verified live.
+        'UpdateSplunkIntegrationSchema.data' => ['$ref' => '#/components/schemas/UpdateSplunkIntegrationDataDto'],
         // A plain string in the specification; an ISO 8601 date in UTC
         // (verified live: "2027-08-18T12:14:17Z").
         'UserDto.activeSubscription.expirationDate' => ['type' => 'string', 'format' => 'date-time'],
@@ -1128,6 +1256,10 @@ return [
         // The ID of the last contact of the previous page (verified live:
         // cursor=8733402 returned the contacts with greater IDs).
         'AlertContactsController_list.cursor',
+        // The ID of the last item of the previous page (verified live with
+        // includeOrgMembers: cursor=6554089 returned the items with greater IDs),
+        // as the provider reads it from nextLink.
+        'IntegrationsController_list.cursor',
     ],
 
     'floats' => [
@@ -1215,6 +1347,56 @@ return [
             ],
             'description' => 'A monitor to create: one model per monitor type, each with the fields that type requires.',
         ],
+        // Integrations: a oneOf of {"type": <single value>, "data": {...}}
+        // without a discriminator keyword; each variant takes the fields of data
+        // and sends its type, in the spelling of the specification (the API
+        // matches it ignoring case, verified live). The class names use the
+        // usual casing of the product names.
+        'IntegrationsController_create.body' => [
+            'interface' => 'IntegrationCreate',
+            'discriminator' => 'type',
+            'envelope' => 'data',
+            'variants' => [
+                'Slack' => 'SlackIntegrationCreate',
+                'Telegram' => 'TelegramIntegrationCreate',
+                'MSTeams' => 'MsTeamsIntegrationCreate',
+                'Webhook' => 'WebhookIntegrationCreate',
+                'Zapier' => 'ZapierIntegrationCreate',
+                'Pagerduty' => 'PagerDutyIntegrationCreate',
+                'GoogleChat' => 'GoogleChatIntegrationCreate',
+                'Discord' => 'DiscordIntegrationCreate',
+                'Splunk' => 'SplunkIntegrationCreate',
+                'PushBullet' => 'PushbulletIntegrationCreate',
+                'Pushover' => 'PushoverIntegrationCreate',
+                'Mattermost' => 'MattermostIntegrationCreate',
+            ],
+            'description' => 'An integration to create: one model per integration type, each with the settings that type requires.',
+        ],
+        // The same for changes. The specification makes type optional except for
+        // Splunk, but the API requires it: PATCH /integrations/999999999 with
+        // {"data": {"friendlyName": "x"}} is rejected with "type must be one of
+        // the following values: 1, 2, 5, ..." (verified live). The variants
+        // always send it.
+        'IntegrationsController_update.body' => [
+            'interface' => 'IntegrationUpdate',
+            'discriminator' => 'type',
+            'envelope' => 'data',
+            'variants' => [
+                'Slack' => 'SlackIntegrationUpdate',
+                'Telegram' => 'TelegramIntegrationUpdate',
+                'MSTeams' => 'MsTeamsIntegrationUpdate',
+                'Webhook' => 'WebhookIntegrationUpdate',
+                'Zapier' => 'ZapierIntegrationUpdate',
+                'Pagerduty' => 'PagerDutyIntegrationUpdate',
+                'GoogleChat' => 'GoogleChatIntegrationUpdate',
+                'Discord' => 'DiscordIntegrationUpdate',
+                'Splunk' => 'SplunkIntegrationUpdate',
+                'PushBullet' => 'PushbulletIntegrationUpdate',
+                'Pushover' => 'PushoverIntegrationUpdate',
+                'Mattermost' => 'MattermostIntegrationUpdate',
+            ],
+            'description' => 'Changes to an integration: one model per integration type, which must be the type of the integration.',
+        ],
         // A oneOf without a discriminator keyword, told apart by its
         // single-value type (verified live: STATUS_UPDATE and NOTIFICATION; COMMENT
         // needs the plan feature incident-comments). An entry of another type is
@@ -1250,6 +1432,18 @@ return [
 
     'additions' => [
         'schemas' => [
+            // The update of a Splunk integration, which the specification gets
+            // wrong (see 'types'): SplunkBaseIntegrationDto without "required", as
+            // every other update relates to its create request.
+            'UpdateSplunkIntegrationDataDto' => [
+                'type' => 'object',
+                'properties' => [
+                    'friendlyName' => ['type' => 'string', 'maxLength' => 60, 'description' => 'The friendly name of the integration'],
+                    'enableNotificationsFor' => ['type' => 'string', 'enum' => ['UpAndDown', 'Down', 'Up', 'None']],
+                    'sslExpirationReminder' => ['type' => 'boolean', 'description' => 'Send a notification about SSL & Domain expiry'],
+                    'urlToNotify' => ['type' => 'string', 'maxLength' => 1500, 'description' => 'The Splunk URL the alerts are posted to.'],
+                ],
+            ],
             // UpdateMonitorDto.config is a bare object that the API merges into
             // the current config key by key: a key left out is kept, a key set
             // to null is removed, and "config": null clears all of them; an API
@@ -1664,6 +1858,46 @@ return [
                 ],
             ],
         ],
+        'integrations' => [
+            'class' => 'IntegrationResource',
+            'description' => 'Integrations: the team channels that monitors alert, such as Slack, Microsoft Teams, PagerDuty or webhooks. Monitors assign them like personal alert contacts, by ID.',
+            'methods' => [
+                'list' => [
+                    'operation' => 'IntegrationsController_list',
+                    'pagination' => 'nextLink',
+                    'all' => 'all',
+                    // The description of includeOrgMembers limits it to the
+                    // owner of an organization and names a "v2 getAlertContacts
+                    // proxy"; the Solo-plan test account got its own 8 contacts,
+                    // including the 2 that /alert-contacts leaves out.
+                    'note' => 'Ascending by ID; the cursor is the ID of the last item of the previous page. Without includeOrgMembers only integrations are listed. With includeOrgMembers true the personal alert contacts are listed as well, in the same shape: the test account, which has no integrations, got all its contacts, although the specification promises the contacts of the members of an organization (both verified live).',
+                ],
+                'get' => [
+                    'operation' => 'IntegrationsController_get',
+                    // Verified live: /integrations/999999999 answers 404 "Alert
+                    // contact not found" (000-004), /integrations/8733402 (a
+                    // personal contact) 404 "No integration found." (021-005).
+                    'note' => 'An unknown ID raises a NotFoundException with the code 000-004, the ID of a personal contact one with the code 021-005 (verified live).',
+                ],
+                'create' => [
+                    'operation' => 'IntegrationsController_create',
+                    'parameters' => ['@body' => 'integration'],
+                    'note' => 'Pass the model of the integration type, e.g. SlackIntegrationCreate, which sends its type. The API matches the type ignoring case; a type the plan lacks raises a ForbiddenException with the code 021-003 (verified live for update() with PagerDuty on the Solo plan). The specification gives Telegram no chat setting. Not verified live beyond the type: the owner of the test account allows no integrations to be created.',
+                ],
+                'update' => [
+                    'operation' => 'IntegrationsController_update',
+                    'parameters' => ['@body' => 'changes'],
+                    // Verified live for 999999999: "pushbullet" reached the
+                    // lookup (404), "PagerDuty" answered 403 "This integration is
+                    // not available for current user." (021-003).
+                    'note' => 'Pass the model of the integration\'s type, which sends it: the API requires the type, although the specification makes it optional (verified live). Only the settings that are set are sent; whether the API keeps the others is not documented, and the official Terraform provider always sends all of them. The API checks the type first, then whether the plan includes it (ForbiddenException with the code 021-003), then looks up the integration; invalid settings still reached the lookup (all verified live). Not verified live beyond that: the test account has no integrations.',
+                ],
+                'delete' => [
+                    'operation' => 'IntegrationsController_delete',
+                    'note' => 'An unknown ID raises a NotFoundException (verified live).',
+                ],
+            ],
+        ],
         'user' => [
             'class' => 'UserResource',
             'description' => 'The account the API key belongs to: its plan and its alert contacts.',
@@ -1692,11 +1926,6 @@ return [
         ],
     ],
 
-    'ignored' => [
-        'IntegrationsController_list' => 'Pending: implemented resource by resource in the following commits.',
-        'IntegrationsController_create' => 'Pending: implemented resource by resource in the following commits.',
-        'IntegrationsController_get' => 'Pending: implemented resource by resource in the following commits.',
-        'IntegrationsController_update' => 'Pending: implemented resource by resource in the following commits.',
-        'IntegrationsController_delete' => 'Pending: implemented resource by resource in the following commits.',
-    ],
+    // Every operation of the specification is implemented.
+    'ignored' => [],
 ];
