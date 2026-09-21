@@ -21,6 +21,7 @@ declare(strict_types=1);
  *   php tools/fetch-specs.php
  */
 
+use GoSuccess\UptimeRobot\Tools\ResponseHeaders;
 use GoSuccess\UptimeRobot\Tools\SpecSnapshot;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -35,8 +36,9 @@ $context = stream_context_create(['http' => [
 ]]);
 
 $yaml = file_get_contents(SPEC_URL, false, $context);
-$headers = http_get_last_response_headers() ?? [];
-$status = preg_match('~^HTTP/\S+\s+(\d{3})~', $headers[0] ?? '', $match) === 1 ? (int) $match[1] : 0;
+// Redirects are followed, so this is the status of the response that was returned.
+$response = ResponseHeaders::parse(http_get_last_response_headers() ?? []);
+$status = $response->status;
 
 if ($yaml === false || $status !== 200) {
     fwrite(STDERR, 'Failed to download ' . SPEC_URL . ($status !== 0 ? " (HTTP {$status})" : '') . "\n");
@@ -44,13 +46,7 @@ if ($yaml === false || $status !== 200) {
     exit(1);
 }
 
-$lastModified = 'unknown';
-
-foreach ($headers as $header) {
-    if (preg_match('/^last-modified:\s*(.+)$/i', $header, $match) === 1) {
-        $lastModified = trim($match[1]);
-    }
-}
+$lastModified = $response->lastModified ?? 'unknown';
 
 try {
     $json = SpecSnapshot::fromYaml($yaml);
