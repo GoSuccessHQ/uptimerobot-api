@@ -13,7 +13,11 @@
         <testsuite name="unit">
             <directory>tests/Unit</directory>
         </testsuite>
-        <!-- Read-only checks against the live API; skipped unless UPTIMEROBOT_API_KEY is set. -->
+        <!--
+            Checks against the live API; skipped unless UPTIMEROBOT_API_KEY is set. They only
+            read, except MonitorLifecycleTest, which creates a monitor, changes and deletes it
+            again, and runs only with UPTIMEROBOT_ALLOW_WRITES=1 as well.
+        -->
         <testsuite name="integration">
             <directory>tests/Integration</directory>
         </testsuite>
