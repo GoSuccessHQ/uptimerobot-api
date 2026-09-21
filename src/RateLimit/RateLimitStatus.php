@@ -55,13 +55,13 @@ final readonly class RateLimitStatus
      * Interpret an `x-ratelimit-reset` value as a clock time.
      *
      * UptimeRobot documents the header as the Unix time "at which the rate
-     * limiting period will end", but the API sends `60` with every response
-     * (verified live: the value stayed 60 while `x-ratelimit-remaining` counted
-     * down), which can only be seconds until the reset or the length of the
-     * window. Both readings are supported: a value above one billion is a Unix
-     * timestamp, anything else a number of seconds from the moment the response
-     * was received. Should `60` be the window length, waiting that long is the
-     * safe upper bound for a rolling window, whereas reading it as a timestamp
+     * limiting period will end", but the API sends the seconds until the
+     * current window ends (verified live): the window is a fixed 60 seconds
+     * that starts with the first request counted in it, the first response of
+     * a window reports `60`, and later ones count down to the end of the
+     * window, e.g. `47` and `5`. Both readings are supported: a value above
+     * one billion is a Unix timestamp, anything else a number of seconds from
+     * the moment the response was received. Reading the seconds as a timestamp
      * (as UptimeRobot's Terraform provider does) would not wait at all.
      *
      * @internal

@@ -10,15 +10,20 @@ use InvalidArgumentException;
  * In-memory sliding-window rate limiter.
  *
  * Keeps the timestamps of the most recent requests within a rolling window
- * (60 seconds by default, like UptimeRobot's own limit). When the window is
- * full, {@see acquire()} blocks until the oldest request leaves the window,
- * guaranteeing that no more than `$maxRequests` requests are sent per window.
+ * (60 seconds by default). When the window is full, {@see acquire()} blocks
+ * until the oldest request leaves the window, guaranteeing that no more than
+ * `$maxRequests` requests are sent in any 60 seconds. That also keeps within
+ * UptimeRobot's own limit, which counts the requests of fixed 60-second
+ * windows (verified live).
  *
- * UptimeRobot allows 10 requests per minute on the free plan and twice the
- * monitor limit (at most 5000) on paid plans.
+ * UptimeRobot documents 10 requests per minute for the free plan and twice
+ * the monitor limit (at most 5000) for paid plans; the Solo plan with 10
+ * monitors reported 20 (verified live).
  *
- * This limiter is process-local. For multi-process or distributed setups, provide
- * a custom {@see RateLimiter} (e.g. backed by Redis).
+ * This limiter is process-local, while UptimeRobot counts the requests of
+ * all clients of the account together (verified live: requests of another
+ * client reduced the remaining quota). For multi-process or distributed
+ * setups, provide a custom {@see RateLimiter} (e.g. backed by Redis).
  */
 final class SlidingWindowRateLimiter implements RateLimiter
 {
