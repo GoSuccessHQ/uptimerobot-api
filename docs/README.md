@@ -54,6 +54,16 @@ Maintenance windows: one-time or recurring periods that suppress the alerts of t
 - [`update()`](maintenanceWindows/update.md) — Update a maintenance window
 - [`delete()`](maintenanceWindows/delete.md) — Delete a maintenance window
 
+## `incidents`
+
+Incidents: the downtimes and slow responses of the monitors, with their root cause, activity log and the alerts sent. Incident IDs are strings of digits.
+
+- [`list()`](incidents/list.md) — List incidents
+- [`all()`](incidents/all.md) — Iterate lazily over every item of list(), across all pages
+- [`get()`](incidents/get.md) — Get an incident by ID
+- [`activityLog()`](incidents/activityLog.md) — Get incident activity log
+- [`alerts()`](incidents/alerts.md) — Get incident sent alerts
+
 ## `user`
 
 The account the API key belongs to: its plan and its alert contacts.

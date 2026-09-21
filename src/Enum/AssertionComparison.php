@@ -9,7 +9,7 @@ namespace GoSuccess\UptimeRobot\Enum;
 /**
  * Comparison operator
  *
- * Schema: PublicApiAssertionCheckDto.comparison
+ * Schema: PublicApiAssertionCheckDto.comparison, IncidentDetailDto.rootCause.assertionDiagnostics.results[].comparison
  */
 enum AssertionComparison: string
 {

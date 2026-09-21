@@ -6,7 +6,9 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Enum;
 
-/** Schema: RegionalDataDto.REGION[] */
+/**
+ * Schema: RegionalDataDto.REGION[], ActivityLogResponseDto.data[]<STATUS_UPDATE>.region, ActivityLogResponseDto.data[]<COMMENT>.region, ActivityLogResponseDto.data[]<NOTIFICATION>.region
+ */
 enum Region: string
 {
     case NorthAmerica = 'na';

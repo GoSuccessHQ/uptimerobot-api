@@ -13,6 +13,7 @@ use GoSuccess\UptimeRobot\RateLimit\NullRateLimiter;
 use GoSuccess\UptimeRobot\RateLimit\RateLimiter;
 use GoSuccess\UptimeRobot\RateLimit\RateLimitStatus;
 use GoSuccess\UptimeRobot\Resource\BulkMonitorResource;
+use GoSuccess\UptimeRobot\Resource\IncidentResource;
 use GoSuccess\UptimeRobot\Resource\MaintenanceWindowResource;
 use GoSuccess\UptimeRobot\Resource\MonitorGroupResource;
 use GoSuccess\UptimeRobot\Resource\MonitorResource;
@@ -54,6 +55,13 @@ final class UptimeRobot
      */
     public private(set) MaintenanceWindowResource $maintenanceWindows {
         get => $this->maintenanceWindows ??= new MaintenanceWindowResource($this->connection);
+    }
+
+    /**
+     * Incidents: the downtimes and slow responses of the monitors, with their root cause, activity log and the alerts sent. Incident IDs are strings of digits.
+     */
+    public private(set) IncidentResource $incidents {
+        get => $this->incidents ??= new IncidentResource($this->connection);
     }
 
     /** The account the API key belongs to: its plan and its alert contacts. */

@@ -9,7 +9,7 @@ namespace GoSuccess\UptimeRobot\Enum;
 /**
  * Logic for combining assertions
  *
- * Schema: PublicApiAssertionsDto.logic
+ * Schema: PublicApiAssertionsDto.logic, IncidentDetailDto.rootCause.assertionDiagnostics.logic
  */
 enum AssertionLogic: string
 {

@@ -68,6 +68,14 @@ $date = ['type' => 'string', 'format' => 'date-time'];
 // validator messages were observable live; see 'types'.
 $windowDays = 'The days a weekly or monthly window recurs on. Weekly: 1 = Monday to 7 = Sunday according to the official Terraform provider, whose acceptance tests store 7; the specification only gives [2, 4, 5] for Tuesday, Thursday and Friday, which 0 = Sunday would fit as well. Monthly: 1 to 31, or -1 for the last day of the month. The API\'s validator accepts any number (verified live: 0, 8, 32 and -2); according to the provider, the API ignores invalid days.';
 $windowTime = 'The start time as HH:mm:ss, e.g. "14:30:00". The specification names no time zone.';
+// Incidents. The specification documents neither the cause codes nor the
+// values of status and type; the codes below are those of the 14 incidents
+// of the account, each next to its reason (verified live).
+$incidentId = 'The ID, a string of digits: incident IDs exceed the integers a JSON number holds exactly (verified live: "358532761126055015").';
+$incidentCause = 'The cause code, which reason spells out. Verified live: the HTTP status code of an HTTP error (403 "403 Forbidden"), 333333 ("Connection Timeout"), 444444 ("No Response") and 0 for a slow response ("Response time"). The specification documents none of them.';
+$incidentStatus = 'The status of the incident; the specification documents no values (verified live: Resolved).';
+$alertRecipient = 'The address the alert went to: an e-mail address, a phone number or, for the mobile app, the device token (verified live: a device token).';
+$alertChannel = 'The channel of the alert contact, e.g. MobileApp (verified live); the specification documents no values.';
 
 return [
     'title' => 'UptimeRobot API v3',
@@ -138,6 +146,19 @@ return [
         // Maintenance windows; MaintenanceWindowDto is named above.
         'CreateMaintenanceWindowDto' => 'MaintenanceWindowCreate',
         'UpdateMaintenanceWindowDto' => 'MaintenanceWindowUpdate',
+
+        // Incidents: the items of a page carry type, monitor and commentsCount,
+        // a single incident its root cause instead (verified live).
+        'IncidentSummaryPaginationDto.data[]' => 'IncidentSummary',
+        'IncidentSummaryPaginationDto.data[].monitor' => 'IncidentMonitor',
+        'IncidentDetailDto' => 'Incident',
+        'IncidentDetailDto.rootCause' => 'IncidentRootCause',
+        'IncidentDetailDto.rootCause.assertionDiagnostics' => 'AssertionDiagnostics',
+        'IncidentDetailDto.rootCause.assertionDiagnostics.summary' => 'AssertionDiagnosticsSummary',
+        'IncidentDetailDto.rootCause.assertionDiagnostics.results[]' => 'AssertionResult',
+        'IncidentDetailDto.rootCause.assertionDiagnostics.results[].failingSamples[]' => 'AssertionFailingSample',
+        'ActivityLogResponseDto.data[]<STATUS_UPDATE>.remoteNode' => 'RemoteNode',
+        'PublicSentAlertsResponseDto.data[]' => 'SentAlert',
     ],
 
     'properties' => [
@@ -149,6 +170,9 @@ return [
         'UpdateMonitorDto.checkSSLErrors' => 'checkSslErrors',
         'PublicBulkUpdateDto.checkSSLErrors' => 'checkSslErrors',
         'PspDto.customSettings.features.showMonitorURL' => 'showMonitorUrl',
+        'ActivityLogResponseDto.data[]<STATUS_UPDATE>.remoteNode.IP' => 'ip',
+        'ActivityLogResponseDto.data[]<STATUS_UPDATE>.remoteNode.IPv6' => 'ipv6',
+        'ActivityLogResponseDto.data[]<STATUS_UPDATE>.remoteNode.privateIP' => 'privateIp',
     ],
 
     'enums' => [
@@ -200,6 +224,22 @@ return [
         // pages): an enum could read a value the API actually sends as null.
         'PspDto.customSettings.page.theme' => false,
         'PspDto.customSettings.page.density' => false,
+        // The assertion diagnostics of an incident share the logic and the
+        // operators of the assertions an API monitor is created with; the
+        // response names its cases in upper case (x-enumNames), which become the
+        // same names.
+        'IncidentDetailDto.rootCause.assertionDiagnostics.logic' => 'AssertionLogic',
+        'IncidentDetailDto.rootCause.assertionDiagnostics.results[].comparison' => 'AssertionComparison',
+        'IncidentDetailDto.rootCause.assertionDiagnostics.results[].source' => 'AssertionSource',
+        'IncidentDetailDto.rootCause.assertionDiagnostics.results[].actualTypes[]' => 'AssertionValueType',
+        'IncidentDetailDto.rootCause.assertionDiagnostics.results[].targetType' => 'AssertionValueType',
+        'IncidentDetailDto.rootCause.assertionDiagnostics.results[].failureReason' => 'AssertionFailureReason',
+        // The four regions of the monitors (verified live: oc and na).
+        'ActivityLogResponseDto.data[]*.region' => 'Region',
+        // The same two values in both (see 'types'; verified live: SUCCESS and
+        // NOT_DELIVERED).
+        'ActivityLogResponseDto.data[]<NOTIFICATION>.notificationStatus' => 'AlertDeliveryStatus',
+        'PublicSentAlertsResponseDto.data[].status' => 'AlertDeliveryStatus',
     ],
 
     'enumCases' => [
@@ -520,6 +560,101 @@ return [
             'items' => ['type' => 'number'],
             'description' => 'The monitors in the window, presumably replacing the current ones: the official Terraform provider sends the whole list and expects the window to report exactly it (not verified live).',
         ],
+
+        // Incidents, verified live on the 14 incidents of the account (all
+        // resolved: downtimes of HTTP, keyword and ping monitors, and slow
+        // responses). The list filters take ISO 8601 ("started_after must be a
+        // Date instance" otherwise, verified live).
+        'IncidentsController_list.started_after' => $date,
+        'IncidentsController_list.started_before' => $date,
+        'IncidentSummaryPaginationDto.data[].id' => ['type' => 'string', 'description' => $incidentId],
+        // Both erased to {}; no values are documented, so they stay strings.
+        'IncidentSummaryPaginationDto.data[].status' => ['type' => 'string', 'description' => $incidentStatus],
+        'IncidentSummaryPaginationDto.data[].type' => [
+            'type' => 'string',
+            'description' => 'The kind of incident; the specification documents no values (verified live: Downtime and SlowResponse).',
+        ],
+        'IncidentSummaryPaginationDto.data[].cause' => ['type' => 'number', 'description' => $incidentCause],
+        // Erased to {}: ISO 8601 in UTC (verified live: "2026-09-16T08:41:11.469Z").
+        'IncidentSummaryPaginationDto.data[].startedAt' => $date,
+        'IncidentSummaryPaginationDto.data[].resolvedAt' => [
+            ...$date,
+            'description' => 'When the incident ended; null according to the specification, presumably while it lasts (every incident read live was resolved).',
+        ],
+        // 1867 for an incident from 08:41:11.469 to 09:12:18.469 (verified live).
+        'IncidentSummaryPaginationDto.data[].duration' => ['type' => 'number', 'description' => 'Seconds from startedAt to resolvedAt (verified live).'],
+        'IncidentSummaryPaginationDto.data[].includeInReports' => [
+            'type' => 'boolean',
+            'description' => 'Whether the incident counts in the uptime reports (verified live: false for slow responses, true for downtimes).',
+        ],
+        'IncidentDetailDto.id' => ['type' => 'string', 'description' => $incidentId],
+        'IncidentDetailDto.status' => ['type' => 'string', 'description' => $incidentStatus],
+        'IncidentDetailDto.cause' => ['type' => 'number', 'description' => $incidentCause],
+        // zod's Date | string: ISO 8601 in UTC (verified live).
+        'IncidentDetailDto.startedAt' => $date,
+        'IncidentDetailDto.resolvedAt' => [...$date, 'description' => 'When the incident ended; null according to the specification, presumably while it lasts.'],
+        'IncidentDetailDto.duration' => ['type' => 'number', 'description' => 'Seconds from startedAt to resolvedAt (verified live).'],
+        'IncidentDetailDto.rootCause.url' => [
+            'type' => 'string',
+            'description' => 'The HTTP method and the URL of the failed check, e.g. "GET https://example.com/"; empty for a slow response (verified live).',
+        ],
+        // additionalProperties {}: header names with string values (verified
+        // live), or null for a slow response, which reads as empty.
+        'IncidentDetailDto.rootCause.requestHeaders' => [
+            'type' => 'object',
+            'additionalProperties' => ['type' => 'string'],
+            'description' => 'The headers the check sent, by name; empty for a slow response (verified live).',
+        ],
+        // additionalProperties {}: header names with a list of values each
+        // (verified live: {"Content-Type": ["text/html"]}), {} when no response
+        // came, or null for a slow response, which reads as empty.
+        'IncidentDetailDto.rootCause.responseHeaders' => [
+            'type' => 'object',
+            'additionalProperties' => ['type' => 'array', 'items' => ['type' => 'string']],
+            'description' => 'The headers of the response, each name with the list of its values; empty if no response came and for a slow response (verified live).',
+        ],
+        'IncidentDetailDto.rootCause.httpResponseCode' => [
+            'type' => 'number',
+            'description' => 'The HTTP status code of the response; null if no response came or for a slow response (verified live).',
+        ],
+        'IncidentDetailDto.rootCause.responseDownloadUrl' => [
+            'type' => 'string',
+            'description' => 'Where to download the response body; empty or null if there is none (verified live; never set on the incidents read).',
+        ],
+        // The activity log. A union of three entry types (see 'unions');
+        // STATUS_UPDATE and NOTIFICATION were seen live, COMMENT needs the plan
+        // feature incident-comments.
+        'ActivityLogResponseDto.data[]*.date' => $date,
+        'ActivityLogResponseDto.data[]<STATUS_UPDATE>.alertLogType' => [
+            'type' => 'string',
+            'description' => 'What the check found; the specification documents no values (verified live: Down, Slow and Up).',
+        ],
+        'ActivityLogResponseDto.data[]<STATUS_UPDATE>.incidentStatus' => [
+            'type' => 'string',
+            'description' => 'The status of the incident; null if absent, as on every entry read live.',
+        ],
+        'ActivityLogResponseDto.data[]<STATUS_UPDATE>.cause' => [
+            'type' => 'number',
+            'description' => 'The cause code, as of the incident; 0 on the Up entry that ends it ("Monitor is UP", verified live).',
+        ],
+        'ActivityLogResponseDto.data[]<STATUS_UPDATE>.responseTime' => [
+            'type' => 'number',
+            'description' => 'The response time in milliseconds; only on Slow entries (verified live: 3503).',
+        ],
+        'ActivityLogResponseDto.data[]<STATUS_UPDATE>.remoteNode.id' => ['type' => 'number', 'description' => 'The ID of the node; 0 on every node read live.'],
+        'ActivityLogResponseDto.data[]<STATUS_UPDATE>.remoteNode.IPv6' => [
+            'type' => 'string',
+            'description' => 'The IPv6 address of the node; some nodes report a private IPv4 address here, e.g. 10.0.4.16 (verified live).',
+        ],
+        'ActivityLogResponseDto.data[]<NOTIFICATION>.notificationType' => ['type' => 'string', 'description' => $alertChannel],
+        'ActivityLogResponseDto.data[]<NOTIFICATION>.sentToValue' => ['type' => 'string', 'description' => $alertRecipient],
+        // NOT_DELIVERED, SUCCESS here, SUCCESS, NOT_DELIVERED in the sent
+        // alerts; one enum for both.
+        'ActivityLogResponseDto.data[]<NOTIFICATION>.notificationStatus' => ['type' => 'string', 'enum' => ['SUCCESS', 'NOT_DELIVERED']],
+        // A plain string: ISO 8601 in UTC (verified live: "2026-08-25T19:30:31.000Z").
+        'PublicSentAlertsResponseDto.data[].timestamp' => [...$date, 'description' => 'When the alert was sent.'],
+        'PublicSentAlertsResponseDto.data[].channelType' => ['type' => 'string', 'description' => $alertChannel],
+        'PublicSentAlertsResponseDto.data[].recipientValue' => ['type' => 'string', 'description' => $alertRecipient],
     ],
 
     // The specification types every number of the request DTOs, and most of the
@@ -599,6 +734,22 @@ return [
         // Counts of the bulk operations.
         'BulkOperationResponseDto.totalSuccess',
         'BulkOperationResponseDto.totalError',
+        // Incidents: cause codes, seconds, counts and milliseconds (verified live,
+        // e.g. cause 333333, duration 1867, commentsCount 0, httpResponseCode 403,
+        // responseTime 3503).
+        'IncidentSummaryPaginationDto.data[].cause',
+        'IncidentSummaryPaginationDto.data[].commentsCount',
+        'IncidentSummaryPaginationDto.data[].duration',
+        'IncidentDetailDto.cause',
+        'IncidentDetailDto.duration',
+        'IncidentDetailDto.rootCause.httpResponseCode',
+        'ActivityLogResponseDto.data[]<STATUS_UPDATE>.cause',
+        'ActivityLogResponseDto.data[]<STATUS_UPDATE>.responseTime',
+        // Always 1 (minimum and maximum 1).
+        'IncidentDetailDto.rootCause.assertionDiagnostics.version',
+        // A monitor ID, at least 1 (verified live: 0 is rejected with
+        // "monitor_id must be a positive number").
+        'IncidentsController_list.monitor_id',
     ],
 
     'floats' => [
@@ -647,6 +798,12 @@ return [
         // verified live: bulk operations would change the account's monitors).
         'BulkOperationResponseDto.results[].error',
         'BulkOperationResponseDto.results[].code',
+        // Absent from the status updates that lack them (verified live:
+        // remoteNode on "Up" entries, responseTime on all but "Slow" ones,
+        // incidentStatus on every entry read).
+        'ActivityLogResponseDto.data[]<STATUS_UPDATE>.remoteNode',
+        'ActivityLogResponseDto.data[]<STATUS_UPDATE>.responseTime',
+        'ActivityLogResponseDto.data[]<STATUS_UPDATE>.incidentStatus',
     ],
 
     'commaSeparated' => [
@@ -673,6 +830,21 @@ return [
                 'VISUAL_COMPARISON' => 'VisualComparisonMonitorCreate',
             ],
             'description' => 'A monitor to create: one model per monitor type, each with the fields that type requires.',
+        ],
+        // A oneOf without a discriminator keyword, told apart by its
+        // single-value type (verified live: STATUS_UPDATE and NOTIFICATION; COMMENT
+        // needs the plan feature incident-comments). An entry of another type is
+        // read as UnknownActivityLogEntry with its raw payload.
+        'ActivityLogResponseDto.data[]' => [
+            'interface' => 'ActivityLogEntry',
+            'discriminator' => 'type',
+            'variants' => [
+                'STATUS_UPDATE' => 'StatusUpdateActivity',
+                'COMMENT' => 'CommentActivity',
+                'NOTIFICATION' => 'NotificationActivity',
+            ],
+            'fallback' => 'UnknownActivityLogEntry',
+            'description' => 'An entry of the activity log of an incident: a status update of the checks, a comment or a notification.',
         ],
     ],
 
@@ -920,6 +1092,40 @@ return [
                 ],
             ],
         ],
+        'incidents' => [
+            'class' => 'IncidentResource',
+            'description' => 'Incidents: the downtimes and slow responses of the monitors, with their root cause, activity log and the alerts sent. Incident IDs are strings of digits.',
+            'methods' => [
+                'list' => [
+                    'operation' => 'IncidentsController_list',
+                    'pagination' => 'nextLink',
+                    'all' => 'all',
+                    // Verified live: cursor=352577094135060139 returned the
+                    // incidents that started before that one; monitor_name=ns
+                    // matched "fast.ns" and "quick.ns", "MY." "my.gosuccess.io";
+                    // started_after and started_before bound startedAt; all 14
+                    // incidents came on one page without nextLink.
+                    'note' => 'Newest first. The cursor is the ID of the last incident of the previous page; the incidents that started before it follow. monitorName matches part of the name, ignoring case; startedAfter and startedBefore bound startedAt. The page size is not documented: all 14 incidents of the test account came on one page (all verified live).',
+                ],
+                'get' => [
+                    'operation' => 'IncidentsController_get',
+                    'note' => 'Unlike the items of list(), an incident has neither type nor monitor; cause 0 marks a slow response. rootCause, null according to the specification, was present on every incident read, with an empty url and null headers for a slow response; assertionDiagnostics is only expected for API monitors and was always null. An unknown ID raises a NotFoundException (all verified live).',
+                ],
+                'activityLog' => [
+                    'operation' => 'IncidentsController_getActivityLog',
+                    'unwrap' => 'data',
+                    // {"nextLink": null, "data": [...]}; ?cursor=1 and ?limit=2
+                    // returned the same entries (verified live), and the
+                    // specification declares neither.
+                    'note' => 'Newest first: status updates of the checks (remoteNode is null on Up entries, responseTime only set on Slow ones), notifications and, with the plan feature incident-comments, comments. Only the first page is available: the API reports a nextLink, but ignores cursor and limit (verified live). No incident read had more than 6 entries, and nextLink was always null.',
+                ],
+                'alerts' => [
+                    'operation' => 'IncidentsController_getAlerts',
+                    'unwrap' => 'data',
+                    'note' => 'Oldest first, all in one response; empty if no alert was sent (verified live).',
+                ],
+            ],
+        ],
         'user' => [
             'class' => 'UserResource',
             'description' => 'The account the API key belongs to: its plan and its alert contacts.',
@@ -949,12 +1155,8 @@ return [
     ],
 
     'ignored' => [
-        'IncidentsController_list' => 'Pending: implemented resource by resource in the following commits.',
-        'IncidentsController_get' => 'Pending: implemented resource by resource in the following commits.',
         'IncidentsController_listComments' => 'Pending: implemented resource by resource in the following commits.',
         'IncidentsController_createComment' => 'Pending: implemented resource by resource in the following commits.',
-        'IncidentsController_getActivityLog' => 'Pending: implemented resource by resource in the following commits.',
-        'IncidentsController_getAlerts' => 'Pending: implemented resource by resource in the following commits.',
         'IncidentsController_updateComment' => 'Pending: implemented resource by resource in the following commits.',
         'IncidentsController_deleteComment' => 'Pending: implemented resource by resource in the following commits.',
         'PspController_list' => 'Pending: implemented resource by resource in the following commits.',
