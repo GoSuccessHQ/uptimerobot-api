@@ -57,7 +57,8 @@ final class RateLimitException extends ApiException
             return null;
         }
 
-        if (ctype_digit($value)) {
+        // Not ctype_digit(): ext-ctype is optional, and not a requirement of the package.
+        if (preg_match('/^\d+$/D', $value) === 1) {
             // An absurdly long value saturates at PHP_INT_MAX; callers cap it anyway.
             return (int) $value;
         }

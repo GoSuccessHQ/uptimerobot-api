@@ -101,10 +101,14 @@ final readonly class RateLimitStatus
         return max(0.0, $this->resetAt - $now);
     }
 
+    /**
+     * Digits only, at most 18 of them, which always fit an int. Not filter_var():
+     * ext-filter is optional, and not a requirement of the package.
+     */
     private static function count(string $value): ?int
     {
-        $count = filter_var(trim($value), \FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
+        $value = trim($value);
 
-        return \is_int($count) ? $count : null;
+        return preg_match('/^\d{1,18}$/D', $value) === 1 ? (int) $value : null;
     }
 }
