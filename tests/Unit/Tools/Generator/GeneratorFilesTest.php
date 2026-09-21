@@ -71,6 +71,21 @@ final class GeneratorFilesTest extends TestCase
         self::assertDoesNotMatchRegularExpression('/^    \)\: \S+\n    \{$/m', $resource);
     }
 
+    public function testImportsTheDeprecatedAttribute(): void
+    {
+        GeneratorFixture::generateIn($this->root, KitchenSink::spec(), KitchenSink::config());
+
+        // As php-cs-fixer imports global classes: a leading backslash would be
+        // rewritten after every run of the generator.
+        foreach (['src/Resource/WidgetResource.php', 'src/Enum/SettingsWindow.php'] as $path) {
+            $code = (string) file_get_contents("{$this->root}/{$path}");
+
+            self::assertStringContainsString("\nuse Deprecated;\n", $code, $path);
+            self::assertStringContainsString('    #[Deprecated(', $code, $path);
+            self::assertStringNotContainsString('\\Deprecated', $code, $path);
+        }
+    }
+
     public function testDeletesStaleGeneratedFilesButNeverHandWrittenOnes(): void
     {
         $this->write('src/Model/Retired.php', "<?php\n\ndeclare(strict_types=1);\n\n// " . CodeFile::MARKER . " from resources/specs/fixture.json. Do not edit.\n\nnamespace X;\n");

@@ -119,6 +119,16 @@ final class KitchenSink
                         'responses' => ['200' => ['description' => '']],
                     ],
                 ],
+                '/widgets/{id}/ping' => [
+                    // Phased out by the API: callers are warned at runtime.
+                    'post' => [
+                        'operationId' => 'WidgetsController_ping',
+                        'summary' => 'Ping a widget',
+                        'deprecated' => true,
+                        'parameters' => [$id],
+                        'responses' => ['204' => ['description' => '']],
+                    ],
+                ],
                 '/widgets/{id}/restore' => [
                     // Declares no body, but the API insists on application/json.
                     'post' => [
@@ -439,6 +449,7 @@ final class KitchenSink
                         'delete' => ['operation' => 'WidgetsController_delete'],
                         'pause' => ['operation' => 'WidgetsController_pause'],
                         'archive' => ['operation' => 'WidgetsController_archive'],
+                        'ping' => ['operation' => 'WidgetsController_ping'],
                         'restore' => ['operation' => 'WidgetsController_restore', 'body' => 'empty'],
                         'addNote' => ['operation' => 'WidgetsController_addNote', 'flatten' => true],
                         'setLabels' => ['operation' => 'WidgetsController_setLabels'],

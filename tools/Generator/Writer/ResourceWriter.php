@@ -75,7 +75,7 @@ final class ResourceWriter
         $tags = $returns['doc'] !== null ? ["@return {$returns['doc']}"] : [];
 
         return $this->docBlock($method, $method->parameters, $file, $tags)
-            . $this->deprecation($method)
+            . $this->deprecation($method, $file)
             . $this->header($method->config->name, $this->signature($method->parameters, $file), $returns['native']) . "{$code}    }\n";
     }
 
@@ -95,7 +95,7 @@ final class ResourceWriter
         $object = "self::expectObject({$this->call($method, $file)})";
 
         $list = $this->docBlock($method, $method->parameters, $file, ["@return {$page}<{$itemDoc}>"])
-            . $this->deprecation($method)
+            . $this->deprecation($method, $file)
             . $this->header($method->config->name, $this->signature($method->parameters, $file), $page)
             . $this->bodyStatements($method, $file)
             . "        \$data = {$object};\n\n        return {$factory}(\$data, {$items}, integerCursor: " . ($integerCursor ? 'true' : 'false') . ");\n    }\n";
@@ -140,7 +140,7 @@ final class ResourceWriter
         $doc = $this->docBlock($method, $allParameters, $file, ["@return {$paginator}<{$itemDoc}>"], $summary);
 
         $all = $doc
-            . $this->deprecation($method)
+            . $this->deprecation($method, $file)
             . $this->header($method->config->all, $this->signature($allParameters, $file), $paginator)
             . "        return new {$paginator}(fn(int|string|null \$cursor): {$page} => \$this->{$method->config->name}(\n"
             . implode('', array_map(static fn(string $argument): string => "            {$argument},\n", $arguments))
@@ -414,13 +414,18 @@ final class ResourceWriter
         return $parameter->nullable && $doc !== 'mixed' ? "{$doc}|null" : $doc;
     }
 
-    private function deprecation(MethodDefinition $method): string
+    /**
+     * PHP reports every call of a deprecated operation at runtime. The
+     * attribute is imported, as php-cs-fixer would otherwise rewrite the file
+     * after every run of the generator.
+     */
+    private function deprecation(MethodDefinition $method, CodeFile $file): string
     {
         if (!$method->operation->isDeprecated()) {
             return '';
         }
 
-        return "    #[\\Deprecated('This endpoint is deprecated by UptimeRobot.')]\n";
+        return '    #[' . $file->alias('Deprecated') . "('This endpoint is deprecated by UptimeRobot.')]\n";
     }
 
     private function escape(string $value): string

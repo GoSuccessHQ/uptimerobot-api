@@ -20,6 +20,7 @@ use GoSuccess\UptimeRobot\Tools\Generator\PhpType;
 use LogicException;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -44,7 +45,11 @@ final class GeneratedResourcesTest extends TestCase
         }
     }
 
+    /**
+     * Deprecated operations report every call, which the test expects.
+     */
     #[DataProvider('methods')]
+    #[IgnoreDeprecations('^Method .+ is deprecated, This endpoint is deprecated by UptimeRobot\.$')]
     public function testSendsTheSpecifiedRequestAndMapsTheResponse(string $code, string $property, string $name): void
     {
         $analysis = GeneratedCode::analysis($code);
@@ -54,6 +59,12 @@ final class GeneratedResourcesTest extends TestCase
         [$arguments, $expectedPath, $expectedQuery, $expectedBody] = $this->arguments($method, $samples);
         $http = new MockHttpClient(new Response($method->returns === null ? 204 : 200, $this->responseBody($method, $samples)));
         $resource = GeneratedCode::client($analysis, $http)->{$property};
+        self::assertIsObject($resource);
+
+        if ($method->operation->isDeprecated()) {
+            // Reported by PHP on every call; the request is still sent.
+            $this->expectUserDeprecationMessage('Method ' . $resource::class . "::{$name}() is deprecated, This endpoint is deprecated by UptimeRobot.");
+        }
 
         $result = $resource->{$name}(...$arguments);
 

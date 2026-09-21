@@ -21,6 +21,7 @@ use GoSuccess\UptimeRobot\Tools\Generator\Writer\ModelWriter;
 use GoSuccess\UptimeRobot\Tools\Generator\Writer\ResourceWriter;
 use GoSuccess\UptimeRobot\Tools\Generator\Writer\UnionWriter;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionEnumBackedCase;
@@ -285,6 +286,28 @@ final class GeneratedFeaturesTest extends TestCase
         self::assertSame('{"env":"prod"}', $http->requests[0]->body);
         self::assertSame('{}', $http->requests[1]->body);
         self::assertNull($http->requests[2]->body);
+    }
+
+    #[IgnoreDeprecations('^Method .+::ping\(\) is deprecated, This endpoint is deprecated by UptimeRobot\.$')]
+    public function testWarnsAboutDeprecatedOperationsOnEveryCall(): void
+    {
+        $resource = KitchenSink::class('Resource\\WidgetResource');
+        $ping = new ReflectionMethod($resource, 'ping');
+        $attribute = $ping->getAttributes(Deprecated::class)[0] ?? null;
+
+        self::assertTrue($ping->isDeprecated());
+        self::assertNotNull($attribute);
+        self::assertSame(['This endpoint is deprecated by UptimeRobot.'], $attribute->getArguments());
+        self::assertStringContainsString('@deprecated', (string) $ping->getDocComment());
+        self::assertFalse(new ReflectionMethod($resource, 'archive')->isDeprecated());
+
+        $http = new MockHttpClient(new Response(204));
+        $this->expectUserDeprecationMessage("Method {$resource}::ping() is deprecated, This endpoint is deprecated by UptimeRobot.");
+
+        self::call(self::resource('widgets', $http), 'ping', 7);
+
+        // The request is sent all the same.
+        self::assertSame('https://api.example.com/v3/widgets/7/ping', $http->requests[0]->uri);
     }
 
     public function testEscapesParameterDescriptionsInDocblocks(): void
