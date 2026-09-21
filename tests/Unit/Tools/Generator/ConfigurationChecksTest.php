@@ -297,6 +297,24 @@ final class ConfigurationChecksTest extends TestCase
         $this->analyze([], ['resources' => ['logos' => ['class' => 'LogoResource', 'description' => 'Logos.', 'methods' => ['upload' => ['operation' => 'LogosController_upload']]]]], $paths);
     }
 
+    public function testSendsAnEmptyBodyOnlyWhereTheSpecificationDeclaresNone(): void
+    {
+        $paths = ['/things/{id}/pin' => ['post' => [
+            'operationId' => 'ThingsController_pin',
+            'parameters' => [['name' => 'id', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'number']]],
+            'requestBody' => ['required' => true, 'content' => ['application/json' => ['schema' => self::object(['note' => ['type' => 'string']])]]],
+            'responses' => ['200' => ['description' => '']],
+        ]]];
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage("ThingsController_pin (pin): 'body' => 'empty' is for operations without a request body, but this one declares one.");
+
+        $this->analyze([], [
+            'integers' => ['ThingsController_pin.id'],
+            'resources' => ['things' => ['class' => 'ThingResource', 'description' => 'Things.', 'methods' => ['pin' => ['operation' => 'ThingsController_pin', 'body' => 'empty']]]],
+        ], $paths);
+    }
+
     public function testChecksThatEveryOperationIsCoveredExactlyOnce(): void
     {
         $paths = [

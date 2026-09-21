@@ -193,6 +193,21 @@ final class GeneratedFeaturesTest extends TestCase
         self::assertArrayNotHasKey('Content-Type', $http->requests[1]->headers);
     }
 
+    public function testSendsAnEmptyObjectWhereTheConfigurationAsksForOne(): void
+    {
+        $http = new MockHttpClient(new Response(200));
+        $restore = new ReflectionMethod(KitchenSink::class('Resource\\WidgetResource'), 'restore');
+
+        self::call(self::resource('widgets', $http), 'restore', 7);
+
+        // Only the ID: the empty body is not a parameter.
+        self::assertSame(['id'], array_map(static fn($parameter): string => $parameter->getName(), $restore->getParameters()));
+        self::assertSame('POST', $http->requests[0]->method->value);
+        self::assertSame('https://api.example.com/v3/widgets/7/restore', $http->requests[0]->uri);
+        self::assertSame('{}', $http->requests[0]->body);
+        self::assertSame('application/json', $http->requests[0]->headers['Content-Type'] ?? null);
+    }
+
     public function testSendsEmptyNestedModelsAsObjects(): void
     {
         $update = KitchenSink::class('Model\\WidgetUpdate');

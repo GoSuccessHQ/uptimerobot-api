@@ -189,6 +189,18 @@ final class ResourceBuilder
             return [[], []];
         }
 
+        // The API insists on an application/json body where the specification
+        // declares none: an empty object is sent.
+        if ($config->body === 'empty') {
+            if ($operation->requestContentTypes() !== []) {
+                throw new RuntimeException("{$context}: 'body' => 'empty' is for operations without a request body, but this one declares one.");
+            }
+
+            $method->emptyBody = true;
+
+            return [[], []];
+        }
+
         // With several content types, e.g. JSON or multipart/form-data for a
         // file upload, the JSON variant is used.
         $schema = $config->body !== null ? $this->componentRef($config->body) : $operation->requestSchema();

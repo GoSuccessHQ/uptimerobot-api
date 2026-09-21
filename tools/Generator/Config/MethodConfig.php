@@ -23,7 +23,9 @@ final readonly class MethodConfig
      * @param string|null           $unwrap      Property of an envelope that holds the payload,
      *                                           e.g. "data" of `{"data": [...]}`.
      * @param bool                  $nullable    Whether a successful response may have no body.
-     * @param string|null           $body        Request body schema override, or "none".
+     * @param string|null           $body        Request body schema override, "none", or
+     *                                           "empty" to send `{}` as application/json
+     *                                           where the specification declares no body.
      * @param bool                  $flatten     Expose the properties of the request body as
      *                                           method parameters instead of a model.
      * @param array<string, string> $parameters  Spec parameter name => PHP parameter name;

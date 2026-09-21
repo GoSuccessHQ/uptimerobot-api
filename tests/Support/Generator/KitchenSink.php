@@ -119,6 +119,14 @@ final class KitchenSink
                         'responses' => ['200' => ['description' => '']],
                     ],
                 ],
+                '/widgets/{id}/restore' => [
+                    // Declares no body, but the API insists on application/json.
+                    'post' => [
+                        'operationId' => 'WidgetsController_restore',
+                        'parameters' => [$id],
+                        'responses' => ['200' => ['description' => '']],
+                    ],
+                ],
                 '/widgets/{id}/notes' => [
                     'post' => [
                         'operationId' => 'WidgetsController_addNote',
@@ -426,6 +434,7 @@ final class KitchenSink
                         'delete' => ['operation' => 'WidgetsController_delete'],
                         'pause' => ['operation' => 'WidgetsController_pause'],
                         'archive' => ['operation' => 'WidgetsController_archive'],
+                        'restore' => ['operation' => 'WidgetsController_restore', 'body' => 'empty'],
                         'addNote' => ['operation' => 'WidgetsController_addNote', 'flatten' => true],
                         'setLabels' => ['operation' => 'WidgetsController_setLabels'],
                         'alerts' => ['operation' => 'WidgetsController_alerts', 'unwrap' => 'data'],
