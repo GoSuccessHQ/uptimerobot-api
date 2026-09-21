@@ -64,6 +64,16 @@ Incidents: the downtimes and slow responses of the monitors, with their root cau
 - [`activityLog()`](incidents/activityLog.md) — Get incident activity log
 - [`alerts()`](incidents/alerts.md) — Get incident sent alerts
 
+## `incidentComments`
+
+Comments on incidents, optionally published on the status page. Requires the plan feature incident-comments.
+
+- [`list()`](incidentComments/list.md) — List incident comments
+- [`all()`](incidentComments/all.md) — Iterate lazily over every item of list(), across all pages
+- [`create()`](incidentComments/create.md) — Create incident comment
+- [`update()`](incidentComments/update.md) — Update an incident comment
+- [`delete()`](incidentComments/delete.md) — Delete incident comment
+
 ## `user`
 
 The account the API key belongs to: its plan and its alert contacts.

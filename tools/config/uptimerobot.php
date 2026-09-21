@@ -76,6 +76,12 @@ $incidentCause = 'The cause code, which reason spells out. Verified live: the HT
 $incidentStatus = 'The status of the incident; the specification documents no values (verified live: Resolved).';
 $alertRecipient = 'The address the alert went to: an e-mail address, a phone number or, for the mobile app, the device token (verified live: a device token).';
 $alertChannel = 'The channel of the alert contact, e.g. MobileApp (verified live); the specification documents no values.';
+// Incident comments need the plan feature incident-comments, which the
+// account lacks: every comment endpoint answers 403 "Feature incident-comments
+// is not enabled in your plan." (000-003), even for an unknown incident and a
+// body the validator would reject (verified live). Everything else about them
+// comes from the specification.
+$commentPlan = 'Requires the plan feature incident-comments; without it, the API raises a ForbiddenException with the code 000-003 before it looks at the incident or the request (verified live). Not verified live beyond that: the test account lacks the feature.';
 
 return [
     'title' => 'UptimeRobot API v3',
@@ -159,6 +165,12 @@ return [
         'IncidentDetailDto.rootCause.assertionDiagnostics.results[].failingSamples[]' => 'AssertionFailingSample',
         'ActivityLogResponseDto.data[]<STATUS_UPDATE>.remoteNode' => 'RemoteNode',
         'PublicSentAlertsResponseDto.data[]' => 'SentAlert',
+
+        // Incident comments; the create and update requests are identical.
+        'IncidentCommentDto' => 'IncidentComment',
+        'IncidentCommentDto.user' => 'IncidentCommentUser',
+        'CreateIncidentCommentRequestDto' => 'IncidentCommentCreate',
+        'UpdateIncidentCommentRequestDto' => 'IncidentCommentUpdate',
     ],
 
     'properties' => [
@@ -655,6 +667,29 @@ return [
         'PublicSentAlertsResponseDto.data[].timestamp' => [...$date, 'description' => 'When the alert was sent.'],
         'PublicSentAlertsResponseDto.data[].channelType' => ['type' => 'string', 'description' => $alertChannel],
         'PublicSentAlertsResponseDto.data[].recipientValue' => ['type' => 'string', 'description' => $alertRecipient],
+
+        // Incident comments, from the specification (see $commentPlan). The items
+        // of a page are an inline copy of IncidentCommentDto.
+        'PublicIncidentCommentsPaginationDto.data[]' => ['$ref' => '#/components/schemas/IncidentCommentDto'],
+        // A string of digits in the specification ("Cursor to paginate through
+        // comments (comment ID)"), but comment IDs are numbers everywhere else:
+        // IncidentCommentDto.id, the commentId of the update and delete paths and
+        // of the activity log. An int lets a comment's ID be passed as is.
+        'IncidentsController_listComments.cursor' => ['type' => 'integer'],
+        // zod's Date | string, as the other dates, which are ISO 8601 in UTC.
+        'IncidentCommentDto.created' => [...$date, 'description' => 'When the comment was written.'],
+        // "content" in the requests, "comment" in the responses.
+        'IncidentCommentDto.comment' => ['type' => 'string', 'description' => 'The text of the comment, which create() and update() send as content.'],
+        'CreateIncidentCommentRequestDto.content' => ['type' => 'string', 'description' => 'The text of the comment, at most 10000 characters; responses name it comment.'],
+        'CreateIncidentCommentRequestDto.publishOnStatusPage' => ['type' => 'boolean', 'description' => 'Whether the comment is published on the status page; false by default.'],
+        'UpdateIncidentCommentRequestDto.content' => [
+            'type' => 'string',
+            'description' => 'The new text of the comment, at most 10000 characters. Required: an update always replaces the text.',
+        ],
+        'UpdateIncidentCommentRequestDto.publishOnStatusPage' => [
+            'type' => 'boolean',
+            'description' => 'Whether the comment is published on the status page. The specification gives false as its default, so leaving it out may unpublish the comment.',
+        ],
     ],
 
     // The specification types every number of the request DTOs, and most of the
@@ -750,6 +785,8 @@ return [
         // A monitor ID, at least 1 (verified live: 0 is rejected with
         // "monitor_id must be a positive number").
         'IncidentsController_list.monitor_id',
+        // The number of comments per page, 1 to 100.
+        'IncidentsController_listComments.limit',
     ],
 
     'floats' => [
@@ -950,6 +987,18 @@ return [
             'next' => 'nextLink',
             'factory' => 'Pagination\\Cursor::fromNextLink',
         ],
+        // GET /incidents/{id}/comments: like nextLink, but all() requests pages
+        // of 100 comments, the maximum of the specification ("1-100, default
+        // 50"), which saves requests against the rate limit. Not verified live
+        // (see $commentPlan).
+        'commentPages' => [
+            'cursor' => 'cursor',
+            'size' => 'limit',
+            'allSize' => 100,
+            'items' => 'data',
+            'next' => 'nextLink',
+            'factory' => 'Pagination\\Cursor::fromNextLink',
+        ],
         // {"data": [...], "nextCursorId": 42}; only GET /tags (verified live:
         // {"data":[],"nextCursorId":null}).
         'nextCursorId' => [
@@ -1126,6 +1175,44 @@ return [
                 ],
             ],
         ],
+        'incidentComments' => [
+            'class' => 'IncidentCommentResource',
+            'description' => 'Comments on incidents, optionally published on the status page. Requires the plan feature incident-comments.',
+            // The incident comes first; the comment itself is $id, as in the
+            // other resources.
+            'parameters' => ['id' => 'incidentId'],
+            'methods' => [
+                'list' => [
+                    'operation' => 'IncidentsController_listComments',
+                    'pagination' => 'commentPages',
+                    'all' => 'all',
+                    'note' => 'Oldest first, according to the specification. The cursor is the ID of the last comment of the previous page. all() requests pages of 100 comments, the most the specification allows. ' . $commentPlan,
+                ],
+                'create' => [
+                    'operation' => 'IncidentsController_createComment',
+                    'parameters' => ['@body' => 'comment'],
+                    // "201: Comment created successfully" without a schema,
+                    // while update returns IncidentCommentDto. UptimeRobot's
+                    // incident-response skill for its MCP server
+                    // (github.com/uptimerobot/ai, skills/incident-response)
+                    // takes "the numeric commentId from the create response", so
+                    // a body is read if the API sends one.
+                    'response' => 'IncidentCommentDto',
+                    'nullable' => true,
+                    'note' => 'The specification documents no response body. This returns the comment if the API sends one, as UptimeRobot\'s incident-response guide for its MCP server takes the commentId "from the create response", and null for an empty response. ' . $commentPlan,
+                ],
+                'update' => [
+                    'operation' => 'IncidentsController_updateComment',
+                    'parameters' => ['commentId' => 'id', '@body' => 'changes'],
+                    'note' => 'content is required, so the text is always replaced. ' . $commentPlan,
+                ],
+                'delete' => [
+                    'operation' => 'IncidentsController_deleteComment',
+                    'parameters' => ['commentId' => 'id'],
+                    'note' => $commentPlan,
+                ],
+            ],
+        ],
         'user' => [
             'class' => 'UserResource',
             'description' => 'The account the API key belongs to: its plan and its alert contacts.',
@@ -1155,10 +1242,6 @@ return [
     ],
 
     'ignored' => [
-        'IncidentsController_listComments' => 'Pending: implemented resource by resource in the following commits.',
-        'IncidentsController_createComment' => 'Pending: implemented resource by resource in the following commits.',
-        'IncidentsController_updateComment' => 'Pending: implemented resource by resource in the following commits.',
-        'IncidentsController_deleteComment' => 'Pending: implemented resource by resource in the following commits.',
         'PspController_list' => 'Pending: implemented resource by resource in the following commits.',
         'PspController_create' => 'Pending: implemented resource by resource in the following commits.',
         'PspController_get' => 'Pending: implemented resource by resource in the following commits.',

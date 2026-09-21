@@ -13,6 +13,7 @@ use GoSuccess\UptimeRobot\RateLimit\NullRateLimiter;
 use GoSuccess\UptimeRobot\RateLimit\RateLimiter;
 use GoSuccess\UptimeRobot\RateLimit\RateLimitStatus;
 use GoSuccess\UptimeRobot\Resource\BulkMonitorResource;
+use GoSuccess\UptimeRobot\Resource\IncidentCommentResource;
 use GoSuccess\UptimeRobot\Resource\IncidentResource;
 use GoSuccess\UptimeRobot\Resource\MaintenanceWindowResource;
 use GoSuccess\UptimeRobot\Resource\MonitorGroupResource;
@@ -62,6 +63,13 @@ final class UptimeRobot
      */
     public private(set) IncidentResource $incidents {
         get => $this->incidents ??= new IncidentResource($this->connection);
+    }
+
+    /**
+     * Comments on incidents, optionally published on the status page. Requires the plan feature incident-comments.
+     */
+    public private(set) IncidentCommentResource $incidentComments {
+        get => $this->incidentComments ??= new IncidentCommentResource($this->connection);
     }
 
     /** The account the API key belongs to: its plan and its alert contacts. */
