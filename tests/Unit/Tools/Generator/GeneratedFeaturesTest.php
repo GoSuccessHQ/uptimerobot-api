@@ -120,6 +120,20 @@ final class GeneratedFeaturesTest extends TestCase
         self::assertSame('{"type":"HTTP","friendlyName":"Shop","url":"https://example.com"}', $http->requests[0]->body);
     }
 
+    public function testLetsCallersLeaveOutRequiredPropertiesTheApiDoesNotNeed(): void
+    {
+        $class = KitchenSink::class('Model\\PingWidgetCreate');
+        $parameters = [];
+
+        foreach (new ReflectionClass($class)->getConstructor()?->getParameters() ?? [] as $parameter) {
+            $parameters[$parameter->getName()] = $parameter->isOptional();
+        }
+
+        self::assertSame(['friendlyName' => false, 'host' => true, 'region' => true], $parameters);
+        self::assertSame(['type' => 'PING', 'friendlyName' => 'Probe'], self::toArray(new $class(friendlyName: 'Probe')));
+        self::assertSame(['type' => 'PING', 'friendlyName' => 'Probe', 'region' => 'eu'], self::toArray(new $class(friendlyName: 'Probe', region: 'eu')));
+    }
+
     public function testFlattensEnvelopedVariants(): void
     {
         $slack = KitchenSink::class('Model\\SlackHookCreate');
@@ -425,6 +439,16 @@ final class GeneratedFeaturesTest extends TestCase
         }
 
         return $cases;
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    private static function toArray(object $model): array
+    {
+        self::assertInstanceOf(RequestModel::class, $model);
+
+        return $model->toArray();
     }
 
     private static function property(object $object, string $name): mixed

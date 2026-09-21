@@ -63,6 +63,9 @@ final class Registry
     private readonly PathPatterns $nullable;
 
     /** @var PathPatterns<bool> */
+    private readonly PathPatterns $optional;
+
+    /** @var PathPatterns<bool> */
     private readonly PathPatterns $commaSeparated;
 
     /** @var PathPatterns<string> */
@@ -92,6 +95,7 @@ final class Registry
         $this->mixed = PathPatterns::of('mixed', $config->mixed);
         $this->excluded = PathPatterns::of('excludedProperties', $config->excludedProperties);
         $this->nullable = PathPatterns::of('nullableProperties', $config->nullableProperties);
+        $this->optional = PathPatterns::of('optionalProperties', $config->optionalProperties);
         $this->commaSeparated = PathPatterns::of('commaSeparated', $config->commaSeparated);
         $this->parameterDescriptions = new PathPatterns('parameterDescriptions', $config->parameterDescriptions);
     }
@@ -179,6 +183,26 @@ final class Registry
     }
 
     /**
+     * Whether a property must be sent: the specification requires it, and
+     * the configuration does not make it optional.
+     *
+     * @param string $path     Location of the property, e.g. "CreateMaintenanceWindowDto.date".
+     * @param bool   $required Whether the specification requires it.
+     */
+    public function isRequired(string $path, bool $required): bool
+    {
+        if (!$this->optional->matches($path)) {
+            return $required;
+        }
+
+        if (!$required) {
+            throw new RuntimeException("optionalProperties: the specification does not require {$path}; remove the entry.");
+        }
+
+        return false;
+    }
+
+    /**
      * The description configured for a method parameter, e.g.
      * "MonitorsController_list.status", or null to keep the specification's.
      */
@@ -207,7 +231,7 @@ final class Registry
             }
         }
 
-        foreach ([$this->enumNames, $this->types, $this->integers, $this->floats, $this->mixed, $this->excluded, $this->nullable, $this->commaSeparated, $this->parameterDescriptions] as $patterns) {
+        foreach ([$this->enumNames, $this->types, $this->integers, $this->floats, $this->mixed, $this->excluded, $this->nullable, $this->optional, $this->commaSeparated, $this->parameterDescriptions] as $patterns) {
             if ($patterns->unused() !== []) {
                 $problems[] = "'{$patterns->key()}' entries that match nothing the configured operations use:\n    " . implode("\n    ", $patterns->unused());
             }
@@ -436,7 +460,7 @@ final class Registry
                 phpName: $phpName,
                 type: $type,
                 nullable: $replaced->isNullable() || $resolved->isNullable() || $this->nullable->matches($path),
-                required: \in_array($json, $required, true),
+                required: $this->isRequired($path, \in_array($json, $required, true)),
                 readOnly: $replaced->isReadOnly() || $resolved->isReadOnly(),
                 deprecated: $replaced->isDeprecated(),
                 description: $description,

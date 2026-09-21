@@ -47,6 +47,9 @@ declare(strict_types=1);
  * - excludedProperties: 'CreatePsPDto.logo'  (left out of the model, e.g. a file upload)
  * - nullableProperties: 'MonitorDto.url'  (read as nullable against the specification: sent as
  *                       null, or left out where 0 or an empty object would misstate it)
+ * - optionalProperties: 'CreateMaintenanceWindowDto.date'  (required by the specification, but not
+ *                       by the API: an optional constructor parameter; fails once the specification
+ *                       makes it optional itself)
  * - commaSeparated:     'MonitorsController_list.status'  (list<T> joined with ",")
  * - parameterDescriptions: 'MonitorsController_list.status' => 'The statuses to filter by ...'
  *                       (the docblock text of a method parameter, by its name in the specification,

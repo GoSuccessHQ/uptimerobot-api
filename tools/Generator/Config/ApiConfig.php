@@ -51,6 +51,8 @@ final readonly class ApiConfig
      * @param list<string>                             $excludedProperties    Properties left out of the models, e.g. file uploads.
      * @param list<string>                             $nullableProperties    Properties the API sends as null although the
      *                                                                        specification says it never does.
+     * @param list<string>                             $optionalProperties    Request properties the specification requires,
+     *                                                                        but the API does not; callers may leave them out.
      * @param list<string>                             $commaSeparated        Query parameters whose lists are sent as one
      *                                                                        comma-separated value.
      * @param array<string, string>                    $parameterDescriptions "OperationId.parameter" => the description of a
@@ -93,6 +95,7 @@ final readonly class ApiConfig
         public array $mixed,
         public array $excludedProperties,
         public array $nullableProperties,
+        public array $optionalProperties,
         public array $commaSeparated,
         public array $parameterDescriptions,
         public array $unions,
@@ -180,6 +183,7 @@ final readonly class ApiConfig
             mixed: $reader->stringList('mixed'),
             excludedProperties: $reader->stringList('excludedProperties'),
             nullableProperties: $reader->stringList('nullableProperties'),
+            optionalProperties: $reader->stringList('optionalProperties'),
             commaSeparated: $reader->stringList('commaSeparated'),
             parameterDescriptions: $reader->stringMapAt('parameterDescriptions'),
             unions: $unions,

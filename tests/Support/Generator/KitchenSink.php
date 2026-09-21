@@ -252,8 +252,10 @@ final class KitchenSink
                         'type' => ['type' => 'string', 'enum' => ['PING']],
                         'friendlyName' => ['type' => 'string'],
                         'host' => ['type' => 'string'],
+                        // Required here, but not by the API (see 'optionalProperties').
+                        'region' => ['type' => 'string'],
                     ],
-                    'required' => ['type', 'friendlyName'],
+                    'required' => ['type', 'friendlyName', 'region'],
                 ],
                 'UpdateWidgetDto' => [
                     'type' => 'object',
@@ -410,6 +412,7 @@ final class KitchenSink
                 'properties' => ['WidgetDto.apiKey' => ['type' => 'string', 'description' => 'Sent, but not documented.']],
             ],
             'excludedProperties' => ['CreatePageDto.logo'],
+            'optionalProperties' => ['CreatePingWidgetDto.region'],
             'extraRequestModels' => ['BulkWidgetUpdateDto'],
             'commaSeparated' => ['WidgetsController_list.status'],
             // The specification describes the query string, the method takes a list.

@@ -198,6 +198,33 @@ final class ConfigurationChecksTest extends TestCase
         self::assertTrue($model->properties[3]->readOnly);
     }
 
+    public function testMakesRequiredPropertiesOptionalWhereTheApiDoesNotNeedThem(): void
+    {
+        $schemas = ['ThingDto' => ['required' => ['name', 'date'], ...self::object(['name' => ['type' => 'string'], 'date' => ['type' => 'string'], 'note' => ['type' => 'string']])]];
+
+        $analysis = $this->analyze($schemas, ['optionalProperties' => ['ThingDto.date']]);
+        $required = array_map(static fn($property): bool => $property->required, array_values($analysis->registry->models)[0]->properties);
+        self::assertSame([true, false, false], $required);
+
+        // Flattened request bodies, too.
+        $paths = ['/things' => ['post' => [
+            'operationId' => 'ThingsController_create',
+            'requestBody' => ['required' => true, 'content' => ['application/json' => ['schema' => self::ref('ThingDto')]]],
+            'responses' => ['204' => ['description' => '']],
+        ]]];
+        $analysis = $this->analyze($schemas, [
+            'optionalProperties' => ['ThingDto.date'],
+            'resources' => ['things' => ['class' => 'ThingResource', 'description' => 'Things.', 'methods' => ['create' => ['operation' => 'ThingsController_create', 'flatten' => true]]]],
+        ], $paths);
+        $parameters = array_map(static fn($parameter): string => $parameter->specName . ($parameter->isRequired() ? '' : '?'), $analysis->resources[0]->methods[0]->parameters);
+        self::assertSame(['name', 'date?', 'note?'], $parameters);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('optionalProperties: the specification does not require ThingDto.note; remove the entry.');
+
+        $this->analyze($schemas, ['optionalProperties' => ['ThingDto.note']]);
+    }
+
     public function testLeavesOutDescriptionsThatOnlyNameAType(): void
     {
         // zod writes the name of a registered schema into its description.
@@ -240,6 +267,7 @@ final class ConfigurationChecksTest extends TestCase
                 'mixed' => ['ThingDto.meta'],
                 'excludedProperties' => ['ThingDto.logo'],
                 'nullableProperties' => ['ThingDto.url'],
+                'optionalProperties' => ['ThingDto.date'],
                 'commaSeparated' => ['ThingsController_get.status'],
                 'parameterDescriptions' => ['ThingsController_get.id' => 'The thing.'],
                 'schemas' => ['ThingDto.owner' => 'Owner'],
@@ -253,6 +281,7 @@ final class ConfigurationChecksTest extends TestCase
             "'mixed' entries that match nothing the configured operations use:\n    ThingDto.meta",
             "'excludedProperties' entries that match nothing the configured operations use:\n    ThingDto.logo",
             "'nullableProperties' entries that match nothing the configured operations use:\n    ThingDto.url",
+            "'optionalProperties' entries that match nothing the configured operations use:\n    ThingDto.date",
             "'commaSeparated' entries that match nothing the configured operations use:\n    ThingsController_get.status",
             "'parameterDescriptions' entries that match nothing the configured operations use:\n    ThingsController_get.id",
             "Configured names that the configured operations do not use:\n    schemas: ThingDto.owner\n    properties: ThingDto.IP\n    enumCases: Region",

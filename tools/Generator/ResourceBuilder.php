@@ -287,7 +287,7 @@ final class ResourceBuilder
 
             // Marked required in the configuration: a value is expected, not null.
             $forced = \in_array($json, $config->required, true);
-            $isRequired = $forced || \in_array($json, $requiredNames, true);
+            $isRequired = $forced || $this->registry->isRequired("{$source}.{$json}", \in_array($json, $requiredNames, true));
             $propertyNullable = !$forced && ($property->isNullable() || $property->resolve()->isNullable());
 
             $definition = new ParameterDefinition(
