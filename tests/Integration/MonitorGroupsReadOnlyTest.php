@@ -66,12 +66,17 @@ final class MonitorGroupsReadOnlyTest extends IntegrationTestCase
     public function testEveryGroupOfAMonitorIsListed(): void
     {
         $ids = array_map(static fn(MonitorGroup $group): int => $group->id, self::monitorGroups());
+        $unlisted = [];
 
         foreach (self::client()->monitors->all() as $monitor) {
-            if (($monitor->groupId ?? 0) !== 0) {
-                self::assertContains($monitor->groupId, $ids, "The group of monitor {$monitor->id} is not listed.");
+            $groupId = $monitor->groupId ?? 0;
+
+            if ($groupId !== 0 && !\in_array($groupId, $ids, true)) {
+                $unlisted[] = "group {$groupId} of monitor {$monitor->id}";
             }
         }
+
+        self::assertSame([], $unlisted);
     }
 
     private static function client(): UptimeRobot
