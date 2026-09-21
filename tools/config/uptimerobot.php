@@ -104,6 +104,8 @@ return [
         'MonitorResponseTimeStatsDto.summary' => 'ResponseTimeSummary',
         'MonitorResponseTimeStatsDto.time_series[]' => 'ResponseTimeDataPoint',
         'MonitorResponseTimeStatsByRegionDto' => 'RegionalResponseTimeStats',
+        'BulkOperationResponseDto' => 'BulkOperationResult',
+        'BulkOperationResponseDto.results[]' => 'BulkOperationItem',
         // The status pages and maintenance windows of a monitor (see 'types').
         'PspDto' => 'StatusPage',
         'MaintenanceWindowDto' => 'MaintenanceWindow',
@@ -122,6 +124,8 @@ return [
         // Used by HTTP and keyword monitors.
         'HttpKeywordMonitorConfigDto' => 'HttpMonitorConfig',
         'VisualComparisonFieldsDto' => 'VisualComparisonSettings',
+        // Without its selection, which BulkMonitorResource::update() takes.
+        'PublicBulkUpdateDto' => 'BulkMonitorUpdate',
     ],
 
     'properties' => [
@@ -131,6 +135,7 @@ return [
         'CreateKeywordMonitorDto.checkSSLErrors' => 'checkSslErrors',
         'CreateApiMonitorDto.checkSSLErrors' => 'checkSslErrors',
         'UpdateMonitorDto.checkSSLErrors' => 'checkSslErrors',
+        'PublicBulkUpdateDto.checkSSLErrors' => 'checkSslErrors',
         'PspDto.customSettings.features.showMonitorURL' => 'showMonitorUrl',
     ],
 
@@ -171,6 +176,7 @@ return [
         'MonitorDto.config.visualComparison.viewport' => 'VisualComparisonViewport',
         'MonitorsController_getUptimeStats.timeFrame' => 'UptimeTimeFrame',
         'UptimeStatsDto.logs[].type' => 'UptimeLogType',
+        'BulkOperationResponseDto.results[].status' => 'BulkOperationStatus',
         // The region filter adds "all" to the four regions.
         'MonitorsController_getMonitorResponseTimeStats.region' => 'ResponseTimeRegion',
         'MaintenanceWindowDto.interval' => 'MaintenanceWindowInterval',
@@ -401,6 +407,13 @@ return [
             'oneOf' => [['type' => 'string'], ['type' => 'object']],
             'description' => 'The body the check sends: an array, sent as a JSON object, or a JSON string; the API stores either as an object (verified live). Not applicable for the HTTP method HEAD.',
         ],
+        // A bare object in the bulk update; the values are strings as for a
+        // single monitor.
+        'PublicBulkUpdateDto.customFields' => [
+            'type' => 'object',
+            'additionalProperties' => ['type' => 'string'],
+            'description' => 'Custom key-value metadata to set on the selected monitors; a single monitor\'s update replaces all its fields (verified live), the bulk update presumably too (not verified). Max 20 keys. Keys: alphanumeric + underscore + hyphen, max 64 chars. Values: max 255 chars. Paid plans only.',
+        ],
         // The API monitor enum lacks HEAD, which its description forbids; one
         // enum for all monitor types.
         'CreateApiMonitorDto.httpMethodType' => ['type' => 'string', 'enum' => $httpMethods],
@@ -477,6 +490,9 @@ return [
         'MonitorsController_getUptimeStats.logLimit',
         'MonitorsController_getUptimeStats.start',
         'MonitorsController_getUptimeStats.end',
+        // Counts of the bulk operations.
+        'BulkOperationResponseDto.totalSuccess',
+        'BulkOperationResponseDto.totalError',
     ],
 
     'floats' => [
@@ -503,6 +519,10 @@ return [
         // the regions and their thresholds.
         'Create*MonitorDto.regionalData',
         'UpdateMonitorDto.regionalData',
+        // The selection of the monitors to change: parameters of
+        // BulkMonitorResource::update(), which checks that one is given.
+        'PublicBulkUpdateDto.groupId',
+        'PublicBulkUpdateDto.tagId',
     ],
 
     'nullableProperties' => [
@@ -517,6 +537,10 @@ return [
         'MonitorDto.config.visualComparison.areaCoordinates',
         // Never present (verified live), which 0 would misstate.
         'MonitorDto.lastDayUptimes.totalChanges',
+        // Optional, presumably only present for a monitor that failed (not
+        // verified live: bulk operations would change the account's monitors).
+        'BulkOperationResponseDto.results[].error',
+        'BulkOperationResponseDto.results[].code',
     ],
 
     'commaSeparated' => [
@@ -549,9 +573,14 @@ return [
     'extraModels' => [
         // MonitorResource::uptimeStats() takes dates for the Unix seconds.
         'UptimeStatsDto',
+        // BulkMonitorResource checks the selection, which the specification
+        // requires in prose only.
+        'BulkOperationResponseDto',
     ],
 
-    'extraRequestModels' => [],
+    'extraRequestModels' => [
+        'PublicBulkUpdateDto',
+    ],
 
     'additions' => [
         'schemas' => [
@@ -686,6 +715,21 @@ return [
                 ],
             ],
         ],
+        // Hand-written: the API needs a groupId, a tagId or both, which the
+        // specification says in prose only ("At least one of groupId or tagId
+        // must be provided"). The methods reject a request without either before
+        // it is sent, as what the API does with it was not tried: bulk
+        // operations change the monitors of the account.
+        'bulkMonitors' => [
+            'class' => 'BulkMonitorResource',
+            'description' => 'Pause, start or change the monitors of a monitor group and/or with a tag at once.',
+            'handwritten' => true,
+            'methods' => [
+                'pause' => ['operation' => 'BulkMonitorsController_bulkPause', 'handwritten' => true],
+                'start' => ['operation' => 'BulkMonitorsController_bulkStart', 'handwritten' => true],
+                'update' => ['operation' => 'BulkMonitorsController_bulkUpdate', 'handwritten' => true],
+            ],
+        ],
         'user' => [
             'class' => 'UserResource',
             'description' => 'The account the API key belongs to: its plan and its alert contacts.',
@@ -715,9 +759,6 @@ return [
     ],
 
     'ignored' => [
-        'BulkMonitorsController_bulkPause' => 'Pending: implemented resource by resource in the following commits.',
-        'BulkMonitorsController_bulkStart' => 'Pending: implemented resource by resource in the following commits.',
-        'BulkMonitorsController_bulkUpdate' => 'Pending: implemented resource by resource in the following commits.',
         'IncidentsController_list' => 'Pending: implemented resource by resource in the following commits.',
         'IncidentsController_get' => 'Pending: implemented resource by resource in the following commits.',
         'IncidentsController_listComments' => 'Pending: implemented resource by resource in the following commits.',

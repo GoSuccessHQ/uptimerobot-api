@@ -12,6 +12,7 @@ use GoSuccess\UptimeRobot\Http\HttpClient;
 use GoSuccess\UptimeRobot\RateLimit\NullRateLimiter;
 use GoSuccess\UptimeRobot\RateLimit\RateLimiter;
 use GoSuccess\UptimeRobot\RateLimit\RateLimitStatus;
+use GoSuccess\UptimeRobot\Resource\BulkMonitorResource;
 use GoSuccess\UptimeRobot\Resource\MonitorResource;
 use GoSuccess\UptimeRobot\Resource\StormProtectionResource;
 use GoSuccess\UptimeRobot\Resource\TagResource;
@@ -32,6 +33,11 @@ final class UptimeRobot
      */
     public private(set) MonitorResource $monitors {
         get => $this->monitors ??= new MonitorResource($this->connection);
+    }
+
+    /** Pause, start or change the monitors of a monitor group and/or with a tag at once. */
+    public private(set) BulkMonitorResource $bulkMonitors {
+        get => $this->bulkMonitors ??= new BulkMonitorResource($this->connection);
     }
 
     /** The account the API key belongs to: its plan and its alert contacts. */

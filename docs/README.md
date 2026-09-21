@@ -24,6 +24,14 @@ Monitors: create, read, change, pause, start and delete them, and read their upt
 - [`responseTimeStats()`](monitors/responseTimeStats.md) — Get monitor response time statistics
 - [`responseTimeStatsByRegion()`](monitors/responseTimeStatsByRegion.md) — Get monitor response time statistics by region
 
+## `bulkMonitors`
+
+Pause, start or change the monitors of a monitor group and/or with a tag at once.
+
+- [`pause()`](bulkMonitors/pause.md) — Pause the monitors of a group and/or with a tag
+- [`start()`](bulkMonitors/start.md) — Start the paused monitors of a group and/or with a tag
+- [`update()`](bulkMonitors/update.md) — Change settings of the monitors of a group and/or with a tag
+
 ## `user`
 
 The account the API key belongs to: its plan and its alert contacts.
