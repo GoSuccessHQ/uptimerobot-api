@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Tests\Unit\RateLimit;
 
+use GoSuccess\UptimeRobot\RateLimit\Clock;
 use GoSuccess\UptimeRobot\RateLimit\SlidingWindowRateLimiter;
 use GoSuccess\UptimeRobot\Tests\Support\FakeClock;
 use InvalidArgumentException;
@@ -53,6 +54,35 @@ final class SlidingWindowRateLimiterTest extends TestCase
         // 25 requests at 10/min (the free plan): the first 10 are free, the
         // remaining 15 force waits that span at least two further windows.
         self::assertGreaterThanOrEqual(120.0, $clock->totalSlept());
+    }
+
+    public function testWaitsAgainWhenASleepEndsEarly(): void
+    {
+        // Wakes up after at most 25 seconds, like a sleep that signals interrupt.
+        $clock = new class implements Clock {
+            /** @var list<float> */
+            public array $sleeps = [];
+
+            private float $time = 1000.0;
+
+            public function now(): float
+            {
+                return $this->time;
+            }
+
+            public function sleep(float $seconds): void
+            {
+                $this->sleeps[] = $seconds;
+                $this->time += min($seconds, 25.0);
+            }
+        };
+        $limiter = new SlidingWindowRateLimiter(maxRequests: 1, windowSeconds: 60.0, clock: $clock);
+
+        $limiter->acquire();
+        $limiter->acquire();
+
+        self::assertSame([60.0, 35.0, 10.0], $clock->sleeps);
+        self::assertSame(1060.0, $clock->now());
     }
 
     public function testRejectsInvalidLimit(): void

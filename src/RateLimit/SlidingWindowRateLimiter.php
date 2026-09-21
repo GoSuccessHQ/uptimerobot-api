@@ -52,13 +52,12 @@ final class SlidingWindowRateLimiter implements RateLimiter
         $now = $this->clock->now();
         $this->prune($now);
 
-        if (\count($this->timestamps) >= $this->maxRequests) {
-            $oldest = $this->timestamps[0];
-            $waitFor = ($oldest + $this->windowSeconds) - $now;
-
-            if ($waitFor > 0.0) {
-                $this->clock->sleep($waitFor);
-            }
+        // Check again after every wait: a sleep may end early (e.g. on a
+        // signal), and the request must not be recorded before the window
+        // has room for it.
+        while (\count($this->timestamps) >= $this->maxRequests) {
+            // Positive, since prune() keeps only timestamps whose window ends after $now.
+            $this->clock->sleep($this->timestamps[0] + $this->windowSeconds - $now);
 
             $now = $this->clock->now();
             $this->prune($now);
@@ -72,11 +71,12 @@ final class SlidingWindowRateLimiter implements RateLimiter
      */
     private function prune(float $now): void
     {
-        $threshold = $now - $this->windowSeconds;
         $expired = 0;
 
         foreach ($this->timestamps as $timestamp) {
-            if ($timestamp > $threshold) {
+            // The same expression as the wait in acquire(), so that a kept
+            // timestamp always means a wait greater than zero.
+            if ($timestamp + $this->windowSeconds > $now) {
                 break;
             }
 

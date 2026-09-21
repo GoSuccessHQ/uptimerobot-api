@@ -10,8 +10,8 @@ namespace GoSuccess\UptimeRobot\RateLimit;
 final class SystemClock implements Clock
 {
     /**
-     * Longest single sleep in seconds (about 31 years), so the conversion to
-     * microseconds can never overflow the integer range.
+     * Longest wait in seconds (about 31 years), so that no conversion comes
+     * near the limits of the integer range.
      */
     private const float MAX_SECONDS = 1.0E9;
 
@@ -27,6 +27,27 @@ final class SystemClock implements Clock
             return;
         }
 
-        usleep((int) ceil(min($seconds, self::MAX_SECONDS) * 1_000_000));
+        $deadline = self::monotonic() + min($seconds, self::MAX_SECONDS);
+
+        // time_nanosleep() takes whole seconds, while usleep() takes the
+        // microseconds as a 32-bit unsigned integer and wraps around for waits
+        // of about 71 minutes or more. A signal ends a sleep early, so the rest
+        // is slept until the deadline has passed.
+        while (($remaining = $deadline - self::monotonic()) > 0.0) {
+            $whole = floor($remaining);
+            $nanoseconds = min(ceil(($remaining - $whole) * 1.0E9), 999_999_999.0);
+
+            if (time_nanosleep((int) $whole, (int) $nanoseconds) === false) {
+                return;
+            }
+        }
+    }
+
+    /**
+     * Seconds on a monotonic clock, which a change of the system time does not move.
+     */
+    private static function monotonic(): float
+    {
+        return hrtime(true) / 1.0E9;
     }
 }
