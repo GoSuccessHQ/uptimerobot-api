@@ -87,7 +87,7 @@ Public status pages: the monitors they show, their design and whether they are p
 
 ## `announcements`
 
-Announcements on status pages: information, maintenance and issue notices, which subscribers receive by e-mail. Requires the plan feature psp-subscribers.
+Announcements on status pages: information, maintenance and issue notices, which are also delivered to the subscribers of the page. Requires the plan feature psp-subscribers.
 
 - [`list()`](announcements/list.md) — List announcements
 - [`all()`](announcements/all.md) — Iterate lazily over every item of list(), across all pages

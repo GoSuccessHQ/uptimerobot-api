@@ -65,8 +65,8 @@ printf(
     $uptime->totalDowntimeSeconds,
 );
 
-// Times are in milliseconds; the time series summarizes longer intervals the
-// longer the range is.
+// Times are in milliseconds. The spacing of the time series is not
+// documented; points 1, 5 and 30 minutes apart were seen.
 $responseTimes = $uptimeRobot->monitors->responseTimeStats($monitor->id, includeTimeSeries: true);
 printf(
     "Last 24 hours: %d / %d / %d ms (min / avg / max) over %d data points\n",

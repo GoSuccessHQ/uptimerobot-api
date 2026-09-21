@@ -82,7 +82,7 @@ final class UptimeRobot
     }
 
     /**
-     * Announcements on status pages: information, maintenance and issue notices, which subscribers receive by e-mail. Requires the plan feature psp-subscribers.
+     * Announcements on status pages: information, maintenance and issue notices, which are also delivered to the subscribers of the page. Requires the plan feature psp-subscribers.
      */
     public private(set) AnnouncementResource $announcements {
         get => $this->announcements ??= new AnnouncementResource($this->connection);

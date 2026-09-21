@@ -17,7 +17,7 @@ use GoSuccess\UptimeRobot\Pagination\Page;
 use GoSuccess\UptimeRobot\Pagination\Paginator;
 
 /**
- * Announcements on status pages: information, maintenance and issue notices, which subscribers receive by e-mail. Requires the plan feature psp-subscribers.
+ * Announcements on status pages: information, maintenance and issue notices, which are also delivered to the subscribers of the page. Requires the plan feature psp-subscribers.
  */
 final class AnnouncementResource extends AbstractResource
 {

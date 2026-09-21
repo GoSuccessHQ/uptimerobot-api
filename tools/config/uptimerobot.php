@@ -1674,7 +1674,7 @@ return [
                 ],
                 'responseTimeStats' => [
                     'operation' => 'MonitorsController_getMonitorResponseTimeStats',
-                    'note' => 'Times are in milliseconds. Pass from and to together or neither: from alone is rejected with "to must be a Date instance", to alone with "Maximum range is 90 days". timeSeries is empty unless includeTimeSeries is true; its points summarize longer intervals for longer ranges (all verified live).',
+                    'note' => 'Times are in milliseconds. Pass from and to together or neither: from alone is rejected with "to must be a Date instance", to alone with "Maximum range is 90 days". timeSeries is empty unless includeTimeSeries is true; the spacing of its points is not documented and varied: 1, 5 and 30 minutes were seen (all verified live).',
                 ],
                 'responseTimeStatsByRegion' => [
                     'operation' => 'MonitorsController_getMonitorResponseTimeStatsByRegion',
@@ -1877,7 +1877,7 @@ return [
         ],
         'announcements' => [
             'class' => 'AnnouncementResource',
-            'description' => 'Announcements on status pages: information, maintenance and issue notices, which subscribers receive by e-mail. Requires the plan feature psp-subscribers.',
+            'description' => 'Announcements on status pages: information, maintenance and issue notices, which are also delivered to the subscribers of the page. Requires the plan feature psp-subscribers.',
             // The status page comes first; the announcement itself is $id.
             'parameters' => ['pspId' => 'statusPageId'],
             'methods' => [
