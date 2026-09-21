@@ -367,7 +367,8 @@ final class ResourceWriter
         $nameWidth = $parameters === [] ? 0 : max(array_map(static fn(ParameterDefinition $parameter): int => \strlen($parameter->phpName) + 1, $parameters));
 
         foreach ($parameters as $index => $parameter) {
-            $text = $parameter->description === null ? '' : ' ' . str_replace("\n", ' ', trim($parameter->description));
+            // On one line, escaped like every other text from the specification: a "*/" would end the comment.
+            $text = ' ' . preg_replace('/\s+/', ' ', implode(' ', Doc::lines($parameter->description)));
             $paramLines[] = rtrim('@param ' . str_pad($types[$index], $width) . ' ' . str_pad("\${$parameter->phpName}", $nameWidth) . $text);
         }
 

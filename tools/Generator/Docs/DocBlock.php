@@ -10,6 +10,12 @@ namespace GoSuccess\UptimeRobot\Tools\Generator\Docs;
 final readonly class DocBlock
 {
     /**
+     * A PHPDoc type, which may contain spaces inside its brackets, e.g.
+     * `array<array-key, string>|null` or `array{id: int}`.
+     */
+    private const string TYPE = '(?<type>(?:[^\s<{(]|(?<angle><(?:[^<>]|(?&angle))*>)|(?<brace>\{(?:[^{}]|(?&brace))*\})|(?<paren>\((?:[^()]|(?&paren))*\)))+)';
+
+    /**
      * @param list<string>                                           $paragraphs
      * @param array<string, array{type: string, description: string}> $params
      */
@@ -75,10 +81,10 @@ final readonly class DocBlock
         $deprecated = false;
 
         foreach ($tags as $tag) {
-            if (preg_match('/^@param\s+(\S+)\s+\$(\w+)\s*(.*)$/s', $tag, $match)) {
-                $params[$match[2]] = ['type' => $match[1], 'description' => self::inline(trim($match[3]))];
-            } elseif (preg_match('/^@return\s+(\S+)/', $tag, $match)) {
-                $return = $match[1];
+            if (preg_match('/^@param\s+' . self::TYPE . '\s+\$(?<name>\w+)\s*(?<description>.*)$/s', $tag, $match)) {
+                $params[$match['name']] = ['type' => $match['type'], 'description' => self::inline(trim($match['description']))];
+            } elseif (preg_match('/^@return\s+' . self::TYPE . '/', $tag, $match)) {
+                $return = $match['type'];
             } elseif (str_starts_with($tag, '@deprecated')) {
                 $deprecated = true;
             }

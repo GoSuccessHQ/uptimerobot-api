@@ -222,6 +222,13 @@ final class GeneratedFeaturesTest extends TestCase
         self::assertNull($http->requests[2]->body);
     }
 
+    public function testEscapesParameterDescriptionsInDocblocks(): void
+    {
+        $doc = (string) new ReflectionMethod(KitchenSink::class('Resource\\WidgetResource'), 'list')->getDocComment();
+
+        self::assertStringContainsString('$tag     Tags such as "eu/*\\/web".', $doc);
+    }
+
     public function testLeavesExcludedFileUploadsOutOfJsonModels(): void
     {
         $page = KitchenSink::class('Model\\CreatePage');

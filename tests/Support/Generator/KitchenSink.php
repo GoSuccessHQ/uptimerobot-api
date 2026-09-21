@@ -57,7 +57,8 @@ final class KitchenSink
                         'operationId' => 'WidgetsController_list',
                         'summary' => 'List widgets',
                         'parameters' => [
-                            ['name' => 'tag', 'in' => 'query', 'schema' => ['type' => 'array', 'items' => ['type' => 'string']]],
+                            // "*/" would end the docblock.
+                            ['name' => 'tag', 'in' => 'query', 'description' => "Tags such as\n\"eu/*/web\".", 'schema' => ['type' => 'array', 'items' => ['type' => 'string']]],
                             ['name' => 'limit', 'in' => 'query', 'description' => 'Widgets per page (1-100).', 'schema' => ['type' => 'number']],
                             ['name' => 'status', 'in' => 'query', 'description' => 'Comma-separated statuses.', 'schema' => ['type' => 'string']],
                             ['name' => 'group_id', 'in' => 'query', 'schema' => ['type' => 'number']],
