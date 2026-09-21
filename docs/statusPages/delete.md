@@ -18,7 +18,7 @@ public function delete(int $id): void
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `$id` | `int` | yes |  |
+| `$id` | `int` | yes | The status page ID. |
 
 ## Returns
 

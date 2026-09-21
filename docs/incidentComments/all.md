@@ -17,7 +17,7 @@ public function all(string $incidentId, int $limit = 100): Paginator
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `$incidentId` | `string` | yes | The incident ID |
-| `$limit` | `int` | no | Number of comments to return (1-100, default 50) |
+| `$limit` | `int` | no | Comments per page, from 1 to 100; the specification gives 50 as the default. |
 
 ## Returns
 

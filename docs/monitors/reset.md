@@ -16,7 +16,7 @@ public function reset(int $id): void
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `$id` | `int` | yes |  |
+| `$id` | `int` | yes | The monitor ID. |
 
 ## Returns
 

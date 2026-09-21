@@ -38,8 +38,8 @@ final class IncidentResource extends AbstractResource
      * @param string|null            $cursor        The cursor of the page to return, as the previous page reported it; null for the first page.
      * @param int|null               $monitorId     Filter incidents by monitor ID
      * @param string|null            $monitorName   Filter incidents by monitor name (partial match)
-     * @param DateTimeInterface|null $startedAfter  Filter incidents started after this date (ISO 8601 format)
-     * @param DateTimeInterface|null $startedBefore Filter incidents started before this date (ISO 8601 format)
+     * @param DateTimeInterface|null $startedAfter  Only incidents that started after this time, sent as ISO 8601 in UTC (verified live).
+     * @param DateTimeInterface|null $startedBefore Only incidents that started before this time, sent as ISO 8601 in UTC (verified live).
      *
      * @return Page<IncidentSummary>
      */
@@ -70,8 +70,8 @@ final class IncidentResource extends AbstractResource
      *
      * @param int|null               $monitorId     Filter incidents by monitor ID
      * @param string|null            $monitorName   Filter incidents by monitor name (partial match)
-     * @param DateTimeInterface|null $startedAfter  Filter incidents started after this date (ISO 8601 format)
-     * @param DateTimeInterface|null $startedBefore Filter incidents started before this date (ISO 8601 format)
+     * @param DateTimeInterface|null $startedAfter  Only incidents that started after this time, sent as ISO 8601 in UTC (verified live).
+     * @param DateTimeInterface|null $startedBefore Only incidents that started before this time, sent as ISO 8601 in UTC (verified live).
      *
      * @return Paginator<IncidentSummary>
      */

@@ -412,6 +412,8 @@ final class KitchenSink
             'excludedProperties' => ['CreatePageDto.logo'],
             'extraRequestModels' => ['BulkWidgetUpdateDto'],
             'commaSeparated' => ['WidgetsController_list.status'],
+            // The specification describes the query string, the method takes a list.
+            'parameterDescriptions' => ['WidgetsController_list.status' => 'The statuses to filter by; a widget matches if it has any of them.'],
             'unions' => [
                 'WidgetsController_create.body' => [
                     'interface' => 'WidgetCreate',

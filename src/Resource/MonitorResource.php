@@ -39,13 +39,13 @@ final class MonitorResource extends AbstractResource
      * `GET /monitors`
      *
      * @param int|null                 $cursor      The cursor of the page to return, as the previous page reported it; null for the first page.
-     * @param int|null                 $limit       Maximum number of monitors to return per page. Default: 50, Min: 1, Max: 200.
-     * @param list<string>|null        $customField Filter monitors by custom field key:value pairs. Format: customField=key:value. Multiple filters use AND logic. Split on first colon only.
-     * @param int|null                 $groupId     Filter monitors by monitor group ID.
-     * @param list<MonitorStatus>|null $status      Comma-separated list of status values to filter monitors. Uses OR logic (matches any specified status). Case-insensitive. Allowed values: PAUSED, STARTED, UP, LOOKS_DOWN, DOWN.
+     * @param int|null                 $limit       Monitors per page, from 1 to 200 (verified live: "Limit must be between 1 and 200"); the specification gives 50 as the default.
+     * @param list<string>|null        $customField Custom field filters as "key:value" strings, split at the first colon; a monitor must match all of them (verified live). Each is sent as a customField parameter of its own.
+     * @param int|null                 $groupId     The monitor group; 0 selects the monitors in no group (verified live).
+     * @param list<MonitorStatus>|null $status      The statuses to filter by; a monitor matches if it has any of them (verified live). Sent as one comma-separated value; an empty list filters nothing.
      * @param string|null              $name        Filter monitors by name. Case-insensitive partial match on the monitor friendly name.
      * @param string|null              $url         Filter monitors by URL. Case-insensitive partial match on the monitor URL.
-     * @param list<string>|null        $tags        Comma-separated list of tag names to filter monitors. Uses OR logic (matches any specified tag). Case-sensitive.
+     * @param list<string>|null        $tags        The tag names to filter by, compared case-sensitively; according to the specification, a monitor matches if it has any of them. Sent as one comma-separated value; an empty list filters nothing.
      *
      * @return Page<Monitor>
      */
@@ -80,13 +80,13 @@ final class MonitorResource extends AbstractResource
      *
      * `GET /monitors`
      *
-     * @param int                      $limit       Maximum number of monitors to return per page. Default: 50, Min: 1, Max: 200.
-     * @param list<string>|null        $customField Filter monitors by custom field key:value pairs. Format: customField=key:value. Multiple filters use AND logic. Split on first colon only.
-     * @param int|null                 $groupId     Filter monitors by monitor group ID.
-     * @param list<MonitorStatus>|null $status      Comma-separated list of status values to filter monitors. Uses OR logic (matches any specified status). Case-insensitive. Allowed values: PAUSED, STARTED, UP, LOOKS_DOWN, DOWN.
+     * @param int                      $limit       Monitors per page, from 1 to 200 (verified live: "Limit must be between 1 and 200"); the specification gives 50 as the default.
+     * @param list<string>|null        $customField Custom field filters as "key:value" strings, split at the first colon; a monitor must match all of them (verified live). Each is sent as a customField parameter of its own.
+     * @param int|null                 $groupId     The monitor group; 0 selects the monitors in no group (verified live).
+     * @param list<MonitorStatus>|null $status      The statuses to filter by; a monitor matches if it has any of them (verified live). Sent as one comma-separated value; an empty list filters nothing.
      * @param string|null              $name        Filter monitors by name. Case-insensitive partial match on the monitor friendly name.
      * @param string|null              $url         Filter monitors by URL. Case-insensitive partial match on the monitor URL.
-     * @param list<string>|null        $tags        Comma-separated list of tag names to filter monitors. Uses OR logic (matches any specified tag). Case-sensitive.
+     * @param list<string>|null        $tags        The tag names to filter by, compared case-sensitively; according to the specification, a monitor matches if it has any of them. Sent as one comma-separated value; an empty list filters nothing.
      *
      * @return Paginator<Monitor>
      */
@@ -118,7 +118,7 @@ final class MonitorResource extends AbstractResource
      *
      * `GET /monitors/{id}`
      *
-     * @param int $id
+     * @param int $id The monitor ID.
      */
     public function get(int $id): Monitor
     {
@@ -152,7 +152,7 @@ final class MonitorResource extends AbstractResource
      *
      * `PATCH /monitors/{id}`
      *
-     * @param int           $id
+     * @param int           $id      The monitor ID.
      * @param MonitorUpdate $changes
      */
     public function update(int $id, MonitorUpdate $changes): Monitor
@@ -169,7 +169,7 @@ final class MonitorResource extends AbstractResource
      *
      * `DELETE /monitors/{id}`
      *
-     * @param int $id
+     * @param int $id The monitor ID.
      */
     public function delete(int $id): void
     {
@@ -185,7 +185,7 @@ final class MonitorResource extends AbstractResource
      *
      * `POST /monitors/{id}/pause`
      *
-     * @param int $id
+     * @param int $id The monitor ID.
      */
     public function pause(int $id): Monitor
     {
@@ -203,7 +203,7 @@ final class MonitorResource extends AbstractResource
      *
      * `POST /monitors/{id}/start`
      *
-     * @param int $id
+     * @param int $id The monitor ID.
      */
     public function start(int $id): Monitor
     {
@@ -219,7 +219,7 @@ final class MonitorResource extends AbstractResource
      *
      * `POST /monitors/{id}/reset`
      *
-     * @param int $id
+     * @param int $id The monitor ID.
      */
     public function reset(int $id): void
     {
@@ -236,8 +236,8 @@ final class MonitorResource extends AbstractResource
      * `GET /monitors/{id}/stats/uptime`
      *
      * @param int                    $id   The monitor ID
-     * @param DateTimeInterface|null $from Start date for statistics (ISO 8601 format). Defaults to 24 hours ago.
-     * @param DateTimeInterface|null $to   End date for statistics (ISO 8601 format). Defaults to now.
+     * @param DateTimeInterface|null $from The start of the period, sent as ISO 8601 in UTC. Without from and to, the last 24 hours are reported, and from alone is accepted (both verified live).
+     * @param DateTimeInterface|null $to   The end of the period, sent as ISO 8601 in UTC. Pass it only together with from: to alone is rejected with a BadRequestException, "Maximum range is 90 days" (verified live).
      */
     public function uptime(int $id, ?DateTimeInterface $from = null, ?DateTimeInterface $to = null): MonitorUptimeStats
     {
@@ -259,10 +259,10 @@ final class MonitorResource extends AbstractResource
      * `GET /monitors/{id}/stats/response-time`
      *
      * @param int                     $id                The monitor ID
-     * @param DateTimeInterface|null  $from              Start date for statistics (ISO 8601 format). Defaults to 24 hours ago.
-     * @param DateTimeInterface|null  $to                End date for statistics (ISO 8601 format). Defaults to now.
+     * @param DateTimeInterface|null  $from              The start of the period, sent as ISO 8601 in UTC. Pass from and to together, or neither for the last 24 hours: from alone is rejected with a BadRequestException, "to must be a Date instance" (verified live).
+     * @param DateTimeInterface|null  $to                The end of the period, sent as ISO 8601 in UTC. Pass from and to together, or neither for the last 24 hours: to alone is rejected with a BadRequestException, "Maximum range is 90 days" (verified live).
      * @param bool|null               $includeTimeSeries Whether to include time series data points in the response. Defaults to false.
-     * @param ResponseTimeRegion|null $region            Filter by region code (na, eu, as, oc). When provided, only returns data for the specified region.
+     * @param ResponseTimeRegion|null $region            Only the data of this region, or of all regions with All (verified live: the API takes na, eu, as, oc and all).
      */
     public function responseTimeStats(
         int $id,
@@ -291,8 +291,8 @@ final class MonitorResource extends AbstractResource
      * `GET /monitors/{id}/stats/response-time/all`
      *
      * @param int                    $id                The monitor ID
-     * @param DateTimeInterface|null $from              Start date for statistics (ISO 8601 format). Defaults to 24 hours ago.
-     * @param DateTimeInterface|null $to                End date for statistics (ISO 8601 format). Defaults to now.
+     * @param DateTimeInterface|null $from              The start of the period, sent as ISO 8601 in UTC. Pass from and to together, or neither for the last 24 hours: from alone is rejected with a BadRequestException, "to must be a Date instance" (verified live).
+     * @param DateTimeInterface|null $to                The end of the period, sent as ISO 8601 in UTC. Pass from and to together, or neither for the last 24 hours: to alone is rejected with a BadRequestException, "Maximum range is 90 days" (verified live).
      * @param bool|null              $includeTimeSeries Whether to include time series data points in the response. Defaults to false.
      */
     public function responseTimeStatsByRegion(

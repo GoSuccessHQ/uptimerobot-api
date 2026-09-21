@@ -53,6 +53,10 @@ final readonly class ApiConfig
      *                                                                        specification says it never does.
      * @param list<string>                             $commaSeparated        Query parameters whose lists are sent as one
      *                                                                        comma-separated value.
+     * @param array<string, string>                    $parameterDescriptions "OperationId.parameter" => the description of a
+     *                                                                        method parameter, replacing the specification's;
+     *                                                                        "parameter" is the name in the specification,
+     *                                                                        a flattened body property or "@body".
      * @param array<string, UnionConfig>               $unions                Location of a `oneOf` of objects => how to
      *                                                                        generate it.
      * @param list<string>                             $extraModels           Schemas generated as response models for
@@ -90,6 +94,7 @@ final readonly class ApiConfig
         public array $excludedProperties,
         public array $nullableProperties,
         public array $commaSeparated,
+        public array $parameterDescriptions,
         public array $unions,
         public array $extraModels,
         public array $extraRequestModels,
@@ -176,6 +181,7 @@ final readonly class ApiConfig
             excludedProperties: $reader->stringList('excludedProperties'),
             nullableProperties: $reader->stringList('nullableProperties'),
             commaSeparated: $reader->stringList('commaSeparated'),
+            parameterDescriptions: $reader->stringMapAt('parameterDescriptions'),
             unions: $unions,
             extraModels: $reader->stringList('extraModels'),
             extraRequestModels: $reader->stringList('extraRequestModels'),

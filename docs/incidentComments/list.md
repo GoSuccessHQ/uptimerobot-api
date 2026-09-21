@@ -20,7 +20,7 @@ public function list(string $incidentId, ?int $cursor = null, ?int $limit = null
 | --- | --- | --- | --- |
 | `$incidentId` | `string` | yes | The incident ID |
 | `$cursor` | `int\|null` | no | The cursor of the page to return, as the previous page reported it; null for the first page. |
-| `$limit` | `int\|null` | no | Number of comments to return (1-100, default 50) |
+| `$limit` | `int\|null` | no | Comments per page, from 1 to 100; the specification gives 50 as the default. |
 
 ## Returns
 

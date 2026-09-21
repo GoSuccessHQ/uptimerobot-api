@@ -48,6 +48,10 @@ declare(strict_types=1);
  * - nullableProperties: 'MonitorDto.url'  (read as nullable against the specification: sent as
  *                       null, or left out where 0 or an empty object would misstate it)
  * - commaSeparated:     'MonitorsController_list.status'  (list<T> joined with ",")
+ * - parameterDescriptions: 'MonitorsController_list.status' => 'The statuses to filter by ...'
+ *                       (the docblock text of a method parameter, by its name in the specification,
+ *                       a flattened body property or "@body"; fails once the specification says the
+ *                       same, and on hand-written methods, whose docblocks describe their parameters)
  * - unions:             'MonitorsController_create.body' => ['interface' => 'MonitorCreate',
  *                       'discriminator' => 'type', 'variants' => ['HTTP' => 'HttpMonitorCreate', ...],
  *                       optional 'envelope' => 'data' and, for responses, 'fallback' => 'UnknownX']
@@ -1327,6 +1331,60 @@ return [
         'MonitorsController_list.tags',
     ],
 
+    // Where the specification's description of a parameter contradicts the
+    // PHP type or what the API does, or is missing.
+    'parameterDescriptions' => [
+        // Monitor lists (see the note of MonitorResource::list()). The
+        // specification describes the query string, not the PHP lists.
+        'MonitorsController_list.limit' => 'Monitors per page, from 1 to 200 (verified live: "Limit must be between 1 and 200"); the specification gives 50 as the default.',
+        'MonitorsController_list.customField' => 'Custom field filters as "key:value" strings, split at the first colon; a monitor must match all of them (verified live). Each is sent as a customField parameter of its own.',
+        'MonitorsController_list.groupId' => 'The monitor group; 0 selects the monitors in no group (verified live).',
+        'MonitorsController_list.status' => 'The statuses to filter by; a monitor matches if it has any of them (verified live). Sent as one comma-separated value; an empty list filters nothing.',
+        // The account has no tags, so only a filter that matches nothing was
+        // tried ("nonexistent-tag,other" returned an empty list, verified live).
+        'MonitorsController_list.tags' => 'The tag names to filter by, compared case-sensitively; according to the specification, a monitor matches if it has any of them. Sent as one comma-separated value; an empty list filters nothing.',
+        // Monitor statistics: dates, not ISO 8601 strings. Without from and to,
+        // the API reported the last 24 hours (verified live: from and to are
+        // echoed in the response).
+        'MonitorsController_getMonitorUptimeStats.from' => 'The start of the period, sent as ISO 8601 in UTC. Without from and to, the last 24 hours are reported, and from alone is accepted (both verified live).',
+        'MonitorsController_getMonitorUptimeStats.to' => 'The end of the period, sent as ISO 8601 in UTC. Pass it only together with from: to alone is rejected with a BadRequestException, "Maximum range is 90 days" (verified live).',
+        'MonitorsController_getMonitorResponseTimeStats*.from' => 'The start of the period, sent as ISO 8601 in UTC. Pass from and to together, or neither for the last 24 hours: from alone is rejected with a BadRequestException, "to must be a Date instance" (verified live).',
+        'MonitorsController_getMonitorResponseTimeStats*.to' => 'The end of the period, sent as ISO 8601 in UTC. Pass from and to together, or neither for the last 24 hours: to alone is rejected with a BadRequestException, "Maximum range is 90 days" (verified live).',
+        // region=all was accepted, region=xx rejected with "region must be one
+        // of the following values: na, eu, as, oc, all" (verified live).
+        'MonitorsController_getMonitorResponseTimeStats.region' => 'Only the data of this region, or of all regions with All (verified live: the API takes na, eu, as, oc and all).',
+        // The specification describes none of these IDs.
+        ...array_fill_keys([
+            'MonitorsController_get.id',
+            'MonitorsController_update.id',
+            'MonitorsController_delete.id',
+            'MonitorsController_pause.id',
+            'MonitorsController_start.id',
+            'MonitorsController_reset.id',
+        ], 'The monitor ID.'),
+        'PspController_get.id' => 'The status page ID.',
+        'PspController_delete.id' => 'The status page ID.',
+        'MaintenanceWindowsController_delete.id' => 'ID of the maintenance window',
+        'IntegrationsController_delete.id' => 'ID of the integration',
+        // Verified live: 0 is rejected with "monitorsNewGroupId must be a
+        // positive number", and GET /monitor-groups/0 answers 404; the monitors
+        // in no group report the groupId 0. Group deletion itself was not tried.
+        'MonitorGroupsController_delete.monitorsNewGroupId' => 'The group the monitors of the deleted group move to, at least 1: 0 is rejected with a BadRequestException (verified live). Without it, they move to no group (groupId 0), which the specification calls the default group.',
+        // Verified live: started_after=2026-09-01T00:00:00Z bounds startedAt,
+        // "notadate" is rejected with "started_after must be a Date instance".
+        'IncidentsController_list.started_after' => 'Only incidents that started after this time, sent as ISO 8601 in UTC (verified live).',
+        'IncidentsController_list.started_before' => 'Only incidents that started before this time, sent as ISO 8601 in UTC (verified live).',
+        // all() requests pages of 100 comments; see 'commentPages'.
+        'IncidentsController_listComments.limit' => 'Comments per page, from 1 to 100; the specification gives 50 as the default.',
+        // The specification limits the flag to the owner of an organization and
+        // explains it with an internal "v2 getAlertContacts proxy". Verified live
+        // on the Solo-plan account, which is in no organization and has no
+        // integrations: true listed its 8 personal contacts, including the 2
+        // mobile app contacts that /alert-contacts leaves out; "maybe" counted
+        // as false.
+        'IntegrationsController_list.includeOrgMembers' => 'With true, the personal alert contacts are listed along with the integrations, in the same shape. Verified live on an account in no organization, which got all its own contacts, mobile app contacts included; the specification promises the contacts of the members of an organization the caller owns.',
+    ],
+
     'unions' => [
         // A discriminator with a mapping. The API matches the type case-insensitively
         // (verified live: "http" creates an HTTP monitor); the variants send it in
@@ -1640,11 +1698,10 @@ return [
                 ],
                 'delete' => [
                     'operation' => 'MonitorGroupsController_delete',
-                    // monitorsNewGroupId has a minimum of 1 (verified live: 0 is rejected
-                    // with "monitorsNewGroupId must be a positive number"); an unknown ID
-                    // answers 404 "Resource you were trying to access is not found."
-                    // (verified live).
-                    'note' => 'The monitors of the group are moved to monitorsNewGroupId, or to no group (groupId 0) without it; monitorsNewGroupId 0 is rejected with a BadRequestException. An unknown ID raises a NotFoundException (both verified live).',
+                    // An unknown ID answers 404 "Resource you were trying to access
+                    // is not found." (verified live); see 'parameterDescriptions' for
+                    // monitorsNewGroupId.
+                    'note' => 'The monitors of the group move to monitorsNewGroupId, or to no group without it. An unknown ID raises a NotFoundException (verified live).',
                 ],
             ],
         ],
@@ -1866,11 +1923,8 @@ return [
                     'operation' => 'IntegrationsController_list',
                     'pagination' => 'nextLink',
                     'all' => 'all',
-                    // The description of includeOrgMembers limits it to the
-                    // owner of an organization and names a "v2 getAlertContacts
-                    // proxy"; the Solo-plan test account got its own 8 contacts,
-                    // including the 2 that /alert-contacts leaves out.
-                    'note' => 'Ascending by ID; the cursor is the ID of the last item of the previous page. Without includeOrgMembers only integrations are listed. With includeOrgMembers true the personal alert contacts are listed as well, in the same shape: the test account, which has no integrations, got all its contacts, although the specification promises the contacts of the members of an organization (both verified live).',
+                    // See 'parameterDescriptions' for includeOrgMembers.
+                    'note' => 'Ascending by ID; the cursor is the ID of the last item of the previous page. Without includeOrgMembers only integrations are listed (verified live).',
                 ],
                 'get' => [
                     'operation' => 'IntegrationsController_get',

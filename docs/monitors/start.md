@@ -18,7 +18,7 @@ public function start(int $id): Monitor
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `$id` | `int` | yes |  |
+| `$id` | `int` | yes | The monitor ID. |
 
 ## Returns
 

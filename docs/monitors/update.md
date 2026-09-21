@@ -16,7 +16,7 @@ public function update(int $id, MonitorUpdate $changes): Monitor
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `$id` | `int` | yes |  |
+| `$id` | `int` | yes | The monitor ID. |
 | `$changes` | `MonitorUpdate` | yes |  |
 
 ## Returns

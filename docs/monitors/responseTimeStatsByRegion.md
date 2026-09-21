@@ -24,8 +24,8 @@ public function responseTimeStatsByRegion(
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `$id` | `int` | yes | The monitor ID |
-| `$from` | `DateTimeInterface\|null` | no | Start date for statistics (ISO 8601 format). Defaults to 24 hours ago. |
-| `$to` | `DateTimeInterface\|null` | no | End date for statistics (ISO 8601 format). Defaults to now. |
+| `$from` | `DateTimeInterface\|null` | no | The start of the period, sent as ISO 8601 in UTC. Pass from and to together, or neither for the last 24 hours: from alone is rejected with a BadRequestException, "to must be a Date instance" (verified live). |
+| `$to` | `DateTimeInterface\|null` | no | The end of the period, sent as ISO 8601 in UTC. Pass from and to together, or neither for the last 24 hours: to alone is rejected with a BadRequestException, "Maximum range is 90 days" (verified live). |
 | `$includeTimeSeries` | `bool\|null` | no | Whether to include time series data points in the response. Defaults to false. |
 
 ## Returns

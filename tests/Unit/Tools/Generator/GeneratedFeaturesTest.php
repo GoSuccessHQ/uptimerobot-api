@@ -317,6 +317,14 @@ final class GeneratedFeaturesTest extends TestCase
         self::assertStringContainsString('$tag     Tags such as "eu/*\\/web".', $doc);
     }
 
+    public function testDescribesParametersAsConfigured(): void
+    {
+        $doc = (string) new ReflectionMethod(KitchenSink::class('Resource\\WidgetResource'), 'list')->getDocComment();
+
+        self::assertStringContainsString('$status  The statuses to filter by; a widget matches if it has any of them.', $doc);
+        self::assertStringNotContainsString('Comma-separated', $doc);
+    }
+
     public function testLeavesExcludedFileUploadsOutOfJsonModels(): void
     {
         $page = KitchenSink::class('Model\\CreatePage');

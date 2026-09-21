@@ -18,7 +18,7 @@ public function get(int $id): StatusPage
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `$id` | `int` | yes |  |
+| `$id` | `int` | yes | The status page ID. |
 
 ## Returns
 

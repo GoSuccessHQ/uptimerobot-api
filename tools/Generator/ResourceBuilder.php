@@ -167,7 +167,7 @@ final class ResourceBuilder
                 location: ParameterDefinition::PATH,
                 nullable: false,
                 default: null,
-                description: $parameter->description(),
+                description: $this->description($operation, $config, $placeholder, $parameter->description()),
             );
         }
 
@@ -245,7 +245,7 @@ final class ResourceBuilder
             location: ParameterDefinition::PAYLOAD,
             nullable: !$required,
             default: $required ? null : 'null',
-            description: $schema->resolve()->description(),
+            description: $this->description($operation, $config, '@body', $schema->resolve()->description()),
         );
 
         return $required ? [[$definition], []] : [[], [$definition]];
@@ -297,7 +297,7 @@ final class ResourceBuilder
                 location: ParameterDefinition::BODY,
                 nullable: !$isRequired || $propertyNullable,
                 default: $isRequired ? null : 'null',
-                description: $property->description() ?? $property->resolve()->description(),
+                description: $this->description($operation, $config, $json, $property->description() ?? $property->resolve()->description()),
             );
 
             if ($isRequired) {
@@ -366,9 +366,36 @@ final class ResourceBuilder
             location: ParameterDefinition::QUERY,
             nullable: $nullable,
             default: $default,
-            description: $description,
+            description: $this->description($method->operation, $method->config, $parameter->name, $description),
             commaSeparated: $commaSeparated,
         );
+    }
+
+    /**
+     * The description of a method parameter: the one configured in
+     * 'parameterDescriptions' for "OperationId.parameter", or the given one.
+     *
+     * @param string $name The name in the specification, a flattened body property or "@body".
+     */
+    private function description(Operation $operation, MethodConfig $config, string $name, ?string $default): ?string
+    {
+        $path = "{$operation->id}.{$name}";
+        $configured = $this->registry->parameterDescription($path);
+
+        if ($configured === null) {
+            return $default;
+        }
+
+        // The pages of hand-written methods come from their own docblocks.
+        if ($config->handwritten) {
+            throw new RuntimeException("parameterDescriptions: {$path} belongs to the hand-written method {$config->name}(); describe the parameter in its docblock.");
+        }
+
+        if (trim($configured) === trim((string) $default)) {
+            throw new RuntimeException("parameterDescriptions: the specification describes {$path} like this now; remove the entry.");
+        }
+
+        return $configured;
     }
 
     private function response(MethodDefinition $method, MethodConfig $config, Operation $operation, string $context): void

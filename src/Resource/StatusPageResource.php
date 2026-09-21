@@ -66,7 +66,7 @@ final class StatusPageResource extends AbstractResource
      *
      * `GET /psps/{id}`
      *
-     * @param int $id
+     * @param int $id The status page ID.
      */
     public function get(int $id): StatusPage
     {
@@ -84,7 +84,7 @@ final class StatusPageResource extends AbstractResource
      *
      * `DELETE /psps/{id}`
      *
-     * @param int $id
+     * @param int $id The status page ID.
      */
     public function delete(int $id): void
     {

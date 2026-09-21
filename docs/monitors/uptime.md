@@ -23,8 +23,8 @@ public function uptime(
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `$id` | `int` | yes | The monitor ID |
-| `$from` | `DateTimeInterface\|null` | no | Start date for statistics (ISO 8601 format). Defaults to 24 hours ago. |
-| `$to` | `DateTimeInterface\|null` | no | End date for statistics (ISO 8601 format). Defaults to now. |
+| `$from` | `DateTimeInterface\|null` | no | The start of the period, sent as ISO 8601 in UTC. Without from and to, the last 24 hours are reported, and from alone is accepted (both verified live). |
+| `$to` | `DateTimeInterface\|null` | no | The end of the period, sent as ISO 8601 in UTC. Pass it only together with from: to alone is rejected with a BadRequestException, "Maximum range is 90 days" (verified live). |
 
 ## Returns
 

@@ -23,8 +23,8 @@ public function all(
 | --- | --- | --- | --- |
 | `$monitorId` | `int\|null` | no | Filter incidents by monitor ID |
 | `$monitorName` | `string\|null` | no | Filter incidents by monitor name (partial match) |
-| `$startedAfter` | `DateTimeInterface\|null` | no | Filter incidents started after this date (ISO 8601 format) |
-| `$startedBefore` | `DateTimeInterface\|null` | no | Filter incidents started before this date (ISO 8601 format) |
+| `$startedAfter` | `DateTimeInterface\|null` | no | Only incidents that started after this time, sent as ISO 8601 in UTC (verified live). |
+| `$startedBefore` | `DateTimeInterface\|null` | no | Only incidents that started before this time, sent as ISO 8601 in UTC (verified live). |
 
 ## Returns
 

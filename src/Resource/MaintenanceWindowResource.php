@@ -112,7 +112,7 @@ final class MaintenanceWindowResource extends AbstractResource
      *
      * `DELETE /maintenance-windows/{id}`
      *
-     * @param int $id
+     * @param int $id ID of the maintenance window
      */
     public function delete(int $id): void
     {

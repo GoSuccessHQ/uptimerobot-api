@@ -23,12 +23,12 @@ final class IntegrationResource extends AbstractResource
     /**
      * List Integrations
      *
-     * Ascending by ID; the cursor is the ID of the last item of the previous page. Without includeOrgMembers only integrations are listed. With includeOrgMembers true the personal alert contacts are listed as well, in the same shape: the test account, which has no integrations, got all its contacts, although the specification promises the contacts of the members of an organization (both verified live).
+     * Ascending by ID; the cursor is the ID of the last item of the previous page. Without includeOrgMembers only integrations are listed (verified live).
      *
      * `GET /integrations`
      *
      * @param int|null  $cursor            The cursor of the page to return, as the previous page reported it; null for the first page.
-     * @param bool|null $includeOrgMembers When true and the caller owns an organization, include each active member's personal alert contacts (EmailToSms / Email / ProSms / Voice) in the response. Used by the v2 getAlertContacts proxy to restore the legacy org-roster scope.
+     * @param bool|null $includeOrgMembers With true, the personal alert contacts are listed along with the integrations, in the same shape. Verified live on an account in no organization, which got all its own contacts, mobile app contacts included; the specification promises the contacts of the members of an organization the caller owns.
      *
      * @return Page<Integration>
      */
@@ -45,11 +45,11 @@ final class IntegrationResource extends AbstractResource
     /**
      * Iterate lazily over every item of list(), across all pages.
      *
-     * Ascending by ID; the cursor is the ID of the last item of the previous page. Without includeOrgMembers only integrations are listed. With includeOrgMembers true the personal alert contacts are listed as well, in the same shape: the test account, which has no integrations, got all its contacts, although the specification promises the contacts of the members of an organization (both verified live).
+     * Ascending by ID; the cursor is the ID of the last item of the previous page. Without includeOrgMembers only integrations are listed (verified live).
      *
      * `GET /integrations`
      *
-     * @param bool|null $includeOrgMembers When true and the caller owns an organization, include each active member's personal alert contacts (EmailToSms / Email / ProSms / Voice) in the response. Used by the v2 getAlertContacts proxy to restore the legacy org-roster scope.
+     * @param bool|null $includeOrgMembers With true, the personal alert contacts are listed along with the integrations, in the same shape. Verified live on an account in no organization, which got all its own contacts, mobile app contacts included; the specification promises the contacts of the members of an organization the caller owns.
      *
      * @return Paginator<Integration>
      */
@@ -119,7 +119,7 @@ final class IntegrationResource extends AbstractResource
      *
      * `DELETE /integrations/{id}`
      *
-     * @param int $id
+     * @param int $id ID of the integration
      */
     public function delete(int $id): void
     {

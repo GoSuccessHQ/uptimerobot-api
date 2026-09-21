@@ -24,13 +24,13 @@ public function all(
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
-| `$limit` | `int` | no | Maximum number of monitors to return per page. Default: 50, Min: 1, Max: 200. |
-| `$customField` | `list<string>\|null` | no | Filter monitors by custom field key:value pairs. Format: customField=key:value. Multiple filters use AND logic. Split on first colon only. |
-| `$groupId` | `int\|null` | no | Filter monitors by monitor group ID. |
-| `$status` | `list<MonitorStatus>\|null` | no | Comma-separated list of status values to filter monitors. Uses OR logic (matches any specified status). Case-insensitive. Allowed values: PAUSED, STARTED, UP, LOOKS_DOWN, DOWN. |
+| `$limit` | `int` | no | Monitors per page, from 1 to 200 (verified live: "Limit must be between 1 and 200"); the specification gives 50 as the default. |
+| `$customField` | `list<string>\|null` | no | Custom field filters as "key:value" strings, split at the first colon; a monitor must match all of them (verified live). Each is sent as a customField parameter of its own. |
+| `$groupId` | `int\|null` | no | The monitor group; 0 selects the monitors in no group (verified live). |
+| `$status` | `list<MonitorStatus>\|null` | no | The statuses to filter by; a monitor matches if it has any of them (verified live). Sent as one comma-separated value; an empty list filters nothing. |
 | `$name` | `string\|null` | no | Filter monitors by name. Case-insensitive partial match on the monitor friendly name. |
 | `$url` | `string\|null` | no | Filter monitors by URL. Case-insensitive partial match on the monitor URL. |
-| `$tags` | `list<string>\|null` | no | Comma-separated list of tag names to filter monitors. Uses OR logic (matches any specified tag). Case-sensitive. |
+| `$tags` | `list<string>\|null` | no | The tag names to filter by, compared case-sensitively; according to the specification, a monitor matches if it has any of them. Sent as one comma-separated value; an empty list filters nothing. |
 
 ## Returns
 

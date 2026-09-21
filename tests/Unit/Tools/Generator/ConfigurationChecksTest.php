@@ -221,6 +221,7 @@ final class ConfigurationChecksTest extends TestCase
                 'excludedProperties' => ['ThingDto.logo'],
                 'nullableProperties' => ['ThingDto.url'],
                 'commaSeparated' => ['ThingsController_get.status'],
+                'parameterDescriptions' => ['ThingsController_get.id' => 'The thing.'],
                 'schemas' => ['ThingDto.owner' => 'Owner'],
                 'properties' => ['ThingDto.IP' => 'ip'],
                 'enumCases' => ['Region' => ['na' => 'NorthAmerica']],
@@ -233,6 +234,7 @@ final class ConfigurationChecksTest extends TestCase
             "'excludedProperties' entries that match nothing the configured operations use:\n    ThingDto.logo",
             "'nullableProperties' entries that match nothing the configured operations use:\n    ThingDto.url",
             "'commaSeparated' entries that match nothing the configured operations use:\n    ThingsController_get.status",
+            "'parameterDescriptions' entries that match nothing the configured operations use:\n    ThingsController_get.id",
             "Configured names that the configured operations do not use:\n    schemas: ThingDto.owner\n    properties: ThingDto.IP\n    enumCases: Region",
         );
     }
@@ -478,6 +480,69 @@ final class ConfigurationChecksTest extends TestCase
         );
 
         self::assertTrue($analysis->resources[0]->methods[0]->parameters[0]->commaSeparated);
+    }
+
+    public function testReplacesTheDescriptionsOfParameters(): void
+    {
+        $paths = ['/things/{id}' => ['patch' => [
+            'operationId' => 'ThingsController_update',
+            'parameters' => [
+                ['name' => 'id', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'string']],
+                ['name' => 'status', 'in' => 'query', 'description' => 'Comma-separated statuses.', 'schema' => ['type' => 'string']],
+                ['name' => 'since', 'in' => 'query', 'description' => 'A date (ISO 8601 format).', 'schema' => ['type' => 'string', 'format' => 'date-time']],
+            ],
+            'requestBody' => ['required' => true, 'content' => ['application/json' => ['schema' => self::object(['name' => ['type' => 'string']])]]],
+            'responses' => ['204' => ['description' => '']],
+        ]]];
+        $resources = ['resources' => ['things' => ['class' => 'ThingResource', 'description' => 'Things.', 'methods' => [
+            'update' => ['operation' => 'ThingsController_update', 'flatten' => true],
+        ]]]];
+
+        $analysis = $this->analyze([], [...$resources, 'parameterDescriptions' => [
+            'ThingsController_update.id' => 'The thing.',
+            'ThingsController_update.s*' => 'The statuses to filter by.',
+            // A flattened body property.
+            'ThingsController_update.name' => 'The new name.',
+        ]], $paths);
+
+        $descriptions = [];
+
+        foreach ($analysis->resources[0]->methods[0]->parameters as $parameter) {
+            $descriptions[$parameter->specName] = $parameter->description;
+        }
+
+        self::assertSame(['id' => 'The thing.', 'status' => 'The statuses to filter by.', 'since' => 'The statuses to filter by.', 'name' => 'The new name.'], $descriptions);
+
+        // Two entries for one parameter must agree.
+        try {
+            $this->analyze([], [...$resources, 'parameterDescriptions' => ['ThingsController_update.status' => 'One.', 'ThingsController_update.s*' => 'Other.']], $paths);
+            self::fail('Expected an exception.');
+        } catch (RuntimeException $e) {
+            self::assertSame("'parameterDescriptions': ThingsController_update.status and ThingsController_update.s* both match ThingsController_update.status but disagree.", $e->getMessage());
+        }
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('parameterDescriptions: the specification describes ThingsController_update.since like this now; remove the entry.');
+
+        $this->analyze([], [...$resources, 'parameterDescriptions' => ['ThingsController_update.since' => ' A date (ISO 8601 format).']], $paths);
+    }
+
+    public function testDescribesTheParametersOfHandWrittenMethodsInTheirDocblocks(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('parameterDescriptions: ThingsController_get.status belongs to the hand-written method get(); describe the parameter in its docblock.');
+
+        $this->analyze(
+            ['ThingDto' => self::object(['name' => ['type' => 'string']])],
+            [
+                'resources' => ['things' => ['class' => 'ThingResource', 'description' => 'Things.', 'handwritten' => true, 'methods' => [
+                    'get' => ['operation' => 'ThingsController_get', 'handwritten' => true],
+                ]]],
+                'extraModels' => ['ThingDto'],
+                'parameterDescriptions' => ['ThingsController_get.status' => 'The statuses.'],
+            ],
+            self::withQuery(['name' => 'status', 'in' => 'query', 'schema' => ['type' => 'string']]),
+        );
     }
 
     /**

@@ -31,7 +31,7 @@ final class IncidentCommentResource extends AbstractResource
      *
      * @param string   $incidentId The incident ID
      * @param int|null $cursor     The cursor of the page to return, as the previous page reported it; null for the first page.
-     * @param int|null $limit      Number of comments to return (1-100, default 50)
+     * @param int|null $limit      Comments per page, from 1 to 100; the specification gives 50 as the default.
      *
      * @return Page<IncidentComment>
      */
@@ -53,7 +53,7 @@ final class IncidentCommentResource extends AbstractResource
      * `GET /incidents/{id}/comments`
      *
      * @param string $incidentId The incident ID
-     * @param int    $limit      Number of comments to return (1-100, default 50)
+     * @param int    $limit      Comments per page, from 1 to 100; the specification gives 50 as the default.
      *
      * @return Paginator<IncidentComment>
      */

@@ -65,6 +65,9 @@ final class Registry
     /** @var PathPatterns<bool> */
     private readonly PathPatterns $commaSeparated;
 
+    /** @var PathPatterns<string> */
+    private readonly PathPatterns $parameterDescriptions;
+
     /** @var array<string, true> Locations of inline enums without a configured name. */
     private array $unnamedEnums = [];
 
@@ -90,6 +93,7 @@ final class Registry
         $this->excluded = PathPatterns::of('excludedProperties', $config->excludedProperties);
         $this->nullable = PathPatterns::of('nullableProperties', $config->nullableProperties);
         $this->commaSeparated = PathPatterns::of('commaSeparated', $config->commaSeparated);
+        $this->parameterDescriptions = new PathPatterns('parameterDescriptions', $config->parameterDescriptions);
     }
 
     /**
@@ -175,6 +179,15 @@ final class Registry
     }
 
     /**
+     * The description configured for a method parameter, e.g.
+     * "MonitorsController_list.status", or null to keep the specification's.
+     */
+    public function parameterDescription(string $path): ?string
+    {
+        return $this->parameterDescriptions->match($path);
+    }
+
+    /**
      * Everything the configuration lacks or has too much of, as messages.
      *
      * @return list<string>
@@ -194,7 +207,7 @@ final class Registry
             }
         }
 
-        foreach ([$this->enumNames, $this->types, $this->integers, $this->floats, $this->mixed, $this->excluded, $this->nullable, $this->commaSeparated] as $patterns) {
+        foreach ([$this->enumNames, $this->types, $this->integers, $this->floats, $this->mixed, $this->excluded, $this->nullable, $this->commaSeparated, $this->parameterDescriptions] as $patterns) {
             if ($patterns->unused() !== []) {
                 $problems[] = "'{$patterns->key()}' entries that match nothing the configured operations use:\n    " . implode("\n    ", $patterns->unused());
             }
