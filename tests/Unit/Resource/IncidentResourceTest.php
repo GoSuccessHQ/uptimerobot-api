@@ -25,6 +25,7 @@ use GoSuccess\UptimeRobot\Model\UnknownActivityLogEntry;
 use GoSuccess\UptimeRobot\Resource\IncidentResource;
 use GoSuccess\UptimeRobot\Tests\Support\MockHttpClient;
 use GoSuccess\UptimeRobot\UptimeRobot;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -279,6 +280,25 @@ final class IncidentResourceTest extends TestCase
         } finally {
             self::assertSame('https://api.uptimerobot.com/v3/incidents/a%2Fb/activity-log', $http->requests[1]->uri);
         }
+    }
+
+    public function testRejectsAnIdThatAddressesAnotherEndpoint(): void
+    {
+        // GET /incidents/ answers with the list, which get() read as an
+        // incident with the ID '' (verified live); cURL turns incidents/. into
+        // the same request.
+        $http = new MockHttpClient(new Response(200, '{"data":[' . self::DOWNTIME . ']}'));
+        $incidents = self::client($http)->incidents;
+
+        foreach (['', '.', '..'] as $id) {
+            try {
+                $incidents->get($id);
+                self::fail("Expected an InvalidArgumentException for the ID \"{$id}\".");
+            } catch (InvalidArgumentException) {
+            }
+        }
+
+        self::assertSame(0, $http->callCount());
     }
 
     public function testReadsTheActivityLogByEntryType(): void

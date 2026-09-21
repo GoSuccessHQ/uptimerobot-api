@@ -14,7 +14,9 @@ use GoSuccess\UptimeRobot\Tests\Support\ExampleModel;
 use GoSuccess\UptimeRobot\Tests\Support\ExampleResource;
 use GoSuccess\UptimeRobot\Tests\Support\MockHttpClient;
 use GoSuccess\UptimeRobot\Tests\Support\SpyRateLimiter;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(AbstractResource::class)]
@@ -26,9 +28,31 @@ final class AbstractResourceTest extends TestCase
 
         self::assertSame('352577094135060139', $resource->segmentOf('352577094135060139'));
         self::assertSame('a%2Fb%3Fc', $resource->segmentOf('a/b?c'));
+        self::assertSame('...', $resource->segmentOf('...'));
+        // An encoded dot stays text, so neither cURL nor the router collapses it.
+        self::assertSame('%252E', $resource->segmentOf('%2E'));
         self::assertSame('42', $resource->segmentOf(42));
         self::assertSame('GET', $resource->segmentOf(Method::Get));
         self::assertSame('2026-09-18T12%3A30%3A00.000Z', $resource->segmentOf(new DateTimeImmutable('2026-09-18T14:30:00+02:00')));
+    }
+
+    #[DataProvider('segmentsThatAddressAnotherEndpoint')]
+    public function testRejectsSegmentsThatAddressAnotherEndpoint(string $value): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("A path segment must not be empty, \".\" or \"..\", got \"{$value}\".");
+
+        $this->resource()->segmentOf($value);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function segmentsThatAddressAnotherEndpoint(): iterable
+    {
+        yield 'empty' => [''];
+        yield 'dot' => ['.'];
+        yield 'dot dot' => ['..'];
     }
 
     public function testMapsResponsesOntoModels(): void

@@ -10,6 +10,7 @@ use GoSuccess\UptimeRobot\Exception\SerializationException;
 use GoSuccess\UptimeRobot\Http\Connection;
 use GoSuccess\UptimeRobot\Http\Query;
 use GoSuccess\UptimeRobot\Model\ResponseModel;
+use InvalidArgumentException;
 
 /**
  * Base class of all API resources.
@@ -20,10 +21,21 @@ abstract class AbstractResource
 
     /**
      * Encode a value for use as one path segment; dates become ISO 8601 in UTC.
+     *
+     * @throws InvalidArgumentException For an empty segment, `.` or `..`, which
+     *                                  would address another endpoint: `incidents/`
+     *                                  lists the incidents, and cURL removes dot
+     *                                  segments from a path.
      */
     protected function segment(string|int|BackedEnum|DateTimeInterface $value): string
     {
-        return rawurlencode(Query::format('path', $value));
+        $segment = Query::format('path', $value);
+
+        if ($segment === '' || $segment === '.' || $segment === '..') {
+            throw new InvalidArgumentException("A path segment must not be empty, \".\" or \"..\", got \"{$segment}\".");
+        }
+
+        return rawurlencode($segment);
     }
 
     /**
