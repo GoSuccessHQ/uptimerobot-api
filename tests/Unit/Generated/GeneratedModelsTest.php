@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace GoSuccess\UptimeRobot\Tests\Unit\Generated;
 
 use GoSuccess\UptimeRobot\Http\Connection;
-use GoSuccess\UptimeRobot\Model\RequestModel;
 use GoSuccess\UptimeRobot\Model\ResponseModel;
 use GoSuccess\UptimeRobot\Tests\Support\Generated\GeneratedCode;
 use GoSuccess\UptimeRobot\Tests\Support\Generated\Samples;
@@ -98,24 +97,29 @@ final class GeneratedModelsTest extends TestCase
     public function testOmitsPropertiesThatWereNotProvided(string $code, string $class): void
     {
         [$model, $samples] = $this->definition($code, $class);
-        $required = array_filter($model->properties, static fn(PropertyDefinition $property): bool => $property->required && !$property->readOnly);
 
-        if ($required !== [] && !$model->response) {
-            self::markTestSkipped('The model has required properties.');
-        }
+        // Only what the constructor requires, e.g. the name of a new group.
+        $instance = $samples->requestModel($model, requiredOnly: true);
+        $required = array_map(
+            static fn(PropertyDefinition $property): string => $property->jsonName,
+            array_filter($model->properties, static fn(PropertyDefinition $property): bool => $property->required && !$property->readOnly),
+        );
 
-        $instance = new $class();
-        self::assertInstanceOf(RequestModel::class, $instance);
+        $payload = $samples->payload($model, forRequest: true);
+        $union = $model->union;
+        $fields = $union?->envelope === null ? $payload : $payload[$union->envelope];
+        self::assertIsArray($fields);
+        $fields = array_intersect_key($fields, array_flip($required));
+        self::assertSame([], array_diff($required, array_keys($fields)), 'Every required property has a sample value.');
 
         // A variant always sends its discriminator, and its envelope if it has one.
-        $union = $model->union;
         $expected = match (true) {
-            $union === null => [],
-            $union->envelope === null => [$union->discriminator => $model->discriminatorValue],
-            default => [$union->discriminator => $model->discriminatorValue, $union->envelope => []],
+            $union === null => $fields,
+            $union->envelope === null => [$union->discriminator => $model->discriminatorValue, ...$fields],
+            default => [$union->discriminator => $model->discriminatorValue, $union->envelope => $fields],
         };
 
-        self::assertSame($expected, Samples::normalize($instance->toArray()));
+        self::assertEquals(Samples::normalize($expected), Samples::normalize($instance->toArray()));
     }
 
     /**

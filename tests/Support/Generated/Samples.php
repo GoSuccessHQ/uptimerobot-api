@@ -117,14 +117,15 @@ final class Samples
     /**
      * Construct a request model with a sample value for every writable property.
      *
-     * @param array<string, mixed> $overrides Values to pass instead, by PHP name.
+     * @param array<string, mixed> $overrides    Values to pass instead, by PHP name.
+     * @param bool                 $requiredOnly Pass only the properties the specification requires.
      */
-    public function requestModel(ModelDefinition $model, int $depth = 0, array $overrides = []): RequestModel
+    public function requestModel(ModelDefinition $model, int $depth = 0, array $overrides = [], bool $requiredOnly = false): RequestModel
     {
         $arguments = [];
 
         foreach ($model->properties as $property) {
-            if ($property->readOnly) {
+            if ($property->readOnly || ($requiredOnly && !$property->required)) {
                 continue;
             }
 
