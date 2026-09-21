@@ -12,6 +12,7 @@ use GoSuccess\UptimeRobot\Http\HttpClient;
 use GoSuccess\UptimeRobot\RateLimit\NullRateLimiter;
 use GoSuccess\UptimeRobot\RateLimit\RateLimiter;
 use GoSuccess\UptimeRobot\RateLimit\RateLimitStatus;
+use GoSuccess\UptimeRobot\Resource\MonitorResource;
 use GoSuccess\UptimeRobot\Resource\StormProtectionResource;
 use GoSuccess\UptimeRobot\Resource\TagResource;
 use GoSuccess\UptimeRobot\Resource\UserResource;
@@ -25,6 +26,13 @@ use SensitiveParameter;
 final class UptimeRobot
 {
     public const string DEFAULT_BASE_URI = 'https://api.uptimerobot.com/v3';
+
+    /**
+     * Monitors: create, read, change, pause, start and delete them, and read their uptime and response time statistics.
+     */
+    public private(set) MonitorResource $monitors {
+        get => $this->monitors ??= new MonitorResource($this->connection);
+    }
 
     /** The account the API key belongs to: its plan and its alert contacts. */
     public private(set) UserResource $user {
