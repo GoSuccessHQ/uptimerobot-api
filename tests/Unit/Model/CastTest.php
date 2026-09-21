@@ -8,6 +8,7 @@ use GoSuccess\UptimeRobot\Http\Method;
 use GoSuccess\UptimeRobot\Model\Cast;
 use GoSuccess\UptimeRobot\Tests\Support\ExampleIntEnum;
 use GoSuccess\UptimeRobot\Tests\Support\ExampleModel;
+use GoSuccess\UptimeRobot\Tests\Support\ExampleUnknownModel;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -144,5 +145,27 @@ final class CastTest extends TestCase
 
         self::assertSame(['a' => 1], Cast::object(['a' => 1]));
         self::assertNull(Cast::object('x'));
+    }
+
+    public function testReadsTheVariantADiscriminatorNames(): void
+    {
+        $variants = ['COMMENT' => ExampleModel::class, 7 => ExampleModel::class];
+        $read = static fn(mixed $value): ExampleModel|ExampleUnknownModel|null => Cast::union($value, 'type', $variants, ExampleUnknownModel::class);
+
+        $comment = $read(['type' => 'COMMENT', 'name' => 'a']);
+        self::assertInstanceOf(ExampleModel::class, $comment);
+        self::assertSame('a', $comment->name);
+        self::assertInstanceOf(ExampleModel::class, $read(['type' => 7]));
+
+        // Unknown, missing and malformed discriminators select the fallback,
+        // which receives the whole payload.
+        $unknown = $read(['type' => 'NOTIFICATION', 'name' => 'b']);
+        self::assertInstanceOf(ExampleUnknownModel::class, $unknown);
+        self::assertSame(['type' => 'NOTIFICATION', 'name' => 'b'], $unknown->data);
+        self::assertInstanceOf(ExampleUnknownModel::class, $read(['name' => 'c']));
+        self::assertInstanceOf(ExampleUnknownModel::class, $read(['type' => ['COMMENT']]));
+
+        self::assertNull($read('COMMENT'));
+        self::assertNull($read(null));
     }
 }

@@ -53,6 +53,11 @@
         "cs": "php-cs-fixer fix --dry-run --diff",
         "cs-fix": "php-cs-fixer fix",
         "specs": "php tools/fetch-specs.php",
+        "generate": [
+            "php tools/generate.php",
+            "php-cs-fixer fix",
+            "php tools/generate-docs.php"
+        ],
         "check": [
             "@cs",
             "@stan",

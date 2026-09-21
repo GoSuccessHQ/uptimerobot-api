@@ -166,6 +166,30 @@ final class Cast
     }
 
     /**
+     * Read one of several models, chosen by the value of a discriminator
+     * property. A missing or unknown value selects the fallback model, so a
+     * variant this client does not know yet never breaks a response.
+     *
+     * @template T of ResponseModel
+     *
+     * @param array<int|string, class-string<T>> $variants Discriminator value => model.
+     * @param class-string<T>                    $fallback Model for a missing or unknown value.
+     *
+     * @return T|null Null unless the value is a JSON object.
+     */
+    public static function union(mixed $value, string $discriminator, array $variants, string $fallback): ?ResponseModel
+    {
+        if (!\is_array($value)) {
+            return null;
+        }
+
+        $tag = $value[$discriminator] ?? null;
+        $model = \is_int($tag) || \is_string($tag) ? ($variants[$tag] ?? $fallback) : $fallback;
+
+        return $model::fromArray($value);
+    }
+
+    /**
      * An untyped JSON object or array.
      *
      * @return array<array-key, mixed>|null
