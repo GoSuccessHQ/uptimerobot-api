@@ -29,8 +29,14 @@ return (new PhpCsFixer\Config())
             'scope' => 'namespaced',
             'strict' => true,
         ],
+        // The rule qualifies the constants the running PHP defines and removes
+        // the backslash from all others, so the constants of an extension that
+        // a PHP may lack are excluded: they stay unqualified everywhere. The
+        // signal constants need ext-pcntl, which e.g. the php:8.4-cli image
+        // lacks (see tests/Unit/Tools/CodingStandardTest.php).
         'native_constant_invocation' => [
             'include' => ['@compiler_optimized'],
+            'exclude' => ['null', 'false', 'true', 'SIGALRM', 'SIGUSR1', 'SIG_IGN'],
             'scope' => 'namespaced',
             'strict' => true,
         ],

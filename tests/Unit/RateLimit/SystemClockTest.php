@@ -41,7 +41,7 @@ final class SystemClockTest extends TestCase
     {
         $signals = 0;
         $handler = static function (int $signal) use (&$signals): void {
-            if ($signal === \SIGALRM) {
+            if ($signal === SIGALRM) {
                 throw new RuntimeException('The signals did not arrive.');
             }
 
@@ -51,9 +51,9 @@ final class SystemClockTest extends TestCase
         };
 
         $async = pcntl_async_signals(true);
-        $previous = [\SIGUSR1 => pcntl_signal_get_handler(\SIGUSR1), \SIGALRM => pcntl_signal_get_handler(\SIGALRM)];
-        pcntl_signal(\SIGUSR1, $handler);
-        pcntl_signal(\SIGALRM, $handler);
+        $previous = [SIGUSR1 => pcntl_signal_get_handler(SIGUSR1), SIGALRM => pcntl_signal_get_handler(SIGALRM)];
+        pcntl_signal(SIGUSR1, $handler);
+        pcntl_signal(SIGALRM, $handler);
         // A watchdog, in case the signals never arrive.
         pcntl_alarm(10);
 
@@ -75,8 +75,8 @@ final class SystemClockTest extends TestCase
             pcntl_alarm(0);
             // Ignore the signals until the sender is stopped; the default
             // action of SIGUSR1 would end the test run.
-            pcntl_signal(\SIGUSR1, \SIG_IGN);
-            pcntl_signal(\SIGALRM, \SIG_IGN);
+            pcntl_signal(SIGUSR1, SIG_IGN);
+            pcntl_signal(SIGALRM, SIG_IGN);
             proc_terminate($sender);
             proc_close($sender);
 
