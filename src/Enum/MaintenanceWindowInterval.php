@@ -6,7 +6,9 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Enum;
 
-/** Schema: MaintenanceWindowDto.interval */
+/**
+ * Schema: MaintenanceWindowDto.interval, CreateMaintenanceWindowDto.interval, UpdateMaintenanceWindowDto.interval
+ */
 enum MaintenanceWindowInterval: string
 {
     case Once = 'once';

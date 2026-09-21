@@ -64,6 +64,10 @@ $monitorStatuses = ['PAUSED', 'STARTED', 'UP', 'LOOKS_DOWN', 'DOWN'];
 $monitorStatus = 'The status of the monitor: UP, DOWN, LOOKS_DOWN, PAUSED, or STARTED, which a new or restarted monitor reports until its first check (verified live).';
 $httpMethods = ['HEAD', 'GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'QUERY'];
 $date = ['type' => 'string', 'format' => 'date-time'];
+// Maintenance windows. The account has none and none may be created, so only
+// validator messages were observable live; see 'types'.
+$windowDays = 'The days a weekly or monthly window recurs on. Weekly: 1 = Monday to 7 = Sunday according to the official Terraform provider, whose acceptance tests store 7; the specification only gives [2, 4, 5] for Tuesday, Thursday and Friday, which 0 = Sunday would fit as well. Monthly: 1 to 31, or -1 for the last day of the month. The API\'s validator accepts any number (verified live: 0, 8, 32 and -2); according to the provider, the API ignores invalid days.';
+$windowTime = 'The start time as HH:mm:ss, e.g. "14:30:00". The specification names no time zone.';
 
 return [
     'title' => 'UptimeRobot API v3',
@@ -130,6 +134,10 @@ return [
         // Monitor groups; MonitorGroupDto is MonitorGroup.
         'CreateMonitorGroupDto' => 'MonitorGroupCreate',
         'UpdateMonitorGroupDto' => 'MonitorGroupUpdate',
+
+        // Maintenance windows; MaintenanceWindowDto is named above.
+        'CreateMaintenanceWindowDto' => 'MaintenanceWindowCreate',
+        'UpdateMaintenanceWindowDto' => 'MaintenanceWindowUpdate',
     ],
 
     'properties' => [
@@ -183,8 +191,10 @@ return [
         'BulkOperationResponseDto.results[].status' => 'BulkOperationStatus',
         // The region filter adds "all" to the four regions.
         'MonitorsController_getMonitorResponseTimeStats.region' => 'ResponseTimeRegion',
-        'MaintenanceWindowDto.interval' => 'MaintenanceWindowInterval',
-        'MaintenanceWindowDto.status' => 'MaintenanceWindowStatus',
+        // The response, create and update copies; the response names its cases
+        // like its values (x-enumNames), the requests derive the same names.
+        '*MaintenanceWindowDto.interval' => 'MaintenanceWindowInterval',
+        '*MaintenanceWindowDto.status' => 'MaintenanceWindowStatus',
         // Lower case here, title case in the request DTOs of status pages
         // ("Light", "Normal"), and not verifiable live (the account has no status
         // pages): an enum could read a value the API actually sends as null.
@@ -450,6 +460,66 @@ return [
             'items' => ['type' => 'number'],
             'description' => 'Groups whose monitors are moved into the new group; 0 stands for the monitors in no group, which the specification calls the default group.',
         ],
+
+        // Maintenance windows. The account has none, and the owner allows none
+        // to be created, so the response shape is the specification's; the
+        // request constraints below come from the messages of requests the
+        // validator rejected (verified live). The items of a page are an inline
+        // copy of MaintenanceWindowDto.
+        'MaintenanceWindowPaginationDto.data[]' => ['$ref' => '#/components/schemas/MaintenanceWindowDto'],
+        // A string without description in the specification. The official
+        // Terraform provider sends the ID of the last window of the previous
+        // page and reads it from nextLink as an integer, as the other lists do;
+        // live, cursor=abc was ignored (200) on the empty list.
+        'MaintenanceWindowsController_list.cursor' => ['type' => 'integer'],
+        // Plain strings in their own formats (below); a DateTimeInterface would
+        // need a time zone, which the specification does not name.
+        'MaintenanceWindowDto.date' => ['type' => 'string', 'description' => 'The start date as YYYY-MM-DD, e.g. "2024-06-20", or null. The specification names no time zone.'],
+        'MaintenanceWindowDto.time' => ['type' => 'string', 'description' => $windowTime],
+        'MaintenanceWindowDto.duration' => ['type' => 'number', 'description' => 'Minutes the window lasts.'],
+        'MaintenanceWindowDto.days' => ['type' => 'array', 'items' => ['type' => 'number'], 'description' => $windowDays],
+        // The provider's documentation: "Use [0] to auto-add all monitors"; it
+        // then sends autoAddMonitors true as well.
+        'MaintenanceWindowDto.monitorIds' => [
+            'type' => 'array',
+            'items' => ['type' => 'number'],
+            'description' => 'The monitors in the window. The official Terraform provider treats [0] as all monitors, together with autoAddMonitors (not verified live).',
+        ],
+        'MaintenanceWindowDto.autoAddMonitors' => ['type' => 'boolean', 'description' => 'Whether all monitors are added to the window automatically.'],
+        // From the description of UpdateMaintenanceWindowDto.status.
+        'MaintenanceWindowDto.status' => [
+            'type' => 'string',
+            'enum' => ['active', 'paused'],
+            'description' => 'active: the window suppresses the alerts of its monitors during its periods; paused: it does not.',
+        ],
+        // Neither validator checks the date: a create request without it and an
+        // update with "2024-13-45" drew no message about it (verified live).
+        'CreateMaintenanceWindowDto.date' => [
+            'type' => 'string',
+            'description' => 'The start date as YYYY-MM-DD (years 19xx and 20xx), e.g. "2024-06-20". The specification names no time zone.',
+        ],
+        'UpdateMaintenanceWindowDto.date' => [
+            'type' => 'string',
+            'description' => 'The start date as YYYY-MM-DD (years 19xx and 20xx), e.g. "2024-06-20". The specification names no time zone.',
+        ],
+        // A regular expression the validator applies (verified live: "25:00:00" is
+        // rejected with "time must match /^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/
+        // regular expression"); the specification writes it as a JavaScript
+        // literal with slashes.
+        'CreateMaintenanceWindowDto.time' => ['type' => 'string', 'description' => $windowTime],
+        'UpdateMaintenanceWindowDto.time' => ['type' => 'string', 'description' => $windowTime],
+        // Verified live: 0 is rejected with "duration must not be less than 1".
+        'CreateMaintenanceWindowDto.duration' => ['type' => 'number', 'description' => 'Minutes the window lasts, at least 1.'],
+        'UpdateMaintenanceWindowDto.duration' => ['type' => 'number', 'description' => 'Minutes the window lasts, at least 1.'],
+        'CreateMaintenanceWindowDto.days' => ['type' => 'array', 'items' => ['type' => 'number'], 'description' => $windowDays],
+        'UpdateMaintenanceWindowDto.days' => ['type' => 'array', 'items' => ['type' => 'number'], 'description' => $windowDays],
+        // The provider sends the whole list and waits until the window reports
+        // exactly it, which only fits a replacement.
+        'UpdateMaintenanceWindowDto.monitorIds' => [
+            'type' => 'array',
+            'items' => ['type' => 'number'],
+            'description' => 'The monitors in the window, presumably replacing the current ones: the official Terraform provider sends the whole list and expects the window to report exactly it (not verified live).',
+        ],
     ],
 
     // The specification types every number of the request DTOs, and most of the
@@ -499,8 +569,8 @@ return [
         // Never populated live; presumably a Unix timestamp.
         'MonitorDto.lastDayUptimes.histogram[].timestamp',
         // Minutes, days of the week or month, and a count (not observable).
-        'MaintenanceWindowDto.duration',
-        'MaintenanceWindowDto.days[]',
+        '*MaintenanceWindowDto.duration',
+        '*MaintenanceWindowDto.days[]',
         'PspDto.monitorsCount',
         // Statistics: seconds, counts and milliseconds (verified live, e.g.
         // totalTimeWithoutIncidents 3155579985, summary {"min":79,"max":2080,
@@ -662,6 +732,18 @@ return [
             ],
         ],
         'properties' => [
+            // In the create request and the response, but not in the update
+            // request of the specification. The official Terraform provider
+            // sends it in PATCH, and its acceptance test
+            // TestAccMaintenanceWindow_AutoAddMonitors_NullAndSet changes it
+            // from false to true in place and reads it back. Not verified live:
+            // the account has no windows, and the maintenance window DTOs do not
+            // reject properties they do not know ("foo" drew no message, verified
+            // live), so a probe cannot tell either.
+            'UpdateMaintenanceWindowDto.autoAddMonitors' => [
+                'type' => 'boolean',
+                'description' => 'Whether all monitors are added to the window automatically. Missing from the specification\'s update request; the official Terraform provider changes it this way (not verified live).',
+            ],
             // Only in the response copy of RegionalDataDto (MonitorDto.regionalData),
             // which the request and the response share (see 'types').
             'RegionalDataDto.INFRASTRUCTURE' => [
@@ -800,6 +882,44 @@ return [
                 ],
             ],
         ],
+        'maintenanceWindows' => [
+            'class' => 'MaintenanceWindowResource',
+            'description' => 'Maintenance windows: one-time or recurring periods that suppress the alerts of the monitors assigned to them.',
+            'methods' => [
+                'list' => [
+                    'operation' => 'MaintenanceWindowsController_list',
+                    'pagination' => 'nextLink',
+                    'all' => 'all',
+                    'note' => 'The cursor is the ID of the last window of the previous page, as the official Terraform provider sends it. Only a single page was observable: an account without windows gets {"data": []} without nextLink (verified live).',
+                ],
+                'get' => [
+                    'operation' => 'MaintenanceWindowsController_get',
+                    // Verified live: /maintenance-windows/999999999 answers 404
+                    // "Maintenance window not found", /maintenance-windows/1 403
+                    // "Not belongs to user" (000-006).
+                    'note' => 'An unknown ID raises a NotFoundException, the ID of another account\'s window a ForbiddenException with the code 000-006 (both verified live).',
+                ],
+                'create' => [
+                    'operation' => 'MaintenanceWindowsController_create',
+                    'parameters' => ['@body' => 'window'],
+                    // The validator rejected every other required property when
+                    // they were missing or invalid, but not the missing date
+                    // (verified live); the Terraform provider leaves date out
+                    // unless one is configured. What a window without a date
+                    // does was not observable, so date stays required.
+                    'note' => 'Weekly and monthly windows need days. The specification requires date for every interval, although the API\'s validator does not ask for it (verified live). There is no status here; update() pauses a window.',
+                ],
+                'update' => [
+                    'operation' => 'MaintenanceWindowsController_update',
+                    'parameters' => ['@body' => 'changes'],
+                    'note' => 'Only the properties that are set are sent. The validator runs before the window is looked up (verified live), so an invalid change to an unknown ID raises a BadRequestException, a valid one a NotFoundException.',
+                ],
+                'delete' => [
+                    'operation' => 'MaintenanceWindowsController_delete',
+                    'note' => 'An unknown ID raises a NotFoundException (verified live).',
+                ],
+            ],
+        ],
         'user' => [
             'class' => 'UserResource',
             'description' => 'The account the API key belongs to: its plan and its alert contacts.',
@@ -848,11 +968,6 @@ return [
         'PspAnnouncementsController_update' => 'Pending: implemented resource by resource in the following commits.',
         'PspAnnouncementsController_pin' => 'Pending: implemented resource by resource in the following commits.',
         'PspAnnouncementsController_unpin' => 'Pending: implemented resource by resource in the following commits.',
-        'MaintenanceWindowsController_list' => 'Pending: implemented resource by resource in the following commits.',
-        'MaintenanceWindowsController_create' => 'Pending: implemented resource by resource in the following commits.',
-        'MaintenanceWindowsController_get' => 'Pending: implemented resource by resource in the following commits.',
-        'MaintenanceWindowsController_update' => 'Pending: implemented resource by resource in the following commits.',
-        'MaintenanceWindowsController_delete' => 'Pending: implemented resource by resource in the following commits.',
         'IntegrationsController_list' => 'Pending: implemented resource by resource in the following commits.',
         'IntegrationsController_create' => 'Pending: implemented resource by resource in the following commits.',
         'IntegrationsController_get' => 'Pending: implemented resource by resource in the following commits.',

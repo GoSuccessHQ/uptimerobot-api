@@ -13,6 +13,7 @@ use GoSuccess\UptimeRobot\RateLimit\NullRateLimiter;
 use GoSuccess\UptimeRobot\RateLimit\RateLimiter;
 use GoSuccess\UptimeRobot\RateLimit\RateLimitStatus;
 use GoSuccess\UptimeRobot\Resource\BulkMonitorResource;
+use GoSuccess\UptimeRobot\Resource\MaintenanceWindowResource;
 use GoSuccess\UptimeRobot\Resource\MonitorGroupResource;
 use GoSuccess\UptimeRobot\Resource\MonitorResource;
 use GoSuccess\UptimeRobot\Resource\StormProtectionResource;
@@ -46,6 +47,13 @@ final class UptimeRobot
      */
     public private(set) MonitorGroupResource $monitorGroups {
         get => $this->monitorGroups ??= new MonitorGroupResource($this->connection);
+    }
+
+    /**
+     * Maintenance windows: one-time or recurring periods that suppress the alerts of the monitors assigned to them.
+     */
+    public private(set) MaintenanceWindowResource $maintenanceWindows {
+        get => $this->maintenanceWindows ??= new MaintenanceWindowResource($this->connection);
     }
 
     /** The account the API key belongs to: its plan and its alert contacts. */

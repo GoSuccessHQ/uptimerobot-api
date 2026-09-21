@@ -43,6 +43,17 @@ Monitor groups: named sets of monitors. A monitor is in one group at most; the m
 - [`update()`](monitorGroups/update.md) — Update a monitor group
 - [`delete()`](monitorGroups/delete.md) — Delete a monitor group
 
+## `maintenanceWindows`
+
+Maintenance windows: one-time or recurring periods that suppress the alerts of the monitors assigned to them.
+
+- [`list()`](maintenanceWindows/list.md) — List maintenance windows
+- [`all()`](maintenanceWindows/all.md) — Iterate lazily over every item of list(), across all pages
+- [`get()`](maintenanceWindows/get.md) — Get a maintenance window by ID
+- [`create()`](maintenanceWindows/create.md) — Create a maintenance window
+- [`update()`](maintenanceWindows/update.md) — Update a maintenance window
+- [`delete()`](maintenanceWindows/delete.md) — Delete a maintenance window
+
 ## `user`
 
 The account the API key belongs to: its plan and its alert contacts.

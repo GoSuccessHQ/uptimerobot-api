@@ -18,14 +18,27 @@ final readonly class MaintenanceWindow implements ResponseModel
         public int $userId = 0,
         public string $name = '',
         public ?MaintenanceWindowInterval $interval = null,
+        /** The start date as YYYY-MM-DD, e.g. "2024-06-20", or null. The specification names no time zone. */
         public ?string $date = null,
+        /** The start time as HH:mm:ss, e.g. "14:30:00". The specification names no time zone. */
         public string $time = '',
+        /** Minutes the window lasts. */
         public int $duration = 0,
+        /** Whether all monitors are added to the window automatically. */
         public bool $autoAddMonitors = false,
-        /** @var list<int> */
+        /**
+         * The monitors in the window. The official Terraform provider treats [0] as all monitors, together with autoAddMonitors (not verified live).
+         *
+         * @var list<int>
+         */
         public array $monitorIds = [],
-        /** @var list<int> */
+        /**
+         * The days a weekly or monthly window recurs on. Weekly: 1 = Monday to 7 = Sunday according to the official Terraform provider, whose acceptance tests store 7; the specification only gives [2, 4, 5] for Tuesday, Thursday and Friday, which 0 = Sunday would fit as well. Monthly: 1 to 31, or -1 for the last day of the month. The API's validator accepts any number (verified live: 0, 8, 32 and -2); according to the provider, the API ignores invalid days.
+         *
+         * @var list<int>
+         */
         public array $days = [],
+        /** active: the window suppresses the alerts of its monitors during its periods; paused: it does not. */
         public ?MaintenanceWindowStatus $status = null,
         public ?DateTimeImmutable $created = null,
     ) {}

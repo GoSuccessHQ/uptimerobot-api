@@ -6,7 +6,11 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Enum;
 
-/** Schema: MaintenanceWindowDto.status */
+/**
+ * active: the window suppresses the alerts of its monitors during its periods; paused: it does not.
+ *
+ * Schema: MaintenanceWindowDto.status, UpdateMaintenanceWindowDto.status
+ */
 enum MaintenanceWindowStatus: string
 {
     case Active = 'active';
