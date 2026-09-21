@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Tests\Unit\Generated;
 
+use GoSuccess\UptimeRobot\Http\Connection;
 use GoSuccess\UptimeRobot\Model\RequestModel;
 use GoSuccess\UptimeRobot\Model\ResponseModel;
 use GoSuccess\UptimeRobot\Tests\Support\Generated\GeneratedCode;
@@ -11,9 +12,11 @@ use GoSuccess\UptimeRobot\Tests\Support\Generated\Samples;
 use GoSuccess\UptimeRobot\Tools\Generator\Definition\ModelDefinition;
 use GoSuccess\UptimeRobot\Tools\Generator\Definition\PropertyDefinition;
 use GoSuccess\UptimeRobot\Tools\Generator\PhpType;
+use LogicException;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 /**
  * Checks every generated model against the specification it was generated
@@ -113,6 +116,80 @@ final class GeneratedModelsTest extends TestCase
         };
 
         self::assertSame($expected, Samples::normalize($instance->toArray()));
+    }
+
+    /**
+     * Request models with a nested model (or a list of them) that can be
+     * constructed without any field.
+     *
+     * @return iterable<string, array{string, string, string}>
+     */
+    public static function nestedRequestModels(): iterable
+    {
+        foreach (GeneratedCode::all() as $code => $analysis) {
+            foreach ($analysis->registry->models as $model) {
+                if (!$model->request) {
+                    continue;
+                }
+
+                foreach ($model->properties as $property) {
+                    $nested = self::nestedModel($property);
+                    $definition = $nested === null ? null : $analysis->registry->models[$nested];
+
+                    if (!$property->readOnly && $definition !== null && self::constructibleEmpty($definition)) {
+                        yield "{$code} {$model->source}.{$property->jsonName}" => [$code, $model->class, $property->jsonName];
+                    }
+                }
+            }
+        }
+    }
+
+    #[DataProvider('nestedRequestModels')]
+    public function testSendsEmptyNestedModelsAsJsonObjects(string $code, string $class, string $json): void
+    {
+        [$model, $samples] = $this->definition($code, $class);
+        $property = array_values(array_filter($model->properties, static fn(PropertyDefinition $property): bool => $property->jsonName === $json))[0];
+        $nested = self::nestedModel($property) ?? throw new LogicException("{$class}::\${$property->phpName} holds no model.");
+        $empty = new $nested();
+        $isList = $property->type->kind === PhpType::LIST;
+
+        $instance = $samples->requestModel($model, overrides: [$property->phpName => $isList ? [$empty] : $empty]);
+        // Decoded with objects as stdClass, so that {} and [] differ.
+        $payload = json_decode(Connection::encodeJson($instance->toArray()), flags: \JSON_THROW_ON_ERROR);
+        self::assertInstanceOf(stdClass::class, $payload);
+        $envelope = $model->union?->envelope;
+        $fields = $envelope === null ? $payload : $payload->{$envelope};
+        self::assertInstanceOf(stdClass::class, $fields);
+
+        $sent = $fields->{$json};
+
+        if ($isList) {
+            self::assertIsArray($sent);
+            $sent = $sent[0];
+        }
+
+        self::assertInstanceOf(stdClass::class, $sent, "An empty {$nested} must be sent as {}.");
+    }
+
+    /**
+     * The model a property holds, directly or as list items.
+     *
+     * @return class-string|null
+     */
+    private static function nestedModel(PropertyDefinition $property): ?string
+    {
+        $type = $property->type->kind === PhpType::LIST ? $property->type->itemOrFail() : $property->type;
+
+        if ($type->kind !== PhpType::MODEL || !class_exists($type->classOrFail())) {
+            return null;
+        }
+
+        return $type->classOrFail();
+    }
+
+    private static function constructibleEmpty(ModelDefinition $model): bool
+    {
+        return array_filter($model->properties, static fn(PropertyDefinition $property): bool => $property->required && !$property->readOnly) === [] || $model->response;
     }
 
     /**

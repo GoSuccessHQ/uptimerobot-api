@@ -209,7 +209,8 @@ final class ResourceBuilder
         $this->registry->markUsage($type, true);
 
         $required = $operation->isRequestBodyRequired();
-        $name = $config->parameters['@body'] ?? lcfirst(substr($type->class ?? 'Payload', (int) strrpos($type->class ?? '\\Payload', '\\') + 1));
+        // Named after the model, e.g. $stormProtectionUpdate; a map has no class.
+        $name = $config->parameters['@body'] ?? ($type->class === null ? 'payload' : lcfirst(substr($type->class, (int) strrpos($type->class, '\\') + 1)));
         $definition = new ParameterDefinition(
             specName: '@body',
             phpName: $name === 'array' ? 'payload' : $name,

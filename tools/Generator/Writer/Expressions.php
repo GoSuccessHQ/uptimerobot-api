@@ -75,7 +75,9 @@ final readonly class Expressions
     }
 
     /**
-     * An expression turning a PHP value into its JSON payload form.
+     * An expression turning a PHP value into its JSON payload form. Nested
+     * models and maps become objects even when empty, i.e. `{}` rather than
+     * the `[]` json_encode() writes for an empty array.
      */
     public function serialize(PhpType $type, string $expression, bool $nullable, CodeFile $file): string
     {
@@ -84,7 +86,9 @@ final readonly class Expressions
         return match ($type->kind) {
             PhpType::STRING, PhpType::INT, PhpType::FLOAT, PhpType::BOOL, PhpType::MIXED => $expression,
             PhpType::ENUM => "{$expression}{$safe}value",
-            PhpType::MODEL, PhpType::UNION => "{$expression}{$safe}toArray()",
+            PhpType::MODEL, PhpType::UNION => $nullable
+                ? "{$expression} === null ? null : {$file->alias(self::JSON)}::map({$expression}->toArray())"
+                : "{$file->alias(self::JSON)}::map({$expression}->toArray())",
             PhpType::DATE => $nullable
                 ? "{$expression} === null ? null : {$file->alias(self::JSON)}::date({$expression})"
                 : "{$file->alias(self::JSON)}::date({$expression})",
@@ -98,6 +102,24 @@ final readonly class Expressions
                 ? "{$file->alias(self::JSON)}::map(array_map({$this->serializer($type->itemOrFail(), $file)}, {$expression}))"
                 : "{$file->alias(self::JSON)}::map({$expression})",
             default => throw new LogicException("Unknown kind {$type->kind}."),
+        };
+    }
+
+    /**
+     * An expression turning a request body parameter into the array that
+     * Connection::json() takes, or null for no body. Connection sends an
+     * empty array as `{}` itself.
+     */
+    public function payload(PhpType $type, string $expression, bool $nullable, CodeFile $file): string
+    {
+        return match ($type->kind) {
+            PhpType::MODEL, PhpType::UNION => $nullable ? "{$expression}?->toArray()" : "{$expression}->toArray()",
+            PhpType::MAP => match (true) {
+                !self::needsMapping($type->itemOrFail()) => $expression,
+                $nullable => "{$expression} === null ? null : array_map({$this->serializer($type->itemOrFail(), $file)}, {$expression})",
+                default => "array_map({$this->serializer($type->itemOrFail(), $file)}, {$expression})",
+            },
+            default => throw new LogicException("A request body of type {$type->kind} is not supported."),
         };
     }
 
@@ -135,7 +157,7 @@ final readonly class Expressions
 
         return match ($item->kind) {
             PhpType::ENUM => "static fn({$alias($item->classOrFail())} \$item): {$item->backing} => \$item->value",
-            PhpType::MODEL, PhpType::UNION => "static fn({$alias($item->classOrFail())} \$item): array => \$item->toArray()",
+            PhpType::MODEL, PhpType::UNION => "static fn({$alias($item->classOrFail())} \$item): array|{$alias('stdClass')} => {$file->alias(self::JSON)}::map(\$item->toArray())",
             PhpType::DATE => "{$file->alias(self::JSON)}::date(...)",
             default => "static fn(mixed \$item): mixed => {$this->serialize($item, '$item', false, $file)}",
         };

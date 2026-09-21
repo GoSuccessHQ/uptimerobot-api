@@ -116,8 +116,10 @@ final class Samples
 
     /**
      * Construct a request model with a sample value for every writable property.
+     *
+     * @param array<string, mixed> $overrides Values to pass instead, by PHP name.
      */
-    public function requestModel(ModelDefinition $model, int $depth = 0): RequestModel
+    public function requestModel(ModelDefinition $model, int $depth = 0, array $overrides = []): RequestModel
     {
         $arguments = [];
 
@@ -135,7 +137,7 @@ final class Samples
             }
         }
 
-        $instance = new ($model->class)(...$arguments);
+        $instance = new ($model->class)(...[...$arguments, ...$overrides]);
 
         if (!$instance instanceof RequestModel) {
             throw new LogicException("{$model->class} is not a request model.");

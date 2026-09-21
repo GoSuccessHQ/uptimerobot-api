@@ -46,7 +46,7 @@ final readonly class StormProtectionUpdate implements RequestModel
         }
 
         if (!$this->config instanceof Undefined) {
-            $data['config'] = $this->config->toArray();
+            $data['config'] = Json::map($this->config->toArray());
         }
 
         return $data;

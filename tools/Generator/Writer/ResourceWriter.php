@@ -198,9 +198,7 @@ final class ResourceWriter
         $body = null;
 
         if ($payload !== null) {
-            $body = $payload->type->kind === PhpType::MAP
-                ? $this->expressions->serialize($payload->type, "\${$payload->phpName}", false, $file)
-                : ($payload->nullable ? "\${$payload->phpName}?->toArray()" : "\${$payload->phpName}->toArray()");
+            $body = $this->expressions->payload($payload->type, "\${$payload->phpName}", $payload->nullable, $file);
         } elseif ($method->parametersIn(ParameterDefinition::BODY) !== [] || $method->parametersIn(ParameterDefinition::BOUND) !== []) {
             $body = '$body';
         } elseif ($method->emptyBody) {

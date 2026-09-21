@@ -126,6 +126,14 @@ final class KitchenSink
                         'responses' => ['201' => ['description' => '']],
                     ],
                 ],
+                '/widgets/{id}/labels' => [
+                    'put' => [
+                        'operationId' => 'WidgetsController_setLabels',
+                        'parameters' => [$id],
+                        'requestBody' => ['required' => false, ...$json(['type' => 'object', 'additionalProperties' => ['type' => 'string']])],
+                        'responses' => ['200' => ['description' => '']],
+                    ],
+                ],
                 '/widgets/{id}/alerts' => [
                     'get' => [
                         'operationId' => 'WidgetsController_alerts',
@@ -236,6 +244,15 @@ final class KitchenSink
                         'startsAt' => ['type' => 'string', 'format' => 'date-time'],
                         'groupIds' => ['type' => 'array', 'items' => ['type' => 'number']],
                         'headers' => ['type' => 'object'],
+                        'retry' => $ref('RetryPolicyDto'),
+                        'fallbacks' => ['type' => 'array', 'items' => $ref('RetryPolicyDto')],
+                    ],
+                ],
+                'RetryPolicyDto' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'backoff' => ['type' => 'string'],
+                        'onTimeout' => ['type' => 'boolean'],
                     ],
                 ],
                 'CreateNoteDto' => [
@@ -394,6 +411,7 @@ final class KitchenSink
                         'pause' => ['operation' => 'WidgetsController_pause'],
                         'archive' => ['operation' => 'WidgetsController_archive'],
                         'addNote' => ['operation' => 'WidgetsController_addNote', 'flatten' => true],
+                        'setLabels' => ['operation' => 'WidgetsController_setLabels'],
                         'alerts' => ['operation' => 'WidgetsController_alerts', 'unwrap' => 'data'],
                     ],
                 ],

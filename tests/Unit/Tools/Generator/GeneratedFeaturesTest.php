@@ -21,6 +21,7 @@ use GoSuccess\UptimeRobot\Tools\Generator\Writer\UnionWriter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
+use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionProperty;
 
@@ -190,6 +191,35 @@ final class GeneratedFeaturesTest extends TestCase
         self::assertSame('application/json', $http->requests[0]->headers['Content-Type'] ?? null);
         self::assertNull($http->requests[1]->body);
         self::assertArrayNotHasKey('Content-Type', $http->requests[1]->headers);
+    }
+
+    public function testSendsEmptyNestedModelsAsObjects(): void
+    {
+        $update = KitchenSink::class('Model\\WidgetUpdate');
+        $retry = KitchenSink::class('Model\\RetryPolicy');
+        $http = new MockHttpClient(new Response(200, '{"id": 7}'));
+
+        // json_encode() writes an empty array as [], which the API does not take for an object.
+        self::call(self::resource('widgets', $http), 'update', 7, new $update(retry: new $retry(), fallbacks: [new $retry()]));
+
+        self::assertSame('{"retry":{},"fallbacks":[{}]}', $http->requests[0]->body);
+    }
+
+    public function testSendsMapBodiesAsObjects(): void
+    {
+        $http = new MockHttpClient(new Response(200), new Response(200), new Response(200));
+        $widgets = self::resource('widgets', $http);
+        $parameters = array_map(static fn($parameter): string => $parameter->getName(), new ReflectionMethod($widgets, 'setLabels')->getParameters());
+
+        self::call($widgets, 'setLabels', 7, ['env' => 'prod']);
+        self::call($widgets, 'setLabels', 7, []);
+        // The body is optional.
+        self::call($widgets, 'setLabels', 7);
+
+        self::assertSame(['id', 'payload'], $parameters);
+        self::assertSame('{"env":"prod"}', $http->requests[0]->body);
+        self::assertSame('{}', $http->requests[1]->body);
+        self::assertNull($http->requests[2]->body);
     }
 
     public function testLeavesExcludedFileUploadsOutOfJsonModels(): void
