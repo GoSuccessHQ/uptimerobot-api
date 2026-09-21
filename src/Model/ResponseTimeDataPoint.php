@@ -12,7 +12,7 @@ use DateTimeImmutable;
 final readonly class ResponseTimeDataPoint implements ResponseModel
 {
     public function __construct(
-        /** ISO 8601 timestamp for the data point */
+        /** The time of the data point. */
         public ?DateTimeImmutable $timestamp = null,
         /** Response time value in milliseconds */
         public int $value = 0,

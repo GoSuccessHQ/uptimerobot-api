@@ -16,9 +16,9 @@ final readonly class ResponseTimeStats implements ResponseModel
         public ResponseTimeSummary $summary = new ResponseTimeSummary(),
         /** The number of time series points the statistics are based on, not of checks (verified live). */
         public int $dataPoints = 0,
-        /** Start of the date range (ISO 8601) */
+        /** The start of the period the statistics cover, as the API applied it. */
         public ?DateTimeImmutable $from = null,
-        /** End of the date range (ISO 8601) */
+        /** The end of the period the statistics cover, as the API applied it. */
         public ?DateTimeImmutable $to = null,
         /**
          * Optional time series data points

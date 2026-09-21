@@ -739,10 +739,12 @@ return [
         // ("from must be a Date instance" otherwise, verified live).
         'MonitorsController_getMonitor*.from' => $date,
         'MonitorsController_getMonitor*.to' => $date,
-        // ISO 8601 in UTC in the responses (verified live: "2026-09-20T08:58:51.465Z").
-        'Monitor*Stats*Dto.from' => $date,
-        'Monitor*Stats*Dto.to' => $date,
-        'MonitorResponseTimeStatsDto.time_series[].timestamp' => $date,
+        // ISO 8601 in UTC in the responses (verified live: "2026-09-20T08:58:51.465Z"),
+        // read as dates; without from and to in the request, the API echoes
+        // the last 24 hours to the millisecond (verified live).
+        'Monitor*Stats*Dto.from' => [...$date, 'description' => 'The start of the period the statistics cover, as the API applied it.'],
+        'Monitor*Stats*Dto.to' => [...$date, 'description' => 'The end of the period the statistics cover, as the API applied it.'],
+        'MonitorResponseTimeStatsDto.time_series[].timestamp' => [...$date, 'description' => 'The time of the data point.'],
         'UptimeStatsDto.logs[].datetime' => $date,
         // The two uptimes have different scales, which the specification does not
         // say (verified live: 0.99697 and 1 against 92.54 and 100).

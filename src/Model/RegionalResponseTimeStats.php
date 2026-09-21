@@ -22,9 +22,9 @@ final readonly class RegionalResponseTimeStats implements ResponseModel
         public ?ResponseTimeStats $oc = null,
         /** Response time statistics averaged across all regions, combined with legacy data when available */
         public ?ResponseTimeStats $all = null,
-        /** Start of the date range (ISO 8601) */
+        /** The start of the period the statistics cover, as the API applied it. */
         public ?DateTimeImmutable $from = null,
-        /** End of the date range (ISO 8601) */
+        /** The end of the period the statistics cover, as the API applied it. */
         public ?DateTimeImmutable $to = null,
     ) {}
 

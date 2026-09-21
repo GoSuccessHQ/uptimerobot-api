@@ -22,9 +22,9 @@ final readonly class MonitorUptimeStats implements ResponseModel
         public int $incidentCount = 0,
         /** Mean Time Between Failures in seconds, or null if no incidents occurred */
         public ?int $mtbf = null,
-        /** Start of the date range (ISO 8601) */
+        /** The start of the period the statistics cover, as the API applied it. */
         public ?DateTimeImmutable $from = null,
-        /** End of the date range (ISO 8601) */
+        /** The end of the period the statistics cover, as the API applied it. */
         public ?DateTimeImmutable $to = null,
     ) {}
 
