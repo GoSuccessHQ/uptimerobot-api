@@ -28,11 +28,15 @@ final readonly class MethodConfig
      *                                           method parameters instead of a model.
      * @param array<string, string> $parameters  Spec parameter name => PHP parameter name;
      *                                           "@body" names the request body parameter.
-     * @param list<string>          $hidden      Spec parameters that are not exposed.
+     * @param list<string>          $hidden      Query and header parameters that are not exposed.
      * @param list<string>          $required    Query parameters and flattened body properties to
      *                                           treat as required where the specification marks
      *                                           them optional.
      * @param string|null           $note        Extra paragraph for the docblock.
+     * @param list<string>          $ownParameters Keys of $parameters the method configures
+     *                                             itself, unlike the names the resource
+     *                                             shares with all its methods; each must
+     *                                             match a parameter of the operation.
      */
     public function __construct(
         public string $name,
@@ -49,6 +53,7 @@ final readonly class MethodConfig
         public array $hidden = [],
         public array $required = [],
         public ?string $note = null,
+        public array $ownParameters = [],
     ) {}
 
     /**
@@ -56,6 +61,7 @@ final readonly class MethodConfig
      */
     public static function fromArray(string $name, ConfigReader $reader, array $parameters = []): self
     {
+        $own = $reader->stringMapAt('parameters');
         $instance = new self(
             name: $name,
             operation: $reader->string('operation'),
@@ -67,10 +73,11 @@ final readonly class MethodConfig
             nullable: $reader->bool('nullable'),
             body: $reader->optionalString('body'),
             flatten: $reader->bool('flatten'),
-            parameters: [...$parameters, ...$reader->stringMapAt('parameters')],
+            parameters: [...$parameters, ...$own],
             hidden: $reader->stringList('hidden'),
             required: $reader->stringList('required'),
             note: $reader->optionalString('note'),
+            ownParameters: array_map(strval(...), array_keys($own)),
         );
 
         $reader->assertNoUnknownKeys();

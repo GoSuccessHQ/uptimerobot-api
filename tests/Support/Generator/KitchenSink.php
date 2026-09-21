@@ -394,8 +394,8 @@ final class KitchenSink
                 ],
             ],
             'pagination' => [
-                'nextLink' => ['cursor' => 'cursor', 'size' => 'limit', 'items' => 'data', 'factory' => 'Pagination\\Cursor::fromNextLink'],
-                'nextCursorId' => ['cursor' => 'cursor', 'items' => 'data', 'factory' => 'Pagination\\Cursor::fromNextCursorId'],
+                'nextLink' => ['cursor' => 'cursor', 'size' => 'limit', 'items' => 'data', 'next' => 'nextLink', 'factory' => 'Pagination\\Cursor::fromNextLink'],
+                'nextCursorId' => ['cursor' => 'cursor', 'items' => 'data', 'next' => 'nextCursorId', 'factory' => 'Pagination\\Cursor::fromNextCursorId'],
             ],
             'resources' => [
                 'widgets' => [

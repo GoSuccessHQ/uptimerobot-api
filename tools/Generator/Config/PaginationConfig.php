@@ -28,6 +28,9 @@ final readonly class PaginationConfig
      * @param int|null    $allSize  Page size used when iterating over all items; null
      *                              uses $pageSize.
      * @param string      $items    Response property holding the items.
+     * @param string      $next     Response property the factory reads the next page
+     *                              from, e.g. "nextLink"; every paginated response must
+     *                              have it, or all() would end after the first page.
      * @param string      $factory  "Class::method", see ApiConfig::referencedClass(),
      *                              called as factory(array $data, list $items,
      *                              bool $integerCursor): Page.
@@ -39,6 +42,7 @@ final readonly class PaginationConfig
         public ?int $pageSize,
         public ?int $allSize,
         public string $items,
+        public string $next,
         public string $factory,
     ) {}
 
@@ -51,6 +55,7 @@ final readonly class PaginationConfig
             pageSize: $reader->optionalInt('pageSize'),
             allSize: $reader->optionalInt('allSize'),
             items: $reader->string('items'),
+            next: $reader->string('next'),
             factory: $reader->string('factory'),
         );
 

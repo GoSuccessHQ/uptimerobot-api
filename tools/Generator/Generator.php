@@ -58,8 +58,17 @@ final class Generator
         $builder = new ResourceBuilder($registry);
 
         $resources = [];
+        // Lower-cased class => client property; one class file would overwrite the other.
+        $classes = [];
 
         foreach ($config->resources as $resourceConfig) {
+            $key = strtolower($resourceConfig->class);
+
+            if (isset($classes[$key])) {
+                throw new RuntimeException("resources.{$classes[$key]} and resources.{$resourceConfig->property} both use the class {$resourceConfig->class}.");
+            }
+
+            $classes[$key] = $resourceConfig->property;
             $resources[] = $builder->build($resourceConfig);
         }
 

@@ -96,16 +96,31 @@ final class ResourceBuilder
             throw new RuntimeException("{$context}: there is no query parameter {$method->pagination->cursor} to request further pages with.");
         }
 
+        // "@body" for a request body parameter, else the flattened properties.
         $bodyNames = array_map(static fn(ParameterDefinition $parameter): string => $parameter->specName, [...$bodyRequired, ...$bodyOptional]);
 
         foreach (array_diff($config->required, $queryNames, $bodyNames) as $unknown) {
             throw new RuntimeException("{$context}: {$unknown} is marked required, but is neither a query parameter nor a flattened body property.");
         }
 
+        $headerNames = [];
+
         foreach ($operation->parametersIn('header') as $parameter) {
+            $headerNames[] = $parameter->name;
+
             if (!\in_array($parameter->name, $config->hidden, true)) {
                 throw new RuntimeException("{$context}: header parameter {$parameter->name} is not supported; hide it or write the method by hand.");
             }
+        }
+
+        // A typo, or a parameter the specification renamed, would otherwise
+        // silently expose the parameter or change its PHP name.
+        foreach (array_diff($config->hidden, $queryNames, $headerNames) as $unknown) {
+            throw new RuntimeException("{$context}: {$unknown} is hidden, but is neither a query nor a header parameter.");
+        }
+
+        foreach (array_diff($config->ownParameters, $operation->pathPlaceholders(), $queryNames, $bodyNames) as $unknown) {
+            throw new RuntimeException("{$context}: 'parameters' renames {$unknown}, which is neither a path or query parameter nor the body or one of its flattened properties.");
         }
 
         // The cursor and the page size lead the optional parameters, so that
@@ -423,7 +438,14 @@ final class ResourceBuilder
         if ($config->response !== null) {
             $type = $this->registry->type($schema, "{$method->operation->id}.item");
         } else {
-            $items = $schema->resolve()->properties()[$pagination->items] ?? throw new RuntimeException("{$context}: response has no {$pagination->items} property.");
+            $properties = $schema->resolve()->properties();
+            $items = $properties[$pagination->items] ?? throw new RuntimeException("{$context}: response has no {$pagination->items} property.");
+
+            if (!isset($properties[$pagination->next])) {
+                // The factory would find no next page, so all() would end after the first.
+                throw new RuntimeException("{$context}: response has no {$pagination->next} property, from which the {$pagination->name} pagination reads the next page.");
+            }
+
             $list = $this->registry->type($items, ($schema->resolvedName() ?? "{$method->operation->id}.response") . ".{$pagination->items}");
 
             if ($list->kind !== PhpType::LIST) {

@@ -163,6 +163,7 @@ return [
             'cursor' => 'cursor',
             'size' => 'limit',
             'items' => 'data',
+            'next' => 'nextLink',
             'factory' => 'Pagination\\Cursor::fromNextLink',
         ],
         // {"data": [...], "nextCursorId": 42}; only GET /tags (verified live:
@@ -170,6 +171,7 @@ return [
         'nextCursorId' => [
             'cursor' => 'cursor',
             'items' => 'data',
+            'next' => 'nextCursorId',
             'factory' => 'Pagination\\Cursor::fromNextCursorId',
         ],
     ],

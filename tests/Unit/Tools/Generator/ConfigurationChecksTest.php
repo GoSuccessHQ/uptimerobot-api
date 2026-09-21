@@ -355,9 +355,80 @@ final class ConfigurationChecksTest extends TestCase
         $this->expectExceptionMessage('ThingsController_list (list): there is no query parameter cursor to request further pages with.');
 
         $this->analyze(['ThingDto' => self::object(['name' => ['type' => 'string']])], [
-            'pagination' => ['nextLink' => ['cursor' => 'cursor', 'items' => 'data', 'factory' => 'Pagination\\Cursor::fromNextLink']],
+            'pagination' => ['nextLink' => ['cursor' => 'cursor', 'items' => 'data', 'next' => 'nextLink', 'factory' => 'Pagination\\Cursor::fromNextLink']],
             'resources' => ['things' => ['class' => 'ThingResource', 'description' => 'Things.', 'methods' => ['list' => ['operation' => 'ThingsController_list', 'pagination' => 'nextLink', 'all' => 'all']]]],
         ], $paths);
+    }
+
+    public function testRequiresTheFieldThePaginationReadsTheNextPageFrom(): void
+    {
+        // Paginated like GET /tags, but configured with the style of the other lists.
+        $paths = ['/things' => ['get' => [
+            'operationId' => 'ThingsController_list',
+            'parameters' => [['name' => 'cursor', 'in' => 'query', 'schema' => ['type' => 'string']]],
+            'responses' => ['200' => self::json(self::object(['data' => ['type' => 'array', 'items' => self::ref('ThingDto')], 'nextCursorId' => ['type' => 'string']]))],
+        ]]];
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('ThingsController_list (list): response has no nextLink property, from which the nextLink pagination reads the next page.');
+
+        $this->analyze(['ThingDto' => self::object(['name' => ['type' => 'string']])], [
+            'pagination' => ['nextLink' => ['cursor' => 'cursor', 'items' => 'data', 'next' => 'nextLink', 'factory' => 'Pagination\\Cursor::fromNextLink']],
+            'resources' => ['things' => ['class' => 'ThingResource', 'description' => 'Things.', 'methods' => ['list' => ['operation' => 'ThingsController_list', 'pagination' => 'nextLink', 'all' => 'all']]]],
+        ], $paths);
+    }
+
+    public function testRejectsResourcesThatShareAClass(): void
+    {
+        $paths = [
+            '/things' => ['get' => ['operationId' => 'ThingsController_get', 'responses' => ['200' => self::json(self::ref('ThingDto'))]]],
+            '/others' => ['delete' => ['operationId' => 'OthersController_delete', 'responses' => ['204' => ['description' => '']]]],
+        ];
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('resources.things and resources.others both use the class thingResource.');
+
+        // One class file would overwrite the other; PHP class names ignore case.
+        $this->analyze(['ThingDto' => self::object(['name' => ['type' => 'string']])], ['resources' => [
+            'things' => ['class' => 'ThingResource', 'description' => 'Things.', 'methods' => ['get' => ['operation' => 'ThingsController_get']]],
+            'others' => ['class' => 'thingResource', 'description' => 'Others.', 'methods' => ['delete' => ['operation' => 'OthersController_delete']]],
+        ]], $paths);
+    }
+
+    public function testRejectsHiddenParametersThatMatchNothing(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('ThingsController_get (get): cursorr is hidden, but is neither a query nor a header parameter.');
+
+        $this->analyze(
+            ['ThingDto' => self::object(['name' => ['type' => 'string']])],
+            ['resources' => ['things' => ['class' => 'ThingResource', 'description' => 'Things.', 'methods' => ['get' => ['operation' => 'ThingsController_get', 'hidden' => ['cursorr']]]]]],
+            self::withQuery(['name' => 'cursor', 'in' => 'query', 'schema' => ['type' => 'string']]),
+        );
+    }
+
+    public function testRejectsParameterNamesThatMatchNothing(): void
+    {
+        $paths = ['/things/{id}' => ['delete' => [
+            'operationId' => 'ThingsController_delete',
+            'parameters' => [['name' => 'id', 'in' => 'path', 'required' => true, 'schema' => ['type' => 'string']]],
+            'responses' => ['204' => ['description' => '']],
+        ]]];
+        $resource = static fn(array $parameters): array => ['resources' => ['things' => [
+            'class' => 'ThingResource',
+            'description' => 'Things.',
+            // Names the resource shares with all its methods need not occur in each.
+            'parameters' => ['monitorId' => 'monitor'],
+            'methods' => ['delete' => ['operation' => 'ThingsController_delete', 'parameters' => $parameters]],
+        ]]];
+
+        $analysis = $this->analyze([], $resource(['id' => 'thingId']), $paths);
+        self::assertSame('thingId', $analysis->resources[0]->methods[0]->parameters[0]->phpName);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage("ThingsController_delete (delete): 'parameters' renames tagId, which is neither a path or query parameter nor the body or one of its flattened properties.");
+
+        $this->analyze([], $resource(['tagId' => 'tag']), $paths);
     }
 
     public function testCommaSeparatedParametersMustBeLists(): void
