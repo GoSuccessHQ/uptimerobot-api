@@ -275,6 +275,57 @@ final class ConnectionTest extends TestCase
         $this->connection($http)->json(Method::Post, 'monitors');
     }
 
+    /**
+     * The first DELETE may have been processed although its answer was lost; the
+     * API answers the repeated one with a 404 (verified live).
+     */
+    #[DataProvider('outcomesThatMayHaveBeenProcessed')]
+    public function testTreatsA404OfARetriedDeleteAsSuccess(Response|TransportException $first): void
+    {
+        $http = new MockHttpClient($first, new Response(404, '{"code":"000-004","message":"Resource you were trying to access is not found."}'));
+
+        $result = $this->connection($http)->json(Method::Delete, 'monitors/1');
+
+        self::assertNull($result);
+        self::assertSame(2, $http->callCount());
+    }
+
+    /**
+     * @return iterable<string, array{Response|TransportException}>
+     */
+    public static function outcomesThatMayHaveBeenProcessed(): iterable
+    {
+        yield 'lost connection' => [new TransportException('Operation timed out after 30001 milliseconds with 0 bytes received')];
+        yield 'gateway timeout' => [new Response(524)];
+        yield 'bad gateway' => [new Response(502)];
+    }
+
+    public function testReportsA404OfADeleteThatWasNotProcessedBefore(): void
+    {
+        // Neither a first attempt nor one rejected with a 429 deleted anything.
+        foreach ([[], [new Response(429, 'ThrottlerException: Too Many Requests', ['retry-after' => '1'])]] as $earlier) {
+            $http = new MockHttpClient(...[...$earlier, new Response(404, '{"code":"000-004","message":"Resource you were trying to access is not found."}')]);
+
+            try {
+                $this->connection($http)->json(Method::Delete, 'monitors/1');
+                self::fail('Expected a NotFoundException.');
+            } catch (NotFoundException $e) {
+                self::assertSame('000-004', $e->errorCode);
+            }
+
+            self::assertSame(\count($earlier) + 1, $http->callCount());
+        }
+    }
+
+    public function testReportsA404OfOtherRetriedRequests(): void
+    {
+        $http = new MockHttpClient(new Response(502), new Response(404, '{"code":"000-004","message":"Resource you were trying to access is not found."}'));
+
+        $this->expectException(NotFoundException::class);
+
+        $this->connection($http)->json(Method::Get, 'monitors/1');
+    }
+
     public function testBacksOffBetweenTransportRetriesAndGivesUp(): void
     {
         $http = new MockHttpClient(new TransportException('a'), new TransportException('b'), new TransportException('c'), new TransportException('d'));

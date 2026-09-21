@@ -151,6 +151,9 @@ final class Connection
         );
 
         $attempt = 0;
+        // Whether an earlier attempt may have been processed although its answer
+        // was a network failure or a server error.
+        $mayHaveBeenProcessed = false;
 
         while (true) {
             // Wait for an exhausted window first, so the limiter records the actual send time.
@@ -163,6 +166,7 @@ final class Connection
                 // The request may have reached the server, so only repeat it if
                 // doing so cannot duplicate a write.
                 if ($method->isIdempotent() && $attempt < $this->options->maxRetries) {
+                    $mayHaveBeenProcessed = true;
                     $this->clock->sleep($this->backoffDelay($attempt++));
 
                     continue;
@@ -178,7 +182,17 @@ final class Connection
                 return $response;
             }
 
+            if ($mayHaveBeenProcessed && $method === Method::Delete && $response->statusCode === 404) {
+                // An earlier attempt deleted the resource and only its answer
+                // was lost: the API answers a repeated DELETE with a 404
+                // (verified live). Either way, the resource is gone.
+                return new Response(204, headers: $response->headers);
+            }
+
             if ($this->isRetryable($response->statusCode, $method) && $attempt < $this->options->maxRetries) {
+                // A 429 was rejected before it was processed; a server error may
+                // have been processed anyway, e.g. behind a gateway timeout.
+                $mayHaveBeenProcessed = $mayHaveBeenProcessed || $response->statusCode >= 500;
                 $delay = $this->retryDelay($response, $receivedAt, $attempt++);
 
                 if ($response->statusCode === 429) {

@@ -23,7 +23,10 @@ final readonly class ClientOptions
      * @param float  $connectTimeout      Maximum duration of the connection phase in seconds.
      * @param int    $maxRetries          How often a failed request is retried. A `429` is
      *                                    always retried; server errors and network failures only
-     *                                    for idempotent requests (GET, PUT, DELETE).
+     *                                    for idempotent requests (GET, PUT, DELETE). A DELETE
+     *                                    retried after such an error that then answers `404`
+     *                                    counts as successful: the earlier attempt may have
+     *                                    deleted the resource, and it is gone either way.
      * @param float  $retryBaseDelay      Base delay in seconds of the exponential backoff.
      * @param float  $maxRetryDelay       Upper bound in seconds for a single wait. It also caps a
      *                                    server-provided `Retry-After` or rate-limit reset.

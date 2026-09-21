@@ -948,7 +948,10 @@ $uptimeRobot = new UptimeRobot('your-api-key', new ClientOptions(
 A `429` is always retried, up to `maxRetries` times. A server error or a lost
 connection is only retried for `GET`, `PUT` and `DELETE`: UptimeRobot creates resources and triggers
 actions with `POST` and changes them with `PATCH`, and repeating such a request
-could apply it twice.
+could apply it twice. The first attempt of a `DELETE` may still have deleted
+the resource, and the API answers a repeated `DELETE` with a `404` (verified
+live). So a `DELETE` that is retried after a server error or a lost connection
+and then answers `404` counts as successful: the resource is gone either way.
 
 ### Custom transport
 
