@@ -15,6 +15,7 @@ use GoSuccess\UptimeRobot\RateLimit\RateLimitStatus;
 use GoSuccess\UptimeRobot\RateLimit\SystemClock;
 use InvalidArgumentException;
 use JsonException;
+use LogicException;
 use SensitiveParameter;
 use SensitiveParameterValue;
 
@@ -262,8 +263,12 @@ final class Connection
 
     private function authorization(): string
     {
-        /** @var string $apiKey */
         $apiKey = $this->apiKey->getValue();
+
+        // The constructor wraps a string; getValue() is declared mixed.
+        if (!\is_string($apiKey)) {
+            throw new LogicException('The API key is not a string.');
+        }
 
         return "Bearer {$apiKey}";
     }
