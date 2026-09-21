@@ -1,0 +1,43 @@
+name: Specification drift
+
+# UptimeRobot changes the published OpenAPI specification several times a
+# month without raising info.version. This job fetches it weekly and fails
+# when the committed snapshot no longer matches, so the change is reviewed and
+# the client regenerated.
+
+on:
+  schedule:
+    # Mondays, 06:17 UTC.
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    name: Snapshot matches the published specification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Fetch the specification
+        run: composer specs
+
+      - name: Fail if the specification changed
+        run: |
+          if ! git diff --exit-code --stat -- resources/specs; then
+            git diff -- resources/specs | head -n 400
+            echo "::error::The UptimeRobot specification changed. Run 'composer specs' and 'composer generate', review the diff and commit the result."
+            exit 1
+          fi
