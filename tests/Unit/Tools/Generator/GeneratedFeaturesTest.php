@@ -6,6 +6,7 @@ namespace GoSuccess\UptimeRobot\Tests\Unit\Tools\Generator;
 
 use BackedEnum;
 use DateTimeImmutable;
+use Deprecated;
 use GoSuccess\UptimeRobot\Http\Response;
 use GoSuccess\UptimeRobot\Model\RequestModel;
 use GoSuccess\UptimeRobot\Model\ResponseModel;
@@ -15,12 +16,14 @@ use GoSuccess\UptimeRobot\Tests\Support\Generated\GeneratedCode;
 use GoSuccess\UptimeRobot\Tests\Support\Generator\KitchenSink;
 use GoSuccess\UptimeRobot\Tests\Support\MockHttpClient;
 use GoSuccess\UptimeRobot\Tools\Generator\Generator;
+use GoSuccess\UptimeRobot\Tools\Generator\Writer\EnumWriter;
 use GoSuccess\UptimeRobot\Tools\Generator\Writer\ModelWriter;
 use GoSuccess\UptimeRobot\Tools\Generator\Writer\ResourceWriter;
 use GoSuccess\UptimeRobot\Tools\Generator\Writer\UnionWriter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
+use ReflectionEnumBackedCase;
 use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionProperty;
@@ -30,6 +33,7 @@ use ReflectionProperty;
  * with a mocked transport: what each feature of the generator produces.
  */
 #[CoversClass(Generator::class)]
+#[CoversClass(EnumWriter::class)]
 #[CoversClass(ModelWriter::class)]
 #[CoversClass(ResourceWriter::class)]
 #[CoversClass(UnionWriter::class)]
@@ -44,6 +48,27 @@ final class GeneratedFeaturesTest extends TestCase
         // Configured in enumCases.
         self::assertSame(['NorthAmerica' => 'na', 'Europe' => 'eu'], self::cases($region));
         self::assertSame(['Up' => 'UP', 'LooksDown' => 'LOOKS_DOWN', 'Paused' => 'PAUSED'], self::cases(KitchenSink::class('Enum\\WidgetStatus')));
+    }
+
+    public function testMarksTheValuesTheApiPhasesOutAsDeprecatedCases(): void
+    {
+        $window = KitchenSink::class('Enum\\SettingsWindow');
+
+        self::assertSame(['Short' => 'SHORT', 'Long' => 'LONG', 'WholeDay' => 'WHOLE_DAY'], self::cases($window));
+        self::assertFalse(new ReflectionEnumBackedCase($window, 'Long')->isDeprecated());
+
+        $case = new ReflectionEnumBackedCase($window, 'WholeDay');
+        self::assertTrue($case->isDeprecated());
+        self::assertStringContainsString("Use LONG; it's accepted through 2026-10-10.", (string) $case->getDocComment());
+        self::assertStringContainsString('@deprecated', (string) $case->getDocComment());
+
+        $attribute = $case->getAttributes(Deprecated::class)[0] ?? null;
+        self::assertNotNull($attribute);
+        self::assertSame(["Use LONG; it's accepted through 2026-10-10."], $attribute->getArguments());
+
+        // Reading the value does not report the deprecation; only code that
+        // names the case does.
+        self::assertSame('WHOLE_DAY', self::enumValue($window::tryFrom('WHOLE_DAY')));
     }
 
     public function testReadsOverriddenTypesAndClassifiedNumbers(): void

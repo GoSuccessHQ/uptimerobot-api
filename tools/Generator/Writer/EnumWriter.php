@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Tools\Generator\Writer;
 
+use GoSuccess\UptimeRobot\Tools\Generator\Definition\EnumCase;
 use GoSuccess\UptimeRobot\Tools\Generator\Definition\EnumDefinition;
 
 /**
- * Renders backed enums.
+ * Renders backed enums, with the description of each case and the
+ * deprecation of the values the API phases out.
  */
 final class EnumWriter
 {
@@ -20,15 +22,19 @@ final class EnumWriter
         $cases = '';
 
         foreach ($enum->cases as $index => $case) {
-            if ($index > 0 && $case->description !== null) {
+            // A case with a docblock or an attribute stands apart.
+            $documented = $case->description !== null || $case->deprecated;
+
+            if ($index > 0 && $documented) {
                 $cases .= "\n";
             }
 
-            $cases .= Doc::block([Doc::lines($case->description)], '    ');
-            $value = \is_int($case->value) ? (string) $case->value : "'" . str_replace(['\\', "'"], ['\\\\', "\\'"], $case->value) . "'";
+            $cases .= Doc::block([Doc::lines($case->description), $case->deprecated ? ['@deprecated'] : []], '    ');
+            $cases .= $this->deprecation($case, $file);
+            $value = \is_int($case->value) ? (string) $case->value : "'" . $this->escape($case->value) . "'";
             $cases .= "    case {$case->name} = {$value};\n";
 
-            if ($case->description !== null && $index < \count($enum->cases) - 1) {
+            if ($documented && $index < \count($enum->cases) - 1) {
                 $cases .= "\n";
             }
         }
@@ -37,5 +43,26 @@ final class EnumWriter
         $doc = Doc::block([Doc::lines($enum->description), ['Schema: ' . implode(', ', $enum->schemas)]]);
 
         return $file->render("{$doc}enum {$short}: {$enum->backing}\n{\n{$cases}}\n", $source);
+    }
+
+    /**
+     * PHP reports the use of a deprecated case at runtime, with its
+     * description as the message; reading the value (tryFrom) stays silent.
+     */
+    private function deprecation(EnumCase $case, CodeFile $file): string
+    {
+        if (!$case->deprecated) {
+            return '';
+        }
+
+        $attribute = $file->alias('Deprecated');
+        $message = trim((string) preg_replace('/\s+/', ' ', $case->description ?? ''));
+
+        return $message === '' ? "    #[{$attribute}]\n" : "    #[{$attribute}('{$this->escape($message)}')]\n";
+    }
+
+    private function escape(string $value): string
+    {
+        return str_replace(['\\', "'"], ['\\\\', "\\'"], $value);
     }
 }

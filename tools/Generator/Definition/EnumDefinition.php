@@ -24,10 +24,10 @@ final readonly class EnumDefinition
     ) {}
 
     /**
-     * A comparable fingerprint of the values and names.
+     * A comparable fingerprint of the values, the names and the deprecations.
      */
     public function signature(): string
     {
-        return $this->backing . ':' . implode(',', array_map(static fn(EnumCase $case): string => "{$case->name}={$case->value}", $this->cases));
+        return $this->backing . ':' . implode(',', array_map(static fn(EnumCase $case): string => "{$case->name}={$case->value}" . ($case->deprecated ? ' (deprecated)' : ''), $this->cases));
     }
 }

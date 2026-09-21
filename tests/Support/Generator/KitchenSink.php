@@ -339,7 +339,12 @@ final class KitchenSink
                     'properties' => [
                         'enabled' => ['type' => 'boolean'],
                         'threshold' => ['type' => 'number'],
-                        'window' => ['type' => 'string', 'enum' => ['SHORT', 'LONG']],
+                        // Values with descriptions, one of them phased out.
+                        'window' => ['oneOf' => [
+                            ['type' => 'string', 'enum' => ['SHORT'], 'description' => 'Five minutes.'],
+                            ['type' => 'string', 'enum' => ['LONG'], 'description' => 'An hour.'],
+                            ['type' => 'string', 'enum' => ['WHOLE_DAY'], 'deprecated' => true, 'description' => "Use LONG; it's accepted through 2026-10-10."],
+                        ]],
                         // Any JSON value, null included.
                         'fallback' => ['description' => 'Anything.'],
                     ],

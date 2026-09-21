@@ -24,6 +24,9 @@ use RuntimeException;
  * `x-enumNames` and those that do not agree. An int enum without names fails:
  * its cases must be named in the configuration. When two sources disagree,
  * generation fails instead of guessing.
+ *
+ * A `oneOf` of single values also gives each case a description and marks the
+ * values the API phases out (`deprecated: true`) as deprecated cases.
  */
 final class EnumBuilder
 {
@@ -36,7 +39,7 @@ final class EnumBuilder
      */
     public function build(Schema $schema, string $class, ?array $configured, string $source): EnumDefinition
     {
-        [$values, $titles, $caseDescriptions] = $this->values($schema);
+        [$values, $titles, $caseDescriptions, $deprecated] = $this->values($schema);
         $backing = $this->backing($schema, $values, $source);
 
         $fromDescription = $this->namesFromDescription($schema->description());
@@ -87,26 +90,30 @@ final class EnumBuilder
             }
 
             $usedNames[strtolower($case)] = true;
-            $cases[] = new EnumCase($case, $backing === 'int' ? (int) $value : (string) $value, $caseDescriptions[$value] ?? null);
+            $cases[] = new EnumCase($case, $backing === 'int' ? (int) $value : (string) $value, $caseDescriptions[$value] ?? null, isset($deprecated[$value]));
         }
 
         return new EnumDefinition($class, $backing, $cases, $this->cleanDescription($schema->description()), [$source]);
     }
 
     /**
-     * @return array{list<int|string>, array<int|string, string>, array<int|string, string>}
+     * The values, and from a `oneOf` of single values also the title,
+     * description and deprecation of each.
+     *
+     * @return array{list<int|string>, array<int|string, string>, array<int|string, string>, array<int|string, true>}
      */
     private function values(Schema $schema): array
     {
         $values = $schema->enum();
 
         if ($values !== null) {
-            return [$values, [], []];
+            return [$values, [], [], []];
         }
 
         $values = [];
         $titles = [];
         $descriptions = [];
+        $deprecated = [];
 
         foreach ($schema->variants('oneOf') as $variant) {
             $value = ($variant->enum() ?? [])[0] ?? null;
@@ -124,9 +131,13 @@ final class EnumBuilder
             if ($variant->description() !== null) {
                 $descriptions[$value] = $variant->description();
             }
+
+            if ($variant->isDeprecated()) {
+                $deprecated[$value] = true;
+            }
         }
 
-        return [$values, $titles, $descriptions];
+        return [$values, $titles, $descriptions, $deprecated];
     }
 
     /**
