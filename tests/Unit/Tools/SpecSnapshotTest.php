@@ -6,6 +6,7 @@ namespace GoSuccess\UptimeRobot\Tests\Unit\Tools;
 
 use GoSuccess\UptimeRobot\Tools\SpecSnapshot;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -85,12 +86,84 @@ final class SpecSnapshotTest extends TestCase
         SpecSnapshot::fromYaml("example: 2026-01-01\n");
     }
 
-    public function testRejectsIntegersBeyondTheIntRange(): void
+    #[DataProvider('integersBeyondTheIntRange')]
+    public function testRejectsIntegersBeyondTheIntRange(string $yaml, string $message): void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('integer beyond the int range');
+        $this->expectExceptionMessage($message);
 
-        SpecSnapshot::fromYaml("maximum: 123456789012345678901\n");
+        SpecSnapshot::fromYaml($yaml);
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function integersBeyondTheIntRange(): iterable
+    {
+        $string = 'is beyond the int range or has leading zeros, so it would be read as a string';
+
+        yield 'block' => ["maximum: 123456789012345678901\n", "Unquoted integer 123456789012345678901 at /maximum: it {$string}"];
+        yield 'negative' => ["minimum: -12345678901234567890\n", 'Unquoted integer -12345678901234567890 at /minimum'];
+        yield 'flow sequence' => ["enum: [1, 12345678901234567890]\n", 'Unquoted integer 12345678901234567890 at /enum/1'];
+        yield 'flow mapping' => ["x: {max: 99999999999999999999}\n", 'Unquoted integer 99999999999999999999 at /x/max'];
+        yield 'quoted once, unquoted once' => ["enum: ['12345678901234567890', 12345678901234567890]\n", 'Unquoted integer 12345678901234567890 at one of /enum/0, /enum/1'];
+        yield 'underscores' => ["x: 1_000_000_000_000_000_000_0\n", 'Unquoted integer 10000000000000000000 at /x'];
+        yield 'plus sign' => ["x: +12345678901234567890\n", 'Unquoted integer 12345678901234567890 at /x'];
+        yield 'leading zeros' => ["x: 007\n", 'Unquoted integer 007 at /x'];
+        yield 'hexadecimal' => ["x: [0x7FFFFFFFFFFFFFFFF]\n", 'Unquoted integer 0x7FFFFFFFFFFFFFFFF at /x/0: it is beyond the int range, so it would be read as an imprecise float'];
+        yield 'octal' => ["x: 0o777777777777777777777777\n", 'Unquoted integer 0o777777777777777777777777 at /x'];
+    }
+
+    public function testKeepsLongIntegersThatAreQuotedFitOrAreText(): void
+    {
+        $yaml = <<<'YAML'
+            quoted: '12345678901234567890'
+            double: "12345678901234567890"
+            tagged: !!str 12345678901234567890
+            padded: '007'
+            fits: 1000000000000000000
+            hex: 0x10
+            text: |
+              id: 1234567890123456789012
+            folded: >
+              see 0x7FFFFFFFFFFFFFFFF
+            end: true
+            YAML;
+
+        $decoded = json_decode(SpecSnapshot::fromYaml($yaml), true, 512, \JSON_THROW_ON_ERROR);
+
+        self::assertSame([
+            'quoted' => '12345678901234567890',
+            'double' => '12345678901234567890',
+            'tagged' => '12345678901234567890',
+            'padded' => '007',
+            'fits' => 1000000000000000000,
+            'hex' => 16,
+            'text' => "id: 1234567890123456789012\n",
+            'folded' => "see 0x7FFFFFFFFFFFFFFFF\n",
+            'end' => true,
+        ], $decoded);
+    }
+
+    #[DataProvider('evaluatedKeys')]
+    public function testRejectsMappingKeysTheParserEvaluates(string $yaml, string $location): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage("Evaluated mapping key at {$location}");
+
+        SpecSnapshot::fromYaml($yaml);
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function evaluatedKeys(): iterable
+    {
+        yield 'date' => ["2026-01-01: released\n", '/1767225600'];
+        yield 'nested date' => ["versions:\n  2026-01-01: released\n", '/versions/1767225600'];
+        yield 'date in a sequence' => ["versions:\n  - 2026-01-01: released\n", '/versions/0/1767225600'];
+        yield 'hexadecimal' => ["codes:\n  0x10: sixteen\n", '/codes/16'];
+        yield 'underscores' => ["codes:\n  1_000: thousand\n", '/codes/1000'];
     }
 
     public function testRejectsNonFiniteNumbers(): void
