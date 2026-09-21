@@ -3,7 +3,8 @@
 declare(strict_types=1);
 
 /**
- * List the status pages with their monitors and design. Read-only.
+ * List the status pages with their monitors, design and announcements.
+ * Read-only.
  *
  *   UPTIMEROBOT_API_KEY=your-api-key php examples/status-pages.php
  *
@@ -15,6 +16,7 @@ declare(strict_types=1);
  *   );
  */
 
+use GoSuccess\UptimeRobot\Exception\ForbiddenException;
 use GoSuccess\UptimeRobot\UptimeRobot;
 
 /** @var UptimeRobot $uptimeRobot */
@@ -37,6 +39,22 @@ foreach ($uptimeRobot->statusPages->all() as $page) {
         $design === null ? '' : sprintf(', %s theme', $design->theme->value ?? '?'),
     );
     ++$count;
+
+    try {
+        foreach ($uptimeRobot->announcements->all($page->id) as $announcement) {
+            printf(
+                "  announcement #%d %s [%s, %s]%s\n",
+                $announcement->id,
+                $announcement->title ?? '(untitled)',
+                $announcement->type ?? '?',
+                $announcement->status ?? '?',
+                $page->pinnedAnnouncementId === $announcement->id ? ' pinned' : '',
+            );
+        }
+    } catch (ForbiddenException $e) {
+        // Announcements need the plan feature psp-subscribers (code 000-003).
+        echo "  announcements: {$e->getMessage()}\n";
+    }
 }
 
 if ($count === 0) {

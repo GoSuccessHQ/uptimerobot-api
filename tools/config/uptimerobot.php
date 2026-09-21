@@ -92,6 +92,15 @@ $commentPlan = 'Requires the plan feature incident-comments; without it, the API
 $pageLayout = ['logo_on_left', 'logo_on_center'];
 $pageTheme = ['light', 'dark'];
 $pageDensity = ['normal', 'compact'];
+// Announcements need the plan feature psp-subscribers, which the account
+// lacks: every announcement endpoint answers 403 "Feature psp-subscribers is
+// not enabled in your plan." (000-003), even for an unknown status page and
+// with a status filter in either casing (verified live). Everything else
+// about them comes from the specification.
+$announcementPlan = 'Requires the plan feature psp-subscribers; without it, the API raises a ForbiddenException with the code 000-003 before it looks at the status page or the request (verified live). Not verified live beyond that: the test account lacks the feature.';
+// The response documents its values in descriptions only, in the title case
+// of the requests; the list filter has upper-case ones.
+$announcementCasing = 'The specification documents the values in its description only; their casing in responses was not verifiable live.';
 $statusPageMonitors = 'The monitors on the page; [0] alone stands for every monitor of the account, including those added later, and an empty list removes every monitor. Wins over autoAddMonitors when both are sent.';
 
 return [
@@ -195,6 +204,11 @@ return [
         'PageCustomSettingsDto' => 'StatusPageCustomSettingsPageInput',
         'ColorsCustomSettingsDto' => 'StatusPageCustomSettingsColorsInput',
         'FeaturesCustomSettingsDto' => 'StatusPageCustomSettingsFeaturesInput',
+
+        // Announcements; the create and update requests are identical.
+        'PspAnnouncementResponseDto' => 'Announcement',
+        'CreatePspAnnouncementRequestDto' => 'AnnouncementCreate',
+        'UpdatePspAnnouncementRequestDto' => 'AnnouncementUpdate',
     ],
 
     'properties' => [
@@ -270,6 +284,13 @@ return [
         'UpdatePspDto.status' => 'StatusPageStatus',
         'CreatePsPDto.sort' => 'StatusPageSort',
         'UpdatePspDto.sort' => 'StatusPageSort',
+        // Announcements: title case in the requests, upper case in the list
+        // filter, as the specification has them (the plan check hides which
+        // casing the API accepts, see $announcementPlan); the response values
+        // stay strings (see 'types').
+        '*PspAnnouncementRequestDto.status' => 'AnnouncementStatus',
+        '*PspAnnouncementRequestDto.type' => 'AnnouncementType',
+        'PspAnnouncementsController_list.status' => 'AnnouncementStatusFilter',
         // The assertion diagnostics of an incident share the logic and the
         // operators of the assertions an API monitor is created with; the
         // response names its cases in upper case (x-enumNames), which become the
@@ -821,7 +842,7 @@ return [
         // /G-[A-Z0-9]{10}/ regular expression".
         'CreatePsPDto.gaCode' => ['type' => 'string', 'description' => 'The Google Analytics measurement ID, "G-" and 10 upper-case letters or digits; for a page with a custom domain only.'],
         'UpdatePspDto.gaCode' => ['type' => 'string', 'description' => 'The Google Analytics measurement ID, "G-" and 10 upper-case letters or digits; for a page with a custom domain only.'],
-        'UpdatePspDto.pinnedAnnouncementId' => ['type' => 'number', 'description' => 'The announcement to pin to the page, as AnnouncementResource::pin() does.'],
+        'UpdatePspDto.pinnedAnnouncementId' => ['type' => 'number', 'description' => 'The announcement to pin to the page, presumably what AnnouncementResource::pin() sets as well (not verified live).'],
         // Whether an update merges the design into the current one or replaces
         // it could not be tried. The provider always sends page, colors and
         // features along, as empty objects if unset; the validator does not ask
@@ -830,6 +851,42 @@ return [
         'UpdatePspDto.customSettings' => [
             '$ref' => '#/components/schemas/CustomSettingsDto',
             'description' => 'The design of the page. Whether it is merged into the current design or replaces it is not documented (not verified live).',
+        ],
+
+        // Announcements, from the specification (see $announcementPlan). The
+        // items of a page are an inline copy of PspAnnouncementResponseDto
+        // (identical).
+        'PspAnnouncementPaginationResponseDto.data[]' => ['$ref' => '#/components/schemas/PspAnnouncementResponseDto'],
+        // Erased to {}; the values are in the descriptions only.
+        'PspAnnouncementResponseDto.status' => [
+            'type' => 'string',
+            'description' => 'The status: Offline (a draft, not shown), Pending (scheduled), Published (shown on the status page) or Archived (no longer shown). ' . $announcementCasing,
+        ],
+        'PspAnnouncementResponseDto.type' => [
+            'type' => 'string',
+            'description' => 'The kind of announcement: Info, Maintenance or Issue. ' . $announcementCasing,
+        ],
+        'PspAnnouncementResponseDto.deliveryStatus' => [
+            'type' => 'string',
+            'description' => 'Whether the announcement reached the subscribers: CantSend, InQueue or Sent. ' . $announcementCasing,
+        ],
+        // Erased to {} as well; the requests send ISO 8601, which the other
+        // dates of the API are in responses too.
+        'PspAnnouncementResponseDto.startDate' => [...$date, 'description' => 'When the announcement starts.'],
+        'PspAnnouncementResponseDto.endDate' => [...$date, 'description' => 'When the announcement ends; null if open-ended.'],
+        'PspAnnouncementResponseDto.creationDate' => [...$date, 'description' => 'When the announcement was created.'],
+        'PspAnnouncementResponseDto.submitDate' => [...$date, 'description' => 'When the announcement was submitted; the specification does not describe it further.'],
+        'PspAnnouncementResponseDto.pspId' => ['type' => 'integer', 'description' => 'The status page.'],
+        // The requests' dates are DateTimeInterface, which the client sends as
+        // ISO 8601 in UTC.
+        '*PspAnnouncementRequestDto.title' => ['type' => 'string', 'description' => 'The title, at most 255 characters.'],
+        '*PspAnnouncementRequestDto.content' => ['type' => 'string', 'description' => 'The text, at most 2000 characters.'],
+        '*PspAnnouncementRequestDto.startDate' => [...$date, 'description' => 'When the announcement starts.'],
+        '*PspAnnouncementRequestDto.endDate' => [...$date, 'description' => 'When the announcement ends; null for no end.'],
+        'PspAnnouncementsController_list.status' => [
+            'type' => 'string',
+            'enum' => ['OFFLINE', 'PENDING', 'PUBLISHED', 'ARCHIVED'],
+            'description' => 'An announcement status as the list filter takes it, in upper case, unlike AnnouncementStatus (per the specification; not verified live).',
         ],
     ],
 
@@ -931,6 +988,9 @@ return [
         // The ID of the last status page of the previous page, as the official
         // Terraform provider reads it from nextLink.
         'PspController_list.cursor',
+        // The ID of the last announcement of the previous page, presumably, as
+        // for the other lists (not verifiable live, see $announcementPlan).
+        'PspAnnouncementsController_list.cursor',
     ],
 
     'floats' => [
@@ -1395,6 +1455,44 @@ return [
                 ],
             ],
         ],
+        'announcements' => [
+            'class' => 'AnnouncementResource',
+            'description' => 'Announcements on status pages: information, maintenance and issue notices, which subscribers receive by e-mail. Requires the plan feature psp-subscribers.',
+            // The status page comes first; the announcement itself is $id.
+            'parameters' => ['pspId' => 'statusPageId'],
+            'methods' => [
+                'list' => [
+                    'operation' => 'PspAnnouncementsController_list',
+                    'pagination' => 'nextLink',
+                    'all' => 'all',
+                    'note' => 'Newest first, according to the specification. The status filter takes the upper-case values of the specification (AnnouncementStatusFilter), unlike the title-case AnnouncementStatus of the requests. ' . $announcementPlan,
+                ],
+                'get' => ['operation' => 'PspAnnouncementsController_get', 'note' => $announcementPlan],
+                'create' => [
+                    'operation' => 'PspAnnouncementsController_create',
+                    'parameters' => ['@body' => 'announcement'],
+                    'note' => 'The specification marks no property as required, not even title and content. ' . $announcementPlan,
+                ],
+                'update' => [
+                    'operation' => 'PspAnnouncementsController_update',
+                    'parameters' => ['@body' => 'changes'],
+                    'note' => 'Only the properties that are set are sent. ' . $announcementPlan,
+                ],
+                // Without a body, POST .../announcements/1/pin and .../unpin
+                // answer 415 "Content-Type must be application/json", with {} the
+                // plan check's 403 (verified live for the status page 999999999).
+                'pin' => [
+                    'operation' => 'PspAnnouncementsController_pin',
+                    'body' => 'empty',
+                    'note' => 'Sends an empty JSON object, which the API insists on although the specification declares no body (verified live). ' . $announcementPlan,
+                ],
+                'unpin' => [
+                    'operation' => 'PspAnnouncementsController_unpin',
+                    'body' => 'empty',
+                    'note' => 'Sends an empty JSON object, which the API insists on although the specification declares no body (verified live). ' . $announcementPlan,
+                ],
+            ],
+        ],
         'user' => [
             'class' => 'UserResource',
             'description' => 'The account the API key belongs to: its plan and its alert contacts.',
@@ -1424,12 +1522,6 @@ return [
     ],
 
     'ignored' => [
-        'PspAnnouncementsController_list' => 'Pending: implemented resource by resource in the following commits.',
-        'PspAnnouncementsController_create' => 'Pending: implemented resource by resource in the following commits.',
-        'PspAnnouncementsController_get' => 'Pending: implemented resource by resource in the following commits.',
-        'PspAnnouncementsController_update' => 'Pending: implemented resource by resource in the following commits.',
-        'PspAnnouncementsController_pin' => 'Pending: implemented resource by resource in the following commits.',
-        'PspAnnouncementsController_unpin' => 'Pending: implemented resource by resource in the following commits.',
         'IntegrationsController_list' => 'Pending: implemented resource by resource in the following commits.',
         'IntegrationsController_create' => 'Pending: implemented resource by resource in the following commits.',
         'IntegrationsController_get' => 'Pending: implemented resource by resource in the following commits.',

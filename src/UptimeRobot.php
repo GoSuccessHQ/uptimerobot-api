@@ -12,6 +12,7 @@ use GoSuccess\UptimeRobot\Http\HttpClient;
 use GoSuccess\UptimeRobot\RateLimit\NullRateLimiter;
 use GoSuccess\UptimeRobot\RateLimit\RateLimiter;
 use GoSuccess\UptimeRobot\RateLimit\RateLimitStatus;
+use GoSuccess\UptimeRobot\Resource\AnnouncementResource;
 use GoSuccess\UptimeRobot\Resource\BulkMonitorResource;
 use GoSuccess\UptimeRobot\Resource\IncidentCommentResource;
 use GoSuccess\UptimeRobot\Resource\IncidentResource;
@@ -76,6 +77,13 @@ final class UptimeRobot
     /** Public status pages: the monitors they show, their design and whether they are published. */
     public private(set) StatusPageResource $statusPages {
         get => $this->statusPages ??= new StatusPageResource($this->connection);
+    }
+
+    /**
+     * Announcements on status pages: information, maintenance and issue notices, which subscribers receive by e-mail. Requires the plan feature psp-subscribers.
+     */
+    public private(set) AnnouncementResource $announcements {
+        get => $this->announcements ??= new AnnouncementResource($this->connection);
     }
 
     /** The account the API key belongs to: its plan and its alert contacts. */

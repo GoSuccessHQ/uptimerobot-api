@@ -85,6 +85,18 @@ Public status pages: the monitors they show, their design and whether they are p
 - [`update()`](statusPages/update.md) — Update a status page
 - [`delete()`](statusPages/delete.md) — Delete a PSP
 
+## `announcements`
+
+Announcements on status pages: information, maintenance and issue notices, which subscribers receive by e-mail. Requires the plan feature psp-subscribers.
+
+- [`list()`](announcements/list.md) — List announcements
+- [`all()`](announcements/all.md) — Iterate lazily over every item of list(), across all pages
+- [`get()`](announcements/get.md) — Get an announcement by ID
+- [`create()`](announcements/create.md) — Create an announcement
+- [`update()`](announcements/update.md) — Update an announcement
+- [`pin()`](announcements/pin.md) — Pin an announcement
+- [`unpin()`](announcements/unpin.md) — Unpin an announcement
+
 ## `user`
 
 The account the API key belongs to: its plan and its alert contacts.

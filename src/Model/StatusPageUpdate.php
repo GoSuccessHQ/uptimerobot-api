@@ -59,7 +59,9 @@ final readonly class StatusPageUpdate implements RequestModel
         public bool|Undefined $showCookieBar = Undefined::Value,
         /** Allowing visitor to interact with the page - should not be used on public pages */
         public bool|Undefined $useSmallCookieConsentModal = Undefined::Value,
-        /** The announcement to pin to the page, as AnnouncementResource::pin() does. */
+        /**
+         * The announcement to pin to the page, presumably what AnnouncementResource::pin() sets as well (not verified live).
+         */
         public int|Undefined $pinnedAnnouncementId = Undefined::Value,
         /**
          * The design of the page. Whether it is merged into the current design or replaces it is not documented (not verified live).
