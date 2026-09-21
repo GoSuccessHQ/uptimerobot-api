@@ -208,7 +208,10 @@ final class CurlHttpClientTest extends TestCase
             new CurlHttpClient(connectTimeout: 30.0)->send(new Request(Method::Get, "http://{$address}/", timeout: 5.0, connectTimeout: 0.2));
             self::fail('Expected a TransportException.');
         } catch (TransportException $e) {
-            self::assertStringContainsString('timed out', $e->getMessage());
+            // The wording differs between libcurl versions ("Connection timed out
+            // after ..." vs. "Failed to connect ...: Timeout was reached"), the
+            // error code does not.
+            self::assertSame(\CURLE_OPERATION_TIMEDOUT, $e->getCode());
         }
 
         self::assertLessThan(2.0, microtime(true) - $start);
