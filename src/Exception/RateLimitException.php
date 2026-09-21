@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Exception;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use GoSuccess\UptimeRobot\Http\Response;
 use GoSuccess\UptimeRobot\RateLimit\RateLimitStatus;
 
@@ -16,6 +18,12 @@ use GoSuccess\UptimeRobot\RateLimit\RateLimitStatus;
  */
 final class RateLimitException extends ApiException
 {
+    /**
+     * The HTTP-date formats of RFC 9110, section 5.6.7: the IMF-fixdate and the
+     * obsolete RFC 850 and asctime() formats, which recipients must accept too.
+     */
+    private const array HTTP_DATE_FORMATS = ['D, d M Y H:i:s \\G\\M\\T', 'l, d-M-y H:i:s \\G\\M\\T', 'D M j H:i:s Y'];
+
     /**
      * @param int|null $retryAfter Seconds until the API accepts requests again, from
      *                             `Retry-After` or else `x-ratelimit-reset`.
@@ -33,9 +41,10 @@ final class RateLimitException extends ApiException
     /**
      * Parse a `Retry-After` header value into seconds.
      *
-     * Supports both the delay-seconds form ("30") and the HTTP-date form
-     * ("Wed, 21 Oct 2026 07:28:00 GMT"). Returns null if the value is empty or
-     * cannot be interpreted.
+     * Supports the two forms of RFC 9110: delay-seconds ("30") and an HTTP-date
+     * ("Wed, 21 Oct 2026 07:28:00 GMT"); a date in the past means no wait.
+     * Returns null for an empty value and for anything else, e.g. "1.5", "-1"
+     * or "tomorrow", so that the caller falls back to other hints.
      *
      * @param float|null $now Current Unix time for the HTTP-date form; defaults to
      *                        the system time.
@@ -53,19 +62,20 @@ final class RateLimitException extends ApiException
             return (int) $value;
         }
 
-        $timestamp = strtotime($value);
+        $date = self::parseHttpDate($value);
 
-        if ($timestamp === false) {
+        if ($date === null) {
             return null;
         }
 
-        return max(0, (int) ceil($timestamp - ($now ?? microtime(true))));
+        return max(0, (int) ceil($date->getTimestamp() - ($now ?? microtime(true))));
     }
 
     /**
      * How long the API asked to wait after a response, in seconds: the
-     * `Retry-After` header if present, otherwise the `x-ratelimit-reset` header
-     * (see {@see RateLimitStatus::parseReset()}). A reset that lies in the past
+     * `Retry-After` header if it is valid (see {@see parseRetryAfter()}),
+     * otherwise the `x-ratelimit-reset` header (see
+     * {@see RateLimitStatus::parseReset()}). A reset that lies in the past
      * (e.g. because of clock skew) announces nothing.
      *
      * @internal
@@ -83,6 +93,39 @@ final class RateLimitException extends ApiException
         $resetAt = RateLimitStatus::parseReset($response->header('x-ratelimit-reset'), $now);
 
         return $resetAt !== null && $resetAt > $now ? $resetAt - $now : null;
+    }
+
+    /**
+     * An HTTP-date, parsed strictly. strtotime() would also take relative
+     * dates ("tomorrow"), times of day ("10.0") and bare zone offsets ("-1").
+     */
+    private static function parseHttpDate(string $value): ?DateTimeImmutable
+    {
+        $utc = new DateTimeZone('UTC');
+
+        foreach (self::HTTP_DATE_FORMATS as $format) {
+            $date = DateTimeImmutable::createFromFormat("!{$format}", $value, $utc);
+
+            if ($date === false) {
+                continue;
+            }
+
+            $canonical = $date->format($format);
+
+            if ($format === 'D M j H:i:s Y') {
+                // asctime() pads a single-digit day with a space: "Sun Nov  6".
+                $canonical = (string) preg_replace('/^(\w{3} \w{3}) (\d) /', '$1  $2 ', $canonical);
+            }
+
+            // The parser tolerates a weekday that does not match the date (it
+            // moves the date instead), overflowing fields and lower case; the
+            // round trip does not.
+            if ($canonical === $value) {
+                return $date;
+            }
+        }
+
+        return null;
     }
 
     /**

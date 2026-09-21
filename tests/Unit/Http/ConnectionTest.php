@@ -181,6 +181,20 @@ final class ConnectionTest extends TestCase
         self::assertSame([1.0, 2.0], $clock->sleeps);
     }
 
+    public function testFallsBackToTheResetWhenRetryAfterIsInvalid(): void
+    {
+        $http = new MockHttpClient(
+            new Response(429, '', ['retry-after' => '1.5', 'x-ratelimit-reset' => '60']),
+            new Response(200, '{}'),
+        );
+        $clock = new FakeClock(1_800_000_000.0);
+
+        // strtotime() read "1.5" as a time of day that had passed, so the retry went out at once.
+        $this->connection($http, clock: $clock)->json(Method::Get, 'monitors');
+
+        self::assertSame([60.0], $clock->sleeps);
+    }
+
     public function testCapsAnExcessiveRetryAfterAndReset(): void
     {
         $http = new MockHttpClient(

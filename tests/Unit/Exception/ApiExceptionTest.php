@@ -103,13 +103,53 @@ final class ApiExceptionTest extends TestCase
         $now = 1_800_000_000.0;
 
         self::assertSame(30, RateLimitException::parseRetryAfter('30', $now));
-        self::assertNull(RateLimitException::parseRetryAfter('', $now));
-        self::assertNull(RateLimitException::parseRetryAfter('soon', $now));
         self::assertSame(0, RateLimitException::parseRetryAfter('Wed, 21 Oct 2015 07:28:00 GMT', $now));
         self::assertSame(120, RateLimitException::parseRetryAfter(gmdate('D, d M Y H:i:s', 1_800_000_120) . ' GMT', $now));
+        // The obsolete RFC 850 and asctime() formats of RFC 9110.
+        self::assertSame(120, RateLimitException::parseRetryAfter(gmdate('l, d-M-y H:i:s', 1_800_000_120) . ' GMT', $now));
+        self::assertSame(3600, RateLimitException::parseRetryAfter('Fri Jan 15 09:00:00 2027', (float) gmmktime(8, 0, 0, 1, 15, 2027)));
+        self::assertSame(3600, RateLimitException::parseRetryAfter('Wed Jan  6 09:00:00 2027', (float) gmmktime(8, 0, 0, 1, 6, 2027)));
 
         $future = gmdate('D, d M Y H:i:s', time() + 120) . ' GMT';
         self::assertGreaterThanOrEqual(118, RateLimitException::parseRetryAfter($future));
+    }
+
+    #[DataProvider('invalidRetryAfterValues')]
+    public function testRejectsRetryAfterValuesOfNeitherForm(string $value): void
+    {
+        self::assertNull(RateLimitException::parseRetryAfter($value, 1_800_000_000.0));
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function invalidRetryAfterValues(): iterable
+    {
+        yield 'empty' => [''];
+        yield 'word' => ['soon'];
+        // strtotime() read these as times of day, relative dates or zone offsets.
+        yield 'fraction' => ['1.5'];
+        yield 'fraction read as a time of day' => ['10.0'];
+        yield 'negative' => ['-1'];
+        yield 'signed' => ['+5'];
+        yield 'military zone' => ['x'];
+        yield 'now' => ['now'];
+        yield 'relative' => ['tomorrow'];
+        yield 'weekday' => ['Sun'];
+        yield 'unit' => ['30s'];
+        yield 'weekday that does not match' => ['Mon, 21 Oct 2015 07:28:00 GMT'];
+        yield 'day beyond the month' => ['Thu, 32 Oct 2015 07:28:00 GMT'];
+        yield 'other zone' => ['Wed, 21 Oct 2015 07:28:00 CET'];
+        yield 'lower case' => ['wed, 21 oct 2015 07:28:00 GMT'];
+        yield 'ISO 8601' => ['2015-10-21T07:28:00Z'];
+    }
+
+    public function testFallsBackToTheResetForAnInvalidRetryAfter(): void
+    {
+        $exception = ApiException::fromResponse(new Response(429, '', ['retry-after' => '1.5', 'x-ratelimit-reset' => '60']), $this->request(), 1_800_000_000.0);
+
+        self::assertInstanceOf(RateLimitException::class, $exception);
+        self::assertSame(60, $exception->retryAfter);
     }
 
     /**
