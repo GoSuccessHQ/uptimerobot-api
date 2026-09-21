@@ -18,6 +18,7 @@ use GoSuccess\UptimeRobot\Resource\IncidentResource;
 use GoSuccess\UptimeRobot\Resource\MaintenanceWindowResource;
 use GoSuccess\UptimeRobot\Resource\MonitorGroupResource;
 use GoSuccess\UptimeRobot\Resource\MonitorResource;
+use GoSuccess\UptimeRobot\Resource\StatusPageResource;
 use GoSuccess\UptimeRobot\Resource\StormProtectionResource;
 use GoSuccess\UptimeRobot\Resource\TagResource;
 use GoSuccess\UptimeRobot\Resource\UserResource;
@@ -70,6 +71,11 @@ final class UptimeRobot
      */
     public private(set) IncidentCommentResource $incidentComments {
         get => $this->incidentComments ??= new IncidentCommentResource($this->connection);
+    }
+
+    /** Public status pages: the monitors they show, their design and whether they are published. */
+    public private(set) StatusPageResource $statusPages {
+        get => $this->statusPages ??= new StatusPageResource($this->connection);
     }
 
     /** The account the API key belongs to: its plan and its alert contacts. */

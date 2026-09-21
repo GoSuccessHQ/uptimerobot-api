@@ -13,24 +13,35 @@ final readonly class StatusPage implements ResponseModel
         public int $id = 0,
         public string $friendlyName = '',
         public ?string $customDomain = null,
+        /** Whether visitors need a password; the API never returns the password itself. */
         public bool $isPasswordSet = false,
-        /** @var list<int> */
+        /**
+         * The monitors on the page; [0] means every monitor of the account, the setting autoAddMonitors of the requests, according to the official Terraform provider (not verified live). Empty if null.
+         *
+         * @var list<int>
+         */
         public array $monitorIds = [],
         /** @var list<int> */
         public array $tagIds = [],
         public ?int $monitorsCount = null,
+        /**
+         * ENABLED if the page is published, PAUSED if not, as the requests name the values; the specification documents none for the response (not verified live).
+         */
         public string $status = '',
         public string $urlKey = '',
         public ?string $homepageLink = null,
         public ?string $gaCode = null,
         public bool $shareAnalyticsConsent = false,
         public bool $useSmallCookieConsentModal = false,
+        /** The uploaded icon as the API reports it, presumably its URL; null without one (not verified live). */
         public ?string $icon = null,
         public bool $noIndex = false,
+        /** The uploaded logo as the API reports it, presumably its URL; null without one (not verified live). */
         public ?string $logo = null,
         public bool $hideUrlLinks = false,
         public bool $subscription = false,
         public bool $showCookieBar = false,
+        /** The announcement pinned to the page; null if none. */
         public ?int $pinnedAnnouncementId = null,
         public ?StatusPageCustomSettings $customSettings = null,
     ) {}

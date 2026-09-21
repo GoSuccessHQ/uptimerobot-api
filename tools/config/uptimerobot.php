@@ -82,6 +82,17 @@ $alertChannel = 'The channel of the alert contact, e.g. MobileApp (verified live
 // body the validator would reject (verified live). Everything else about them
 // comes from the specification.
 $commentPlan = 'Requires the plan feature incident-comments; without it, the API raises a ForbiddenException with the code 000-003 before it looks at the incident or the request (verified live). Not verified live beyond that: the test account lacks the feature.';
+// Status pages. The account has none, and the owner allows none to be
+// created, so the response shape is the specification's, read with the
+// official Terraform provider (uptimerobot/terraform-provider-uptimerobot,
+// internal/client/psp.go and internal/provider/psp); the request constraints
+// come from the messages of requests the validator rejected (verified live:
+// PATCH /psps/999999999 and POST /psps with invalid bodies, as JSON and as
+// multipart/form-data).
+$pageLayout = ['logo_on_left', 'logo_on_center'];
+$pageTheme = ['light', 'dark'];
+$pageDensity = ['normal', 'compact'];
+$statusPageMonitors = 'The monitors on the page; [0] alone stands for every monitor of the account, including those added later, and an empty list removes every monitor. Wins over autoAddMonitors when both are sent.';
 
 return [
     'title' => 'UptimeRobot API v3',
@@ -171,6 +182,19 @@ return [
         'IncidentCommentDto.user' => 'IncidentCommentUser',
         'CreateIncidentCommentRequestDto' => 'IncidentCommentCreate',
         'UpdateIncidentCommentRequestDto' => 'IncidentCommentUpdate',
+
+        // Status pages; PspDto is StatusPage (above). The requests describe the
+        // design with other types than the response (booleans against the
+        // strings "true" and "false", all optional), so they get models of their
+        // own: the names of the response models plus Input, as bunny-api names
+        // a request copy (OptimizerClassInput).
+        'CreatePsPDto' => 'StatusPageCreate',
+        'UpdatePspDto' => 'StatusPageUpdate',
+        'CustomSettingsDto' => 'StatusPageCustomSettingsInput',
+        'FontCustomSettingsDto' => 'StatusPageCustomSettingsFontInput',
+        'PageCustomSettingsDto' => 'StatusPageCustomSettingsPageInput',
+        'ColorsCustomSettingsDto' => 'StatusPageCustomSettingsColorsInput',
+        'FeaturesCustomSettingsDto' => 'StatusPageCustomSettingsFeaturesInput',
     ],
 
     'properties' => [
@@ -182,6 +206,7 @@ return [
         'UpdateMonitorDto.checkSSLErrors' => 'checkSslErrors',
         'PublicBulkUpdateDto.checkSSLErrors' => 'checkSslErrors',
         'PspDto.customSettings.features.showMonitorURL' => 'showMonitorUrl',
+        'FeaturesCustomSettingsDto.showMonitorURL' => 'showMonitorUrl',
         'ActivityLogResponseDto.data[]<STATUS_UPDATE>.remoteNode.IP' => 'ip',
         'ActivityLogResponseDto.data[]<STATUS_UPDATE>.remoteNode.IPv6' => 'ipv6',
         'ActivityLogResponseDto.data[]<STATUS_UPDATE>.remoteNode.privateIP' => 'privateIp',
@@ -231,11 +256,20 @@ return [
         // like its values (x-enumNames), the requests derive the same names.
         '*MaintenanceWindowDto.interval' => 'MaintenanceWindowInterval',
         '*MaintenanceWindowDto.status' => 'MaintenanceWindowStatus',
-        // Lower case here, title case in the request DTOs of status pages
-        // ("Light", "Normal"), and not verifiable live (the account has no status
-        // pages): an enum could read a value the API actually sends as null.
-        'PspDto.customSettings.page.theme' => false,
-        'PspDto.customSettings.page.density' => false,
+        // The design of a status page: the same lower-case values in the
+        // requests and the response (see 'types').
+        'PspDto.customSettings.page.layout' => 'StatusPageLayout',
+        'PageCustomSettingsDto.layout' => 'StatusPageLayout',
+        'PspDto.customSettings.page.theme' => 'StatusPageTheme',
+        'PageCustomSettingsDto.theme' => 'StatusPageTheme',
+        'PspDto.customSettings.page.density' => 'StatusPageDensity',
+        'PageCustomSettingsDto.density' => 'StatusPageDensity',
+        // The value sets of the requests (see 'types'); the response reports no
+        // sort, and its status as a string.
+        'CreatePsPDto.status' => 'StatusPageStatus',
+        'UpdatePspDto.status' => 'StatusPageStatus',
+        'CreatePsPDto.sort' => 'StatusPageSort',
+        'UpdatePspDto.sort' => 'StatusPageSort',
         // The assertion diagnostics of an incident share the logic and the
         // operators of the assertions an API monitor is created with; the
         // response names its cases in upper case (x-enumNames), which become the
@@ -397,14 +431,9 @@ return [
         'MonitorResponseTimeStatsByRegionDto.as' => ['$ref' => '#/components/schemas/MonitorResponseTimeStatsDto', 'nullable' => true],
         'MonitorResponseTimeStatsByRegionDto.oc' => ['$ref' => '#/components/schemas/MonitorResponseTimeStatsDto', 'nullable' => true],
         'MonitorResponseTimeStatsByRegionDto.all' => ['$ref' => '#/components/schemas/MonitorResponseTimeStatsDto', 'nullable' => true],
-        // Status pages and maintenance windows, as monitors embed them. Always
-        // empty on this account, so nothing here is verified live.
+        // Maintenance windows, as monitors embed them. Always empty on this
+        // account, so nothing here is verified live.
         'MaintenanceWindowDto.created' => $date,
-        // Erased; PAUSED and ENABLED are documented for requests only.
-        'PspDto.status' => ['type' => 'string'],
-        // The strings "true" and "false" (booleans in the request DTOs), which a
-        // bool reads as well.
-        'PspDto.customSettings.features.*' => ['type' => 'boolean'],
 
         // Monitor lists: status and tags are comma-separated lists in a plain
         // string parameter, of which any value matches (verified live).
@@ -690,6 +719,118 @@ return [
             'type' => 'boolean',
             'description' => 'Whether the comment is published on the status page. The specification gives false as its default, so leaving it out may unpublish the comment.',
         ],
+
+        // Status pages (see $pageLayout). The items of a page are an inline copy
+        // of PspDto (identical); monitors embed the same model.
+        'PspPaginationDto.data[]' => ['$ref' => '#/components/schemas/PspDto'],
+        // Erased to {}. ENABLED and PAUSED are the values of the requests; the
+        // official Terraform provider reads the response into an attribute it
+        // validates against them, and its tests mock "ENABLED". Not observable
+        // live, so the status stays a string.
+        'PspDto.status' => [
+            'type' => 'string',
+            'description' => 'ENABLED if the page is published, PAUSED if not, as the requests name the values; the specification documents none for the response (not verified live).',
+        ],
+        // The provider reads [0] as "all monitors, also future ones" and derives
+        // its auto_add_monitors from it, since the response has no
+        // autoAddMonitors.
+        'PspDto.monitorIds' => [
+            'type' => 'array',
+            'items' => ['type' => 'number'],
+            'description' => 'The monitors on the page; [0] means every monitor of the account, the setting autoAddMonitors of the requests, according to the official Terraform provider (not verified live). Empty if null.',
+        ],
+        'PspDto.isPasswordSet' => ['type' => 'boolean', 'description' => 'Whether visitors need a password; the API never returns the password itself.'],
+        'PspDto.logo' => ['type' => 'string', 'description' => 'The uploaded logo as the API reports it, presumably its URL; null without one (not verified live).'],
+        'PspDto.icon' => ['type' => 'string', 'description' => 'The uploaded icon as the API reports it, presumably its URL; null without one (not verified live).'],
+        'PspDto.pinnedAnnouncementId' => ['type' => 'integer', 'description' => 'The announcement pinned to the page; null if none.'],
+        // The validator of the requests takes these lower-case values only,
+        // unlike the title-case enums of PageCustomSettingsDto (verified live:
+        // "Light", "LogoOnLeft" and "Compact" are rejected with "customSettings.
+        // page.theme must be one of the following values: light, dark", "...
+        // layout ...: logo_on_left, logo_on_center" and "... density ...:
+        // normal, compact"). The response documents theme and density in lower
+        // case and layout as a plain string; the provider's acceptance tests set
+        // logo_on_left, dark and compact and read them back.
+        'PspDto.customSettings.page.layout' => [
+            'type' => 'string',
+            'enum' => $pageLayout,
+            'description' => 'Where the logo sits. The requests take the same lower-case values, not the title-case ones of the specification (verified live).',
+        ],
+        'PspDto.customSettings.page.theme' => [
+            'type' => 'string',
+            'enum' => $pageTheme,
+            'description' => 'The color theme. The requests take the same lower-case values, not the title-case ones of the specification (verified live).',
+        ],
+        'PspDto.customSettings.page.density' => [
+            'type' => 'string',
+            'enum' => $pageDensity,
+            'description' => 'The density of the page. The requests take the same lower-case values, not the title-case ones of the specification (verified live).',
+        ],
+        'PageCustomSettingsDto.layout' => ['type' => 'string', 'enum' => $pageLayout],
+        'PageCustomSettingsDto.theme' => ['type' => 'string', 'enum' => $pageTheme],
+        'PageCustomSettingsDto.density' => ['type' => 'string', 'enum' => $pageDensity],
+        // The strings "true" and "false" in the specification, booleans at times
+        // according to the provider ("tolerating inconsistent api response
+        // values"); a bool reads both.
+        'PspDto.customSettings.features.*' => [
+            'type' => 'boolean',
+            'description' => 'Sent as the string "true" or "false", or as a boolean; null if not set.',
+        ],
+        // Verified live: -1 is rejected with "each value in monitorIds must not
+        // be less than 0", 0 in tagIds with "each value in tagIds must not be
+        // less than 1".
+        'CreatePsPDto.monitorIds' => ['type' => 'array', 'items' => ['type' => 'number'], 'description' => $statusPageMonitors],
+        'UpdatePspDto.monitorIds' => [
+            'type' => 'array',
+            'items' => ['type' => 'number'],
+            'description' => $statusPageMonitors . ' Presumably replaces the current monitors, as the empty list suggests (not verified live).',
+        ],
+        // The response has no autoAddMonitors; the provider sends monitorIds [0]
+        // for it and reads [0] back as it.
+        'CreatePsPDto.autoAddMonitors' => [
+            'type' => 'boolean',
+            'description' => 'Whether every monitor of the account, also those added later, is shown on the page. An explicit monitorIds wins over it, even an empty one. Responses do not report it; they list monitorIds [0] instead, according to the official Terraform provider (not verified live).',
+        ],
+        'UpdatePspDto.autoAddMonitors' => [
+            'type' => 'boolean',
+            'description' => 'Whether every monitor of the account, also those added later, is shown on the page. An explicit monitorIds wins over it, even an empty one. Responses do not report it; they list monitorIds [0] instead, according to the official Terraform provider (not verified live).',
+        ],
+        'CreatePsPDto.tagIds' => ['type' => 'array', 'items' => ['type' => 'number'], 'description' => 'The tags assigned to the page.'],
+        'UpdatePspDto.tagIds' => ['type' => 'array', 'items' => ['type' => 'number'], 'description' => 'The tags assigned to the page.'],
+        // The validator turns the names into the numbers 1 to 4 and matches them
+        // case-insensitively (verified live: "FriendlyNameAsc" and
+        // "friendlynameasc" pass, "Manual" is rejected with "sort must be one of
+        // the following values: 1, 2, 3, 4"); the provider sends the numbers.
+        'CreatePsPDto.sort' => [
+            'type' => 'string',
+            'enum' => ['FriendlyNameAsc', 'FriendlyNameDesc', 'StatusUpDownPaused', 'StatusDownUpPaused'],
+            'description' => 'How the monitors are ordered on the page. A manual order can only be arranged in the dashboard. Responses do not report the order.',
+        ],
+        'UpdatePspDto.sort' => [
+            'type' => 'string',
+            'enum' => ['FriendlyNameAsc', 'FriendlyNameDesc', 'StatusUpDownPaused', 'StatusDownUpPaused'],
+            'description' => 'How the monitors are ordered on the page. A manual order can only be arranged in the dashboard. Responses do not report the order.',
+        ],
+        // Likewise: "ENABLED" and "enabled" pass, "FOO" is rejected with "status
+        // must be one of the following values: 0, 1" (verified live).
+        'CreatePsPDto.status' => ['type' => 'string', 'enum' => ['ENABLED', 'PAUSED'], 'description' => 'ENABLED publishes the page, PAUSED takes it offline.'],
+        'UpdatePspDto.status' => ['type' => 'string', 'enum' => ['ENABLED', 'PAUSED'], 'description' => 'ENABLED publishes the page, PAUSED takes it offline.'],
+        'CreatePsPDto.password' => ['type' => 'string', 'description' => 'A password visitors must enter, at most 255 characters. Responses only report isPasswordSet.'],
+        'UpdatePspDto.password' => ['type' => 'string', 'description' => 'A password visitors must enter, at most 255 characters. Responses only report isPasswordSet.'],
+        // Verified live: "nope" is rejected with "gaCode must match
+        // /G-[A-Z0-9]{10}/ regular expression".
+        'CreatePsPDto.gaCode' => ['type' => 'string', 'description' => 'The Google Analytics measurement ID, "G-" and 10 upper-case letters or digits; for a page with a custom domain only.'],
+        'UpdatePspDto.gaCode' => ['type' => 'string', 'description' => 'The Google Analytics measurement ID, "G-" and 10 upper-case letters or digits; for a page with a custom domain only.'],
+        'UpdatePspDto.pinnedAnnouncementId' => ['type' => 'number', 'description' => 'The announcement to pin to the page, as AnnouncementResource::pin() does.'],
+        // Whether an update merges the design into the current one or replaces
+        // it could not be tried. The provider always sends page, colors and
+        // features along, as empty objects if unset; the validator does not ask
+        // for them (verified live).
+        'CreatePsPDto.customSettings' => ['$ref' => '#/components/schemas/CustomSettingsDto', 'description' => 'The design of the page.'],
+        'UpdatePspDto.customSettings' => [
+            '$ref' => '#/components/schemas/CustomSettingsDto',
+            'description' => 'The design of the page. Whether it is merged into the current design or replaces it is not documented (not verified live).',
+        ],
     ],
 
     // The specification types every number of the request DTOs, and most of the
@@ -787,6 +928,9 @@ return [
         'IncidentsController_list.monitor_id',
         // The number of comments per page, 1 to 100.
         'IncidentsController_listComments.limit',
+        // The ID of the last status page of the previous page, as the official
+        // Terraform provider reads it from nextLink.
+        'PspController_list.cursor',
     ],
 
     'floats' => [
@@ -817,6 +961,12 @@ return [
         // BulkMonitorResource::update(), which checks that one is given.
         'PublicBulkUpdateDto.groupId',
         'PublicBulkUpdateDto.tagId',
+        // Files, which StatusPageResource::create() and update() take as
+        // parameters and upload as multipart/form-data.
+        'CreatePsPDto.logo',
+        'CreatePsPDto.icon',
+        'UpdatePspDto.logo',
+        'UpdatePspDto.icon',
     ],
 
     'nullableProperties' => [
@@ -895,6 +1045,10 @@ return [
 
     'extraRequestModels' => [
         'PublicBulkUpdateDto',
+        // StatusPageResource::create() and update() send them as JSON, or as
+        // multipart/form-data together with a logo or an icon.
+        'CreatePsPDto',
+        'UpdatePspDto',
     ],
 
     'additions' => [
@@ -1213,6 +1367,34 @@ return [
                 ],
             ],
         ],
+        // Hand-written: create() and update() upload a logo and an icon as
+        // multipart/form-data, which the generator does not build.
+        'statusPages' => [
+            'class' => 'StatusPageResource',
+            'description' => 'Public status pages: the monitors they show, their design and whether they are published.',
+            'handwritten' => true,
+            'methods' => [
+                'list' => [
+                    'operation' => 'PspController_list',
+                    'pagination' => 'nextLink',
+                    'all' => 'all',
+                    'note' => 'The cursor is the ID of the last status page of the previous page, as the official Terraform provider reads it from nextLink. Only a single page was observable: an account without status pages gets {"data": []} without nextLink (verified live).',
+                ],
+                'get' => [
+                    'operation' => 'PspController_get',
+                    // Verified live: /psps/999999999 answers 404 "PSP not found".
+                    'note' => 'An unknown ID raises a NotFoundException (verified live).',
+                ],
+                'create' => ['operation' => 'PspController_create', 'handwritten' => true],
+                'update' => ['operation' => 'PspController_update', 'handwritten' => true],
+                'delete' => [
+                    'operation' => 'PspController_delete',
+                    // Verified live: 404 "Resource you were trying to access is not
+                    // found." for /psps/999999999.
+                    'note' => 'An unknown ID raises a NotFoundException (verified live).',
+                ],
+            ],
+        ],
         'user' => [
             'class' => 'UserResource',
             'description' => 'The account the API key belongs to: its plan and its alert contacts.',
@@ -1242,11 +1424,6 @@ return [
     ],
 
     'ignored' => [
-        'PspController_list' => 'Pending: implemented resource by resource in the following commits.',
-        'PspController_create' => 'Pending: implemented resource by resource in the following commits.',
-        'PspController_get' => 'Pending: implemented resource by resource in the following commits.',
-        'PspController_update' => 'Pending: implemented resource by resource in the following commits.',
-        'PspController_delete' => 'Pending: implemented resource by resource in the following commits.',
         'PspAnnouncementsController_list' => 'Pending: implemented resource by resource in the following commits.',
         'PspAnnouncementsController_create' => 'Pending: implemented resource by resource in the following commits.',
         'PspAnnouncementsController_get' => 'Pending: implemented resource by resource in the following commits.',

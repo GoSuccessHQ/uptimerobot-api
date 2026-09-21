@@ -10,14 +10,23 @@ namespace GoSuccess\UptimeRobot\Model;
 final readonly class StatusPageCustomSettingsFeatures implements ResponseModel
 {
     public function __construct(
+        /** Sent as the string "true" or "false", or as a boolean; null if not set. */
         public ?bool $showBars = null,
+        /** Sent as the string "true" or "false", or as a boolean; null if not set. */
         public ?bool $showUptimePercentage = null,
+        /** Sent as the string "true" or "false", or as a boolean; null if not set. */
         public ?bool $enableFloatingStatus = null,
+        /** Sent as the string "true" or "false", or as a boolean; null if not set. */
         public ?bool $showOverallUptime = null,
+        /** Sent as the string "true" or "false", or as a boolean; null if not set. */
         public ?bool $showOutageUpdates = null,
+        /** Sent as the string "true" or "false", or as a boolean; null if not set. */
         public ?bool $showOutageDetails = null,
+        /** Sent as the string "true" or "false", or as a boolean; null if not set. */
         public ?bool $enableDetailsPage = null,
+        /** Sent as the string "true" or "false", or as a boolean; null if not set. */
         public ?bool $showMonitorUrl = null,
+        /** Sent as the string "true" or "false", or as a boolean; null if not set. */
         public ?bool $hidePausedMonitors = null,
     ) {}
 

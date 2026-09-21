@@ -74,6 +74,17 @@ Comments on incidents, optionally published on the status page. Requires the pla
 - [`update()`](incidentComments/update.md) — Update an incident comment
 - [`delete()`](incidentComments/delete.md) — Delete incident comment
 
+## `statusPages`
+
+Public status pages: the monitors they show, their design and whether they are published.
+
+- [`list()`](statusPages/list.md) — List PSPs
+- [`all()`](statusPages/all.md) — Iterate lazily over every item of list(), across all pages
+- [`get()`](statusPages/get.md) — Get a PSP by ID
+- [`create()`](statusPages/create.md) — Create a status page
+- [`update()`](statusPages/update.md) — Update a status page
+- [`delete()`](statusPages/delete.md) — Delete a PSP
+
 ## `user`
 
 The account the API key belongs to: its plan and its alert contacts.

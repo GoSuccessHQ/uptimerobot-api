@@ -6,21 +6,34 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Model;
 
+use GoSuccess\UptimeRobot\Enum\StatusPageDensity;
+use GoSuccess\UptimeRobot\Enum\StatusPageLayout;
+use GoSuccess\UptimeRobot\Enum\StatusPageTheme;
+
 /** Schema: PspDto.customSettings.page */
 final readonly class StatusPageCustomSettingsPage implements ResponseModel
 {
     public function __construct(
-        public string $layout = '',
-        public string $theme = '',
-        public string $density = '',
+        /**
+         * Where the logo sits. The requests take the same lower-case values, not the title-case ones of the specification (verified live).
+         */
+        public ?StatusPageLayout $layout = null,
+        /**
+         * The color theme. The requests take the same lower-case values, not the title-case ones of the specification (verified live).
+         */
+        public ?StatusPageTheme $theme = null,
+        /**
+         * The density of the page. The requests take the same lower-case values, not the title-case ones of the specification (verified live).
+         */
+        public ?StatusPageDensity $density = null,
     ) {}
 
     public static function fromArray(array $data): static
     {
         return new self(
-            layout: Cast::string($data['layout'] ?? null) ?? '',
-            theme: Cast::string($data['theme'] ?? null) ?? '',
-            density: Cast::string($data['density'] ?? null) ?? '',
+            layout: Cast::stringEnum(StatusPageLayout::class, $data['layout'] ?? null),
+            theme: Cast::stringEnum(StatusPageTheme::class, $data['theme'] ?? null),
+            density: Cast::stringEnum(StatusPageDensity::class, $data['density'] ?? null),
         );
     }
 }
