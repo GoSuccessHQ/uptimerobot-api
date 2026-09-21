@@ -275,6 +275,22 @@ final class ConnectionTest extends TestCase
         $this->connection($http)->json(Method::Post, 'monitors');
     }
 
+    public function testBacksOffBetweenTransportRetriesAndGivesUp(): void
+    {
+        $http = new MockHttpClient(new TransportException('a'), new TransportException('b'), new TransportException('c'), new TransportException('d'));
+        $clock = new FakeClock();
+
+        try {
+            $this->connection($http, new ClientOptions(maxRetries: 2), $clock)->json(Method::Get, 'monitors');
+            self::fail('Expected a TransportException.');
+        } catch (TransportException $e) {
+            self::assertSame('c', $e->getMessage());
+        }
+
+        self::assertSame(3, $http->callCount());
+        self::assertSame([1.0, 2.0], $clock->sleeps);
+    }
+
     public function testGivesUpAfterMaxRetries(): void
     {
         $http = new MockHttpClient(new Response(503), new Response(503), new Response(503));

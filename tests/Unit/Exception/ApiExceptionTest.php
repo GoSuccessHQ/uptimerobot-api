@@ -81,7 +81,8 @@ final class ApiExceptionTest extends TestCase
 
     public function testShortensHugeBodiesWithoutBreakingUtf8(): void
     {
-        $body = str_repeat('ä', 400);
+        // One ASCII byte first, so that the cut after 500 bytes splits an "ä".
+        $body = 'a' . str_repeat('ä', 400);
         $exception = ApiException::fromResponse(new Response(502, $body), $this->request());
 
         self::assertTrue(mb_check_encoding($exception->getMessage(), 'UTF-8'));
