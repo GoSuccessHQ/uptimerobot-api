@@ -1,0 +1,11 @@
+/vendor/
+.php-cs-fixer.cache
+.phpunit.result.cache
+.phpunit.cache/
+/build/
+/coverage/
+/.idea/
+/.vscode/
+*.log
+/.claude/
+.env

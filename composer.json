@@ -1,0 +1,69 @@
+{
+    "name": "gosuccess/uptimerobot-api",
+    "description": "A modern, strongly-typed, dependency-free PHP client for the UptimeRobot API v3.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "uptimerobot",
+        "uptime",
+        "monitoring",
+        "status-page",
+        "incidents",
+        "api",
+        "client"
+    ],
+    "homepage": "https://github.com/GoSuccessHQ/uptimerobot-api",
+    "readme": "README.md",
+    "authors": [
+        {
+            "name": "GoSuccess GmbH",
+            "homepage": "https://gosuccess.io"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/GoSuccessHQ/uptimerobot-api/issues",
+        "source": "https://github.com/GoSuccessHQ/uptimerobot-api"
+    },
+    "require": {
+        "php": "^8.4",
+        "ext-curl": "*",
+        "ext-json": "*"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.95",
+        "phpstan/phpstan": "^2.2",
+        "phpunit/phpunit": "^13.3",
+        "symfony/yaml": "^8.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "GoSuccess\\UptimeRobot\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "GoSuccess\\UptimeRobot\\Tests\\": "tests/",
+            "GoSuccess\\UptimeRobot\\Tools\\": "tools/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --testsuite unit",
+        "test:integration": "phpunit --testsuite integration",
+        "stan": "phpstan analyse --memory-limit=2G",
+        "cs": "php-cs-fixer fix --dry-run --diff",
+        "cs-fix": "php-cs-fixer fix",
+        "check": [
+            "@cs",
+            "@stan",
+            "@test"
+        ]
+    },
+    "config": {
+        "platform": {
+            "php": "8.4.1"
+        },
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
