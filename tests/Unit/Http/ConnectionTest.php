@@ -52,6 +52,19 @@ final class ConnectionTest extends TestCase
         self::assertSame(ClientOptions::DEFAULT_USER_AGENT, $request->headers['User-Agent']);
         self::assertSame('{"name":"Group"}', $request->body);
         self::assertSame(30.0, $request->timeout);
+        self::assertSame(10.0, $request->connectTimeout);
+    }
+
+    public function testSendsTheTimeoutsOfTheOptionsWithEveryRequest(): void
+    {
+        // A custom transport, e.g. one that wraps new CurlHttpClient(), learns
+        // them only from the request.
+        $http = new MockHttpClient(new Response(200, '{}'));
+
+        $this->connection($http, new ClientOptions(timeout: 5.0, connectTimeout: 1.5))->json(Method::Get, 'monitors');
+
+        self::assertSame(5.0, $http->requests[0]->timeout);
+        self::assertSame(1.5, $http->requests[0]->connectTimeout);
     }
 
     public function testEncodesAnEmptyBodyAsJsonObject(): void

@@ -157,6 +157,7 @@ final class Connection
             ],
             body: $body,
             timeout: $this->options->timeout,
+            connectTimeout: $this->options->connectTimeout,
         );
 
         $attempt = 0;

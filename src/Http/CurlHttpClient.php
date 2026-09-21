@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GoSuccess\UptimeRobot\Http;
 
 use CurlHandle;
+use GoSuccess\UptimeRobot\ClientOptions;
 use GoSuccess\UptimeRobot\Exception\TransportException;
 use SensitiveParameter;
 
@@ -39,8 +40,11 @@ final class CurlHttpClient implements HttpClient
 
     /**
      * @param float $timeout               Default maximum duration of a whole request in
-     *                                     seconds; a request may override it.
-     * @param float $connectTimeout        Maximum duration of the connection phase in seconds.
+     *                                     seconds; a request may override it, as the client
+     *                                     does with {@see ClientOptions::$timeout}.
+     * @param float $connectTimeout        Default maximum duration of the connection phase in
+     *                                     seconds; a request may override it, as the client
+     *                                     does with {@see ClientOptions::$connectTimeout}.
      * @param bool  $persistentConnections Share DNS, connection and TLS session caches
      *                                     across requests of the worker process (PHP 8.5+).
      */
@@ -67,7 +71,7 @@ final class CurlHttpClient implements HttpClient
             \CURLOPT_FOLLOWLOCATION => false,
             \CURLOPT_ENCODING => '',
             \CURLOPT_HTTPHEADER => $this->formatHeaders($request->headers),
-            \CURLOPT_CONNECTTIMEOUT_MS => $this->milliseconds($this->connectTimeout),
+            \CURLOPT_CONNECTTIMEOUT_MS => $this->milliseconds($request->connectTimeout ?? $this->connectTimeout),
             \CURLOPT_HEADERFUNCTION => static function (CurlHandle $_handle, string $line) use (&$headers, &$reasonPhrase): int {
                 $trimmed = trim($line);
 

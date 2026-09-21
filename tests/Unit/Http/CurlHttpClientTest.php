@@ -20,6 +20,7 @@ use GoSuccess\UptimeRobot\Tests\Support\FakeClock;
 use GoSuccess\UptimeRobot\Tests\Support\LocalServer;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RequiresOperatingSystemFamily;
 use PHPUnit\Framework\TestCase;
 use SensitiveParameterValue;
 
@@ -182,6 +183,36 @@ final class CurlHttpClientTest extends TestCase
         $this->expectException(TransportException::class);
 
         $this->send(new Request(Method::Get, $this->uri('/sleep/2000'), timeout: 0.3));
+    }
+
+    #[RequiresOperatingSystemFamily('Linux')]
+    public function testRequestConnectTimeoutOverridesTheDefault(): void
+    {
+        // A listener whose accept queue is full: Linux drops further SYNs, so a
+        // connection hangs in the handshake until the connect timeout.
+        $listener = stream_socket_server('tcp://127.0.0.1:0', $errno, $error, \STREAM_SERVER_BIND | \STREAM_SERVER_LISTEN, stream_context_create(['socket' => ['backlog' => 0]]));
+        self::assertNotFalse($listener, 'Unable to listen on a local port.');
+        $address = (string) stream_socket_get_name($listener, false);
+        // A backlog of 0 still queues a connection; these fill the queue and must stay open.
+        $queued = [];
+
+        for ($i = 0; $i < 2; ++$i) {
+            $queued[] = @stream_socket_client("tcp://{$address}", $errno, $error, 0.2, \STREAM_CLIENT_CONNECT | \STREAM_CLIENT_ASYNC_CONNECT);
+        }
+
+        usleep(100_000);
+        $start = microtime(true);
+
+        try {
+            // Without the request's connect timeout, the connection would wait for the whole 5 seconds.
+            new CurlHttpClient(connectTimeout: 30.0)->send(new Request(Method::Get, "http://{$address}/", timeout: 5.0, connectTimeout: 0.2));
+            self::fail('Expected a TransportException.');
+        } catch (TransportException $e) {
+            self::assertStringContainsString('timed out', $e->getMessage());
+        }
+
+        self::assertLessThan(2.0, microtime(true) - $start);
+        self::assertCount(2, $queued);
     }
 
     public function testTransportErrorMessageOmitsTheQueryString(): void

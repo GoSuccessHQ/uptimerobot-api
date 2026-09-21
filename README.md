@@ -989,7 +989,10 @@ $uptimeRobot = new UptimeRobot('your-api-key', httpClient: new LoggingTransport(
 A transport returns error statuses as responses, throws a `TransportException`
 only for network failures, returns lower-case header names and must not follow
 redirects, so that the API key never reaches another host. The request carries
-the key, so mark the parameter `#[SensitiveParameter]`.
+the key, so mark the parameter `#[SensitiveParameter]`. It also carries the
+`timeout` and `connectTimeout` of the `ClientOptions`, which a transport should
+apply; the built-in one prefers them to the defaults it was created with, so
+the wrapped `CurlHttpClient` above uses the options of the client.
 
 The built-in cURL transport keeps connections alive and, on PHP 8.5, shares
 DNS, connection and TLS session caches across the requests of a PHP worker.

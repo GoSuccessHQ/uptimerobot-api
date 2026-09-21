@@ -17,6 +17,10 @@ final readonly class ClientOptions
     public const string DEFAULT_USER_AGENT = 'gosuccess/uptimerobot-api (+https://github.com/GoSuccessHQ/uptimerobot-api)';
 
     /**
+     * The two timeouts travel with every request (see {@see Http\Request}), so they
+     * also apply through a custom transport and take precedence over the defaults
+     * the transport was created with.
+     *
      * @param float  $timeout             Maximum duration of a request in seconds; `0.0` means
      *                                    no limit, though a request that stalls for 60 seconds
      *                                    is still aborted.
