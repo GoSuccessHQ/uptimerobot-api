@@ -92,7 +92,7 @@ final class AnnouncementResourceTest extends TestCase
         self::assertSame('application/json', $request->headers['Content-Type'] ?? null);
         self::assertSame(
             '{"title":"Scheduled Maintenance","content":"We will be performing scheduled maintenance on our servers.",'
-            . '"status":"Pending","type":"Maintenance","startDate":"2026-10-01T22:00:00Z","endDate":null}',
+            . '"status":"Pending","type":"Maintenance","startDate":"2026-10-01T22:00:00.000Z","endDate":null}',
             $request->body,
         );
         self::assertSame(3301, $announcement->id);

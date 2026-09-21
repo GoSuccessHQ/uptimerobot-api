@@ -126,9 +126,9 @@ final class MonitorsReadOnlyTest extends IntegrationTestCase
         // A percentage (verified live).
         self::assertGreaterThanOrEqual(0.0, $uptime->uptime);
         self::assertLessThanOrEqual(100.0, $uptime->uptime);
-        // The range is echoed as sent, which is ISO 8601 in whole seconds.
-        self::assertSame($from->getTimestamp(), $uptime->from?->getTimestamp());
-        self::assertSame($to->getTimestamp(), $uptime->to?->getTimestamp());
+        // The range is echoed as sent, to the millisecond.
+        self::assertSame($from->format('U.v'), $uptime->from?->format('U.v'));
+        self::assertSame($to->format('U.v'), $uptime->to?->format('U.v'));
         self::assertSame($responseTimes->dataPoints, \count($responseTimes->timeSeries));
         self::assertNotNull($byRegion->all);
 

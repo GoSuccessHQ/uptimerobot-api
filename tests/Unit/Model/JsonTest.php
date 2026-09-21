@@ -14,10 +14,12 @@ use stdClass;
 #[CoversClass(Json::class)]
 final class JsonTest extends TestCase
 {
-    public function testFormatsDatesAsUtc(): void
+    public function testFormatsDatesAsUtcWithMilliseconds(): void
     {
-        self::assertSame('2026-09-18T12:30:00Z', Json::date(new DateTimeImmutable('2026-09-18T14:30:00+02:00')));
-        self::assertSame('2026-09-18T12:30:00Z', Json::date(new DateTime('2026-09-18T12:30:00.999Z')));
+        self::assertSame('2026-09-18T12:30:00.000Z', Json::date(new DateTimeImmutable('2026-09-18T14:30:00+02:00')));
+        // The precision of the API's dates, e.g. the start of an incident (verified live).
+        self::assertSame('2026-09-16T08:41:11.469Z', Json::date(new DateTime('2026-09-16T08:41:11.469Z')));
+        self::assertSame('2026-09-18T12:30:00.999Z', Json::date(new DateTimeImmutable('2026-09-18T12:30:00.999999Z')));
     }
 
     public function testFormatsFloatsWithoutExponent(): void

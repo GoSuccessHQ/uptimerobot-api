@@ -28,7 +28,7 @@ final class AbstractResourceTest extends TestCase
         self::assertSame('a%2Fb%3Fc', $resource->segmentOf('a/b?c'));
         self::assertSame('42', $resource->segmentOf(42));
         self::assertSame('GET', $resource->segmentOf(Method::Get));
-        self::assertSame('2026-09-18T12%3A30%3A00Z', $resource->segmentOf(new DateTimeImmutable('2026-09-18T14:30:00+02:00')));
+        self::assertSame('2026-09-18T12%3A30%3A00.000Z', $resource->segmentOf(new DateTimeImmutable('2026-09-18T14:30:00+02:00')));
     }
 
     public function testMapsResponsesOntoModels(): void

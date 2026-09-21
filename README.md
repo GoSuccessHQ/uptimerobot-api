@@ -476,7 +476,10 @@ echo $incident->rootCause?->url, ' answered ', $incident->rootCause->httpRespons
 ```
 
 The list is sorted newest first; `monitorName` matches part of the name,
-ignoring case. The items of the list carry the `type` (e.g. `Downtime`,
+ignoring case. `startedAfter` and `startedBefore` include an incident that
+started exactly at the given time, to the millisecond (verified live): to list
+only the incidents after one you have seen, pass its `startedAt` plus one
+millisecond. The items of the list carry the `type` (e.g. `Downtime`,
 `SlowResponse`) and the monitor, `get()` carries neither but adds the root
 cause. `cause` is the HTTP status of an HTTP error, `333333` for a connection
 timeout, `444444` for no response and `0` for a slow response (verified

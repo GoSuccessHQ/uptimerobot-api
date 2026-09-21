@@ -30,7 +30,7 @@ final class QueryTest extends TestCase
         ]);
 
         self::assertSame(
-            'limit=50&includeTimeSeries=true&includeOrgMembers=false&ratio=0.5&name=a%20b%2Fc%26d&method=POST&from=2026-09-18T12%3A30%3A00Z',
+            'limit=50&includeTimeSeries=true&includeOrgMembers=false&ratio=0.5&name=a%20b%2Fc%26d&method=POST&from=2026-09-18T12%3A30%3A00.000Z',
             $query,
         );
     }

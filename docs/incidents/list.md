@@ -27,8 +27,8 @@ public function list(
 | `$cursor` | `string\|null` | no | The cursor of the page to return, as the previous page reported it; null for the first page. |
 | `$monitorId` | `int\|null` | no | Filter incidents by monitor ID |
 | `$monitorName` | `string\|null` | no | Filter incidents by monitor name (partial match) |
-| `$startedAfter` | `DateTimeInterface\|null` | no | Only incidents that started after this time, sent as ISO 8601 in UTC (verified live). |
-| `$startedBefore` | `DateTimeInterface\|null` | no | Only incidents that started before this time, sent as ISO 8601 in UTC (verified live). |
+| `$startedAfter` | `DateTimeInterface\|null` | no | Only incidents that started at or after this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC. To continue after an incident, pass its startedAt plus one millisecond. |
+| `$startedBefore` | `DateTimeInterface\|null` | no | Only incidents that started at or before this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC. |
 
 ## Returns
 

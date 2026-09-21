@@ -17,13 +17,15 @@ use stdClass;
 final class Json
 {
     /**
-     * Format a date as ISO 8601 in UTC, e.g. `2026-09-18T12:00:00Z`.
+     * Format a date as ISO 8601 in UTC with milliseconds, e.g.
+     * `2026-09-18T12:00:00.000Z`: the precision of the dates the API sends,
+     * and the one its filters compare with (verified live).
      */
     public static function date(DateTimeInterface $date): string
     {
         return DateTimeImmutable::createFromInterface($date)
             ->setTimezone(new DateTimeZone('UTC'))
-            ->format('Y-m-d\TH:i:s\Z');
+            ->format('Y-m-d\TH:i:s.v\Z');
     }
 
     /**

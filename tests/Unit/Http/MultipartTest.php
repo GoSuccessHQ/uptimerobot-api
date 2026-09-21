@@ -38,7 +38,7 @@ final class MultipartTest extends TestCase
             . "--b0undary\r\nContent-Disposition: form-data; name=\"hideUrlLinks\"\r\n\r\ntrue\r\n"
             . "--b0undary\r\nContent-Disposition: form-data; name=\"ratio\"\r\n\r\n0.5\r\n"
             . "--b0undary\r\nContent-Disposition: form-data; name=\"sort\"\r\n\r\nGET\r\n"
-            . "--b0undary\r\nContent-Disposition: form-data; name=\"since\"\r\n\r\n2026-09-18T12:30:00Z\r\n"
+            . "--b0undary\r\nContent-Disposition: form-data; name=\"since\"\r\n\r\n2026-09-18T12:30:00.000Z\r\n"
             . "--b0undary\r\nContent-Disposition: form-data; name=\"monitorIds[]\"\r\n\r\n1\r\n"
             . "--b0undary\r\nContent-Disposition: form-data; name=\"monitorIds[]\"\r\n\r\n2\r\n"
             // An empty list is a single empty field, as the API documents.

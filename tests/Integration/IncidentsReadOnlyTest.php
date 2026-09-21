@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Tests\Integration;
 
+use DateTimeInterface;
 use GoSuccess\UptimeRobot\Exception\ForbiddenException;
 use GoSuccess\UptimeRobot\Exception\NotFoundException;
 use GoSuccess\UptimeRobot\Model\CommentActivity;
@@ -92,37 +93,35 @@ final class IncidentsReadOnlyTest extends IntegrationTestCase
         }
     }
 
-    public function testFiltersByStart(): void
+    public function testFiltersByStartInclusivelyToTheMillisecond(): void
     {
         $incidents = self::incidents();
-        $middle = $incidents[intdiv(\count($incidents), 2)]->startedAt;
-        self::assertNotNull($middle);
+        $middle = $incidents[intdiv(\count($incidents), 2)];
+        $startedAt = $middle->startedAt;
+        self::assertNotNull($startedAt);
 
-        $after = iterator_to_array(self::client()->incidents->all(startedAfter: $middle), false);
-        $before = iterator_to_array(self::client()->incidents->all(startedBefore: $middle), false);
+        // Limited to the monitor of the incident, to keep the pages few.
+        $monitorId = $middle->monitor->id;
+        $after = self::incidentsOf($monitorId, after: $startedAt);
+        $before = self::incidentsOf($monitorId, before: $startedAt);
+        $later = self::incidentsOf($monitorId, after: $startedAt->modify('+1 millisecond'));
 
-        // The dates are sent in whole seconds.
-        $from = $middle->setTime((int) $middle->format('H'), (int) $middle->format('i'), (int) $middle->format('s'));
-        $to = $from->modify('+1 second');
+        // Both bounds include the incident that started exactly then, and the
+        // dates are compared to the millisecond.
+        self::assertContains($middle->id, self::ids($after));
+        self::assertContains($middle->id, self::ids($before));
+        self::assertNotContains($middle->id, self::ids($later));
 
         foreach ($after as $incident) {
-            self::assertGreaterThanOrEqual($from, $incident->startedAt);
+            self::assertGreaterThanOrEqual($startedAt, $incident->startedAt);
         }
 
         foreach ($before as $incident) {
-            self::assertLessThanOrEqual($to, $incident->startedAt);
+            self::assertLessThanOrEqual($startedAt, $incident->startedAt);
         }
 
-        // The newest incident started after the middle one, the oldest before it.
-        $newest = $incidents[0];
-        $oldest = $incidents[\count($incidents) - 1];
-
-        if ($newest->startedAt > $to) {
-            self::assertContains($newest->id, self::ids($after));
-        }
-
-        if ($oldest->startedAt < $from) {
-            self::assertContains($oldest->id, self::ids($before));
+        foreach ($later as $incident) {
+            self::assertGreaterThan($startedAt, $incident->startedAt);
         }
     }
 
@@ -230,6 +229,14 @@ final class IncidentsReadOnlyTest extends IntegrationTestCase
     private static function ids(array $incidents): array
     {
         return array_map(static fn(IncidentSummary $incident): string => $incident->id, $incidents);
+    }
+
+    /**
+     * @return list<IncidentSummary>
+     */
+    private static function incidentsOf(int $monitorId, ?DateTimeInterface $after = null, ?DateTimeInterface $before = null): array
+    {
+        return iterator_to_array(self::client()->incidents->all(monitorId: $monitorId, startedAfter: $after, startedBefore: $before), false);
     }
 
     /**

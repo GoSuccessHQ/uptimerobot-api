@@ -357,7 +357,7 @@ final class MonitorResourceTest extends TestCase
             to: new DateTimeImmutable('2026-09-21T08:58:51Z'),
         );
 
-        self::assertSame('https://api.uptimerobot.com/v3/monitors/804045264/stats/uptime?from=2026-09-20T08%3A58%3A51Z&to=2026-09-21T08%3A58%3A51Z', $http->requests[0]->uri);
+        self::assertSame('https://api.uptimerobot.com/v3/monitors/804045264/stats/uptime?from=2026-09-20T08%3A58%3A51.465Z&to=2026-09-21T08%3A58%3A51.000Z', $http->requests[0]->uri);
         self::assertSame(92.54237891737893, $stats->uptime);
         self::assertSame(6441, $stats->totalDowntimeSeconds);
         self::assertSame(2, $stats->incidentCount);

@@ -38,8 +38,8 @@ final class IncidentResource extends AbstractResource
      * @param string|null            $cursor        The cursor of the page to return, as the previous page reported it; null for the first page.
      * @param int|null               $monitorId     Filter incidents by monitor ID
      * @param string|null            $monitorName   Filter incidents by monitor name (partial match)
-     * @param DateTimeInterface|null $startedAfter  Only incidents that started after this time, sent as ISO 8601 in UTC (verified live).
-     * @param DateTimeInterface|null $startedBefore Only incidents that started before this time, sent as ISO 8601 in UTC (verified live).
+     * @param DateTimeInterface|null $startedAfter  Only incidents that started at or after this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC. To continue after an incident, pass its startedAt plus one millisecond.
+     * @param DateTimeInterface|null $startedBefore Only incidents that started at or before this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC.
      *
      * @return Page<IncidentSummary>
      */
@@ -70,8 +70,8 @@ final class IncidentResource extends AbstractResource
      *
      * @param int|null               $monitorId     Filter incidents by monitor ID
      * @param string|null            $monitorName   Filter incidents by monitor name (partial match)
-     * @param DateTimeInterface|null $startedAfter  Only incidents that started after this time, sent as ISO 8601 in UTC (verified live).
-     * @param DateTimeInterface|null $startedBefore Only incidents that started before this time, sent as ISO 8601 in UTC (verified live).
+     * @param DateTimeInterface|null $startedAfter  Only incidents that started at or after this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC. To continue after an incident, pass its startedAt plus one millisecond.
+     * @param DateTimeInterface|null $startedBefore Only incidents that started at or before this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC.
      *
      * @return Paginator<IncidentSummary>
      */

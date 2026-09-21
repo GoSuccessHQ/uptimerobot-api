@@ -15,7 +15,7 @@ use InvalidArgumentException;
  * - `null` values are omitted,
  * - booleans become `true`/`false` (not `1`/`0`),
  * - backed enums are sent as their value,
- * - dates are sent as ISO 8601 in UTC, e.g. `2026-09-18T12:00:00Z`,
+ * - dates are sent as ISO 8601 in UTC with milliseconds, e.g. `2026-09-18T12:00:00.000Z`,
  * - lists are sent as repeated keys (`customField=a:1&customField=b:2`).
  *
  * @internal

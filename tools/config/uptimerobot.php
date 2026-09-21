@@ -1396,8 +1396,12 @@ return [
         'MonitorGroupsController_delete.monitorsNewGroupId' => 'The group the monitors of the deleted group move to, at least 1: 0 is rejected with a BadRequestException (verified live). Without it, they move to no group (groupId 0), which the specification calls the default group.',
         // Verified live: started_after=2026-09-01T00:00:00Z bounds startedAt,
         // "notadate" is rejected with "started_after must be a Date instance".
-        'IncidentsController_list.started_after' => 'Only incidents that started after this time, sent as ISO 8601 in UTC (verified live).',
-        'IncidentsController_list.started_before' => 'Only incidents that started before this time, sent as ISO 8601 in UTC (verified live).',
+        // Both bounds are inclusive and compared to the millisecond: the
+        // incident that started at 2026-09-16T08:41:11.469Z is listed with
+        // started_after=…11.469Z but not …11.470Z, and with
+        // started_before=…11.469Z but not …11Z (verified live).
+        'IncidentsController_list.started_after' => 'Only incidents that started at or after this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC. To continue after an incident, pass its startedAt plus one millisecond.',
+        'IncidentsController_list.started_before' => 'Only incidents that started at or before this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC.',
         // all() requests pages of 100 comments; see 'commentPages'.
         'IncidentsController_listComments.limit' => 'Comments per page, from 1 to 100; the specification gives 50 as the default.',
         // The specification limits the flag to the owner of an organization and

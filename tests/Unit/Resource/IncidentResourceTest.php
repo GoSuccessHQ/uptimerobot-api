@@ -91,15 +91,33 @@ final class IncidentResourceTest extends TestCase
             startedBefore: new DateTimeImmutable('2026-09-20T23:59:59Z'),
         );
 
-        // Dates in UTC, as the API accepts them (verified live:
-        // started_after=2026-09-01T00:00:00Z).
+        // Dates in UTC with milliseconds, as the API accepts them (verified
+        // live: started_after=2026-09-01T00:00:00Z and …T08:41:11.469Z).
         self::assertSame(
             'https://api.uptimerobot.com/v3/incidents?cursor=352577094135060139&monitor_id=803767164&monitor_name=ns'
-            . '&started_after=2026-09-01T00%3A00%3A00Z&started_before=2026-09-20T23%3A59%3A59Z',
+            . '&started_after=2026-09-01T00%3A00%3A00.000Z&started_before=2026-09-20T23%3A59%3A59.000Z',
             $http->requests[0]->uri,
         );
         self::assertSame([], $page->items);
         self::assertNull($page->next);
+    }
+
+    public function testFiltersByTheStartOfAnIncidentToTheMillisecond(): void
+    {
+        // Both bounds are inclusive and compared to the millisecond (verified
+        // live): started_before=…T08:41:11.469Z includes this incident,
+        // …T08:41:11Z leaves it out, and started_after=…T08:41:11.470Z excludes it.
+        $http = new MockHttpClient(new Response(200, '{"data":[' . self::DOWNTIME . ']}'), new Response(200, '{"data":[]}'));
+        $client = self::client($http);
+        $startedAt = $client->incidents->list()->items[0]->startedAt;
+        self::assertNotNull($startedAt);
+
+        $client->incidents->list(startedAfter: $startedAt->modify('+1 millisecond'), startedBefore: $startedAt);
+
+        self::assertSame(
+            'https://api.uptimerobot.com/v3/incidents?started_after=2026-09-16T08%3A41%3A11.470Z&started_before=2026-09-16T08%3A41%3A11.469Z',
+            $http->requests[1]->uri,
+        );
     }
 
     public function testIteratesOverAllIncidentsWithTheIdOfTheLastIncidentAsCursor(): void

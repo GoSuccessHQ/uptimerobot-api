@@ -22,7 +22,8 @@ use stdClass;
  */
 final class Samples
 {
-    private const string DATE = '2026-01-02T03:04:05Z';
+    /** A date with milliseconds, as the API sends them and the client sends them back. */
+    private const string DATE = '2026-01-02T03:04:05.678Z';
 
     /** Nested models deeper than this are left out to break cycles. */
     private const int MAX_DEPTH = 3;
