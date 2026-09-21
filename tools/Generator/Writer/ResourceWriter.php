@@ -76,7 +76,7 @@ final class ResourceWriter
 
         return $this->docBlock($method, $method->parameters, $file, $tags)
             . $this->deprecation($method)
-            . "    public function {$method->config->name}({$this->signature($method->parameters, $file)}): {$returns['native']}\n    {\n{$code}    }\n";
+            . $this->header($method->config->name, $this->signature($method->parameters, $file), $returns['native']) . "{$code}    }\n";
     }
 
     private function paginated(MethodDefinition $method, CodeFile $file): string
@@ -96,7 +96,7 @@ final class ResourceWriter
 
         $list = $this->docBlock($method, $method->parameters, $file, ["@return {$page}<{$itemDoc}>"])
             . $this->deprecation($method)
-            . "    public function {$method->config->name}({$this->signature($method->parameters, $file)}): {$page}\n    {\n"
+            . $this->header($method->config->name, $this->signature($method->parameters, $file), $page)
             . $this->bodyStatements($method, $file)
             . "        \$data = {$object};\n\n        return {$factory}(\$data, {$items}, integerCursor: " . ($integerCursor ? 'true' : 'false') . ");\n    }\n";
 
@@ -141,7 +141,7 @@ final class ResourceWriter
 
         $all = $doc
             . $this->deprecation($method)
-            . "    public function {$method->config->all}({$this->signature($allParameters, $file)}): {$paginator}\n    {\n"
+            . $this->header($method->config->all, $this->signature($allParameters, $file), $paginator)
             . "        return new {$paginator}(fn(int|string|null \$cursor): {$page} => \$this->{$method->config->name}(\n"
             . implode('', array_map(static fn(string $argument): string => "            {$argument},\n", $arguments))
             . "        ));\n    }\n";
@@ -255,6 +255,17 @@ final class ResourceWriter
         }, str_replace(['\\', '"', '$'], ['\\\\', '\\"', '\\$'], $path));
 
         return "\"{$interpolated}\"";
+    }
+
+    /**
+     * The declaration of a method up to its opening brace, which follows a
+     * signature wrapped over several lines on the same line (PSR-12).
+     */
+    private function header(string $name, string $signature, string $returns): string
+    {
+        $brace = str_contains($signature, "\n") ? " {\n" : "\n    {\n";
+
+        return "    public function {$name}({$signature}): {$returns}{$brace}";
     }
 
     /**
