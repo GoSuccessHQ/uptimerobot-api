@@ -149,12 +149,31 @@ final class GeneratedFeaturesTest extends TestCase
         self::assertSame('{"type":"Telegram","data":{}}', $http->requests[1]->body);
     }
 
+    public function testDeclaresThePropertiesEveryVariantOfAResponseUnionHas(): void
+    {
+        $event = new ReflectionClass(KitchenSink::class('Model\\Event'));
+        $declared = [];
+
+        foreach ($event->getProperties() as $property) {
+            $declared[$property->getName()] = (string) $property->getType();
+        }
+
+        // In the order of the first variant; note differs in type.
+        self::assertSame(['id' => 'int', 'actor' => 'string', 'tags' => 'array'], $declared);
+        self::assertStringContainsString('@var list<string>', (string) $event->getProperty('tags')->getDocComment());
+        // The variants describe actor differently.
+        self::assertFalse($event->getProperty('actor')->getDocComment());
+
+        // Requests are built from optional parameters, not read from properties.
+        self::assertSame([], new ReflectionClass(KitchenSink::class('Model\\WidgetCreate'))->getProperties());
+    }
+
     public function testReadsTheVariantADiscriminatorNamesAndKeepsUnknownOnes(): void
     {
         $http = new MockHttpClient(new Response(200, json_encode(['data' => [
-            ['type' => 'CREATED', 'at' => '2026-09-21T09:06:30.000Z'],
-            ['type' => 'DELETED', 'reason' => 'Cleanup'],
-            ['type' => 'RENAMED', 'to' => 'Shop'],
+            ['type' => 'CREATED', 'id' => 1, 'at' => '2026-09-21T09:06:30.000Z', 'actor' => 'Ann'],
+            ['type' => 'DELETED', 'id' => 2, 'reason' => 'Cleanup', 'actor' => 'Bob'],
+            ['type' => 'RENAMED', 'id' => 3, 'to' => 'Shop', 'actor' => 'Cid', 'tags' => ['a']],
             'not an object',
         ]], \JSON_THROW_ON_ERROR)));
 
@@ -170,7 +189,12 @@ final class GeneratedFeaturesTest extends TestCase
         self::assertInstanceOf(KitchenSink::class('Model\\UnknownEvent'), $events[2]);
         self::assertInstanceOf(KitchenSink::class('Model\\Event'), $events[2]);
         self::assertSame('RENAMED', self::property($events[2], 'type'));
-        self::assertSame(['type' => 'RENAMED', 'to' => 'Shop'], self::property($events[2], 'data'));
+        self::assertSame(['type' => 'RENAMED', 'id' => 3, 'to' => 'Shop', 'actor' => 'Cid', 'tags' => ['a']], self::property($events[2], 'data'));
+
+        // What every kind has, the unknown one included, is read without instanceof.
+        self::assertSame([1, 2, 3], array_map(static fn(object $event): mixed => self::property($event, 'id'), $events));
+        self::assertSame(['Ann', 'Bob', 'Cid'], array_map(static fn(object $event): mixed => self::property($event, 'actor'), $events));
+        self::assertSame([[], [], ['a']], array_map(static fn(object $event): mixed => self::property($event, 'tags'), $events));
     }
 
     public function testJoinsCommaSeparatedParametersAndRepeatsOthers(): void

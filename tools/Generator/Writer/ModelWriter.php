@@ -278,6 +278,38 @@ final class ModelWriter
     }
 
     /**
+     * How the model reads a property: the declared type, its zero value and
+     * the expression that reads it from $data. The fallback of a union reads
+     * the properties its variants share the same way.
+     *
+     * @return array{native: string, doc: string|null, default: string, nullable: bool, expression: string}
+     */
+    public function readProperty(PropertyDefinition $property, ModelDefinition $model, CodeFile $file): array
+    {
+        return [...$this->readType($property, $model, $file), 'expression' => $this->readExpression($property, $model, $file)];
+    }
+
+    /**
+     * The docblock of a property: its description, its PHPDoc type and whether it is deprecated.
+     *
+     * @param array{native: string, doc: string|null} $type
+     */
+    public function propertyDoc(PropertyDefinition $property, array $type, string $indent): string
+    {
+        $tags = [];
+
+        if ($type['doc'] !== null) {
+            $tags[] = "@var {$type['doc']}";
+        }
+
+        if ($property->deprecated) {
+            $tags[] = '@deprecated';
+        }
+
+        return Doc::block([Doc::lines($property->description), $tags], $indent);
+    }
+
+    /**
      * @return array{native: string, doc: string|null, default: string, nullable: bool}
      */
     private function readType(PropertyDefinition $property, ModelDefinition $model, CodeFile $file): array
@@ -399,24 +431,6 @@ final class ModelWriter
         $read = $this->readType($property, $model, $file);
 
         return $read['nullable'] ? $expression : "{$expression} ?? {$read['default']}";
-    }
-
-    /**
-     * @param array{native: string, doc: string|null} $type
-     */
-    private function propertyDoc(PropertyDefinition $property, array $type, string $indent): string
-    {
-        $tags = [];
-
-        if ($type['doc'] !== null) {
-            $tags[] = "@var {$type['doc']}";
-        }
-
-        if ($property->deprecated) {
-            $tags[] = '@deprecated';
-        }
-
-        return Doc::block([Doc::lines($property->description), $tags], $indent);
     }
 
     private function classDoc(ModelDefinition $model): string

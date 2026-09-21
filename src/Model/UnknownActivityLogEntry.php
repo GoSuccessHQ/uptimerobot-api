@@ -6,10 +6,14 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Model;
 
+use DateTimeImmutable;
+use GoSuccess\UptimeRobot\Enum\Region;
+
 /**
  * A {@see ActivityLogEntry} of a kind this client does not know yet.
  *
- * It keeps the payload as the API sent it, so nothing is lost until the client learns the new kind.
+ * It keeps the payload as the API sent it, so nothing is lost until the client learns the new kind,
+ * and reads the properties that every kind has.
  *
  * Schema: ActivityLogResponseDto.data[]
  */
@@ -22,10 +26,17 @@ final readonly class UnknownActivityLogEntry implements ActivityLogEntry
     public function __construct(
         public ?string $type = null,
         public array $data = [],
+        public ?DateTimeImmutable $date = null,
+        public ?Region $region = null,
     ) {}
 
     public static function fromArray(array $data): static
     {
-        return new self(Cast::string($data['type'] ?? null), $data);
+        return new self(
+            type: Cast::string($data['type'] ?? null),
+            data: $data,
+            date: Cast::dateTime($data['date'] ?? null),
+            region: Cast::stringEnum(Region::class, $data['region'] ?? null),
+        );
     }
 }

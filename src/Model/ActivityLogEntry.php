@@ -6,13 +6,22 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Model;
 
+use DateTimeImmutable;
+use GoSuccess\UptimeRobot\Enum\Region;
+
 /**
  * An entry of the activity log of an incident: a status update of the checks, a comment or a notification.
  *
  * Implemented by one model per "type": {@see StatusUpdateActivity}, {@see CommentActivity}, {@see
  * NotificationActivity}. A value this client does not know yet is read as {@see
- * UnknownActivityLogEntry}.
+ * UnknownActivityLogEntry}. Each of them has the properties declared here; the others need an
+ * instanceof check.
  *
  * Schema: ActivityLogResponseDto.data[]
  */
-interface ActivityLogEntry extends ResponseModel {}
+interface ActivityLogEntry extends ResponseModel
+{
+    public ?DateTimeImmutable $date { get; }
+
+    public ?Region $region { get; }
+}

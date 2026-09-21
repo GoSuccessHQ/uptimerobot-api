@@ -157,6 +157,7 @@ final class IncidentsReadOnlyTest extends IntegrationTestCase
             }
 
             self::assertTrue($entry instanceof StatusUpdateActivity || $entry instanceof NotificationActivity || $entry instanceof CommentActivity);
+            // Declared by ActivityLogEntry, so no instanceof is needed.
             self::assertNotNull($entry->date);
 
             if ($previous !== null) {

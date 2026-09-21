@@ -145,7 +145,7 @@ final class Generator
         $files = [];
         $modelWriter = new ModelWriter($registry);
         $enumWriter = new EnumWriter();
-        $unionWriter = new UnionWriter();
+        $unionWriter = new UnionWriter($registry, $modelWriter);
         $resourceWriter = new ResourceWriter($config, $registry);
 
         foreach ($registry->enums as $enum) {

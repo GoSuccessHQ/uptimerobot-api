@@ -316,17 +316,32 @@ final class KitchenSink
                     'type' => 'object',
                     'properties' => ['friendlyName' => ['type' => 'string']],
                 ],
+                // Both kinds have id, actor and tags; note differs in type.
                 'EventLogDto' => [
                     'type' => 'object',
                     'properties' => ['data' => ['type' => 'array', 'items' => ['oneOf' => [
                         [
                             'type' => 'object',
-                            'properties' => ['type' => ['type' => 'string', 'enum' => ['CREATED']], 'at' => ['oneOf' => [[], ['type' => 'string']]]],
+                            'properties' => [
+                                'type' => ['type' => 'string', 'enum' => ['CREATED']],
+                                'id' => ['type' => 'number'],
+                                'at' => ['oneOf' => [[], ['type' => 'string']]],
+                                'actor' => ['type' => 'string', 'description' => 'Who did it.'],
+                                'tags' => ['type' => 'array', 'items' => ['type' => 'string']],
+                                'note' => ['type' => 'string'],
+                            ],
                             'required' => ['type', 'at'],
                         ],
                         [
                             'type' => 'object',
-                            'properties' => ['type' => ['type' => 'string', 'enum' => ['DELETED']], 'reason' => ['type' => 'string', 'nullable' => true]],
+                            'properties' => [
+                                'type' => ['type' => 'string', 'enum' => ['DELETED']],
+                                'reason' => ['type' => 'string', 'nullable' => true],
+                                'note' => ['type' => 'boolean'],
+                                'tags' => ['type' => 'array', 'items' => ['type' => 'string']],
+                                'actor' => ['type' => 'string', 'description' => 'Who deleted it.'],
+                                'id' => ['type' => 'number'],
+                            ],
                             'required' => ['type'],
                         ],
                     ]]]],

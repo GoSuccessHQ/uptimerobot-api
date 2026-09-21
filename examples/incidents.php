@@ -53,25 +53,24 @@ if ($rootCause !== null && $rootCause->url !== '') {
 }
 
 foreach ($uptimeRobot->incidents->activityLog($newest->id) as $entry) {
+    // Every entry has a date and a region; the rest depends on its kind.
     $line = match (true) {
         $entry instanceof StatusUpdateActivity => sprintf(
-            '%s %s: %s%s',
-            $entry->date?->format('H:i:s'),
+            '%s: %s%s',
             $entry->alertLogType,
             $entry->reason,
             $entry->remoteNode === null ? '' : " (from {$entry->remoteNode->city}, {$entry->remoteNode->country})",
         ),
         $entry instanceof NotificationActivity => sprintf(
-            '%s %s alert to %s: %s',
-            $entry->date?->format('H:i:s'),
+            '%s alert to %s: %s',
             $entry->notificationType,
             $entry->sentToFullName,
             $entry->notificationStatus->value ?? '?',
         ),
-        $entry instanceof CommentActivity => sprintf('%s comment by %s', $entry->date?->format('H:i:s'), $entry->commentFullName),
+        $entry instanceof CommentActivity => "comment by {$entry->commentFullName}",
         $entry instanceof UnknownActivityLogEntry => "entry of the type {$entry->type}",
         default => 'unknown entry',
     };
 
-    printf("  %s\n", $line);
+    printf("  %s %s\n", $entry->date?->format('H:i:s') ?? '?', $line);
 }

@@ -15,6 +15,7 @@ use GoSuccess\UptimeRobot\Enum\Region;
 use GoSuccess\UptimeRobot\Exception\BadRequestException;
 use GoSuccess\UptimeRobot\Exception\NotFoundException;
 use GoSuccess\UptimeRobot\Http\Response;
+use GoSuccess\UptimeRobot\Model\ActivityLogEntry;
 use GoSuccess\UptimeRobot\Model\CommentActivity;
 use GoSuccess\UptimeRobot\Model\IncidentSummary;
 use GoSuccess\UptimeRobot\Model\NotificationActivity;
@@ -340,6 +341,13 @@ final class IncidentResourceTest extends TestCase
         self::assertInstanceOf(UnknownActivityLogEntry::class, $unknown);
         self::assertSame('ESCALATION', $unknown->type);
         self::assertSame(['type' => 'ESCALATION', 'date' => '2026-08-21T20:40:00.000Z', 'level' => 2], $unknown->data);
+
+        // Every kind has a date and a region, the unknown one included.
+        self::assertSame(
+            ['21:00:00', '20:51:11', '20:51:10', '20:38:06', '20:38:05', '19:29:33', '20:40:00'],
+            array_map(static fn(ActivityLogEntry $entry): ?string => $entry->date?->format('H:i:s'), $entries),
+        );
+        self::assertSame([null, 'oc', 'oc', 'oc', 'oc', 'na', null], array_map(static fn(ActivityLogEntry $entry): ?string => $entry->region?->value, $entries));
     }
 
     public function testReadsTheSentAlerts(): void

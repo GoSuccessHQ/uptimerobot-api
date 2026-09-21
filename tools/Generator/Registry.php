@@ -183,6 +183,64 @@ final class Registry
     }
 
     /**
+     * The properties that every variant of a union read from responses has,
+     * with the same name, JSON key and type, in the order of the first
+     * variant: its interface declares them, so they can be read without an
+     * instanceof check. The description is kept where all variants agree.
+     *
+     * A union that is also sent gets none: its variants take their fields as
+     * optional parameters, not as plain properties. Neither does a union
+     * whose variants nest their fields in an envelope.
+     *
+     * @return list<PropertyDefinition>
+     */
+    public function sharedProperties(UnionDefinition $union): array
+    {
+        if (!$union->response || $union->request || $union->envelope !== null) {
+            return [];
+        }
+
+        $variants = array_map(fn(string $class): ModelDefinition => $this->models[$class], array_values($union->variants));
+        $shared = [];
+
+        foreach ($variants[0]->properties as $property) {
+            $description = $property->description;
+            $deprecated = $property->deprecated;
+
+            foreach (\array_slice($variants, 1) as $variant) {
+                $other = null;
+
+                foreach ($variant->properties as $candidate) {
+                    if ($candidate->phpName === $property->phpName) {
+                        $other = $candidate;
+                    }
+                }
+
+                // Same PHP type when read: kind, class and items, and nullability.
+                if ($other === null || $other->jsonName !== $property->jsonName || $other->nullable !== $property->nullable || $other->type != $property->type) {
+                    continue 2;
+                }
+
+                $description = $other->description === $description ? $description : null;
+                $deprecated = $deprecated && $other->deprecated;
+            }
+
+            $shared[] = new PropertyDefinition(
+                jsonName: $property->jsonName,
+                phpName: $property->phpName,
+                type: $property->type,
+                nullable: $property->nullable,
+                required: false,
+                readOnly: $property->readOnly,
+                deprecated: $deprecated,
+                description: $description,
+            );
+        }
+
+        return $shared;
+    }
+
+    /**
      * Whether a property must be sent: the specification requires it, and
      * the configuration does not make it optional.
      *

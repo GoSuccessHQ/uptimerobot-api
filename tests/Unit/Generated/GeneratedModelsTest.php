@@ -15,6 +15,7 @@ use LogicException;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 use stdClass;
 
 /**
@@ -71,6 +72,44 @@ final class GeneratedModelsTest extends TestCase
             }
 
             $this->assertRead($samples, $property->type, $fields[$property->jsonName], $instance->{$property->phpName}, "{$class}::\${$property->phpName}");
+        }
+    }
+
+    /**
+     * Unions read from responses, whose fallback reads the properties every variant has.
+     *
+     * @return iterable<string, array{string, string}>
+     */
+    public static function responseUnions(): iterable
+    {
+        foreach (GeneratedCode::all() as $code => $analysis) {
+            foreach ($analysis->registry->unions as $union) {
+                if ($union->response && $union->fallback !== null) {
+                    yield "{$code} {$union->source}" => [$code, $union->interface];
+                }
+            }
+        }
+    }
+
+    #[DataProvider('responseUnions')]
+    public function testFallbacksReadThePropertiesEveryVariantHas(string $code, string $interface): void
+    {
+        $registry = GeneratedCode::analysis($code)->registry;
+        $samples = new Samples($registry);
+        $union = $registry->unions[$interface];
+        $fallback = $union->fallback ?? throw new LogicException("{$interface} has no fallback.");
+
+        // A variant's payload, but of a kind this client does not know.
+        $payload = [...$samples->payload($samples->firstVariant(new PhpType(PhpType::UNION, $interface))), $union->discriminator => $union->backing === 'int' ? 999 : 'UNKNOWN_KIND'];
+        $instance = $fallback::fromArray($payload);
+
+        self::assertTrue(interface_exists($interface));
+        self::assertInstanceOf($interface, $instance);
+        self::assertSame($payload, new ReflectionProperty($instance, 'data')->getValue($instance));
+
+        foreach ($registry->sharedProperties($union) as $property) {
+            self::assertArrayHasKey($property->jsonName, $payload);
+            $this->assertRead($samples, $property->type, $payload[$property->jsonName], $instance->{$property->phpName}, "{$fallback}::\${$property->phpName}");
         }
     }
 
