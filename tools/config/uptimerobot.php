@@ -50,6 +50,8 @@ declare(strict_types=1);
  *                       'discriminator' => 'type', 'variants' => ['HTTP' => 'HttpMonitorCreate', ...],
  *                       optional 'envelope' => 'data' and, for responses, 'fallback' => 'UnknownX']
  * - additions:          schemas and properties the specification lacks
+ * - extraModels:        'UptimeStatsDto'  (read by hand-written methods)
+ * - extraRequestModels: 'PublicBulkUpdateDto'  (sent by hand-written methods)
  */
 return [
     'title' => 'UptimeRobot API v3',
@@ -149,6 +151,8 @@ return [
     'unions' => [],
 
     'extraModels' => [],
+
+    'extraRequestModels' => [],
 
     'additions' => [
         'schemas' => [],

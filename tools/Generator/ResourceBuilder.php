@@ -129,7 +129,7 @@ final class ResourceBuilder
         $method->parameters = [...$path, ...$bodyRequired, ...$required, ...$paging, ...$optional, ...$bodyOptional];
 
         // Hand-written methods read their responses themselves; the models they
-        // use are listed as extraModels.
+        // use are listed as extraModels (read) and extraRequestModels (sent).
         if (!$config->handwritten) {
             $this->response($method, $config, $operation, $context);
         }

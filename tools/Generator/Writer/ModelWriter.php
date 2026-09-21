@@ -28,6 +28,12 @@ use LogicException;
  * response); other values follow the specification's nullability and fall back
  * to their zero value when the API omits a field the specification promises.
  *
+ * Writing rules: null is sent where the specification allows it. A shared model
+ * clears a list or map with an empty value instead, since it reads them as
+ * never null; a request-only model sends null for a nullable list or map too,
+ * where null means something else than empty (e.g. "remove the key" in a
+ * merged object).
+ *
  * The variant of a union has its discriminator value as a constant instead of
  * a property, and sends it with every payload; with an envelope, its own
  * properties are nested in that property.
@@ -87,12 +93,12 @@ final class ModelWriter
         $body = '';
 
         foreach ($properties as $property) {
-            $type = $this->writeType($property, $file, !$property->required);
+            $type = $this->writeType($property, $file, !$property->required, requestOnly: true);
             $parameters .= $this->propertyDoc($property, $type, '        ');
             $default = $property->required ? '' : " = {$undefined}::Value";
             $parameters .= "        public {$type['native']} \${$property->phpName}{$default},\n";
 
-            $value = $this->expressions->serialize($property->type, "\$this->{$property->phpName}", $this->writeNullable($property), $file);
+            $value = $this->expressions->serialize($property->type, "\$this->{$property->phpName}", $this->writeNullable($property, requestOnly: true), $file);
             $assignment = "\$data['{$this->escape($property->jsonName)}'] = {$value};";
             $body .= $property->required
                 ? "        {$assignment}\n"
@@ -348,12 +354,12 @@ final class ModelWriter
     /**
      * @return array{native: string, doc: string|null}
      */
-    private function writeType(PropertyDefinition $property, CodeFile $file, bool $optional): array
+    private function writeType(PropertyDefinition $property, CodeFile $file, bool $optional, bool $requestOnly = false): array
     {
         $type = $property->type;
         $alias = $file->alias(...);
         $undefined = $optional ? '|' . $file->alias(Expressions::UNDEFINED) : '';
-        $nullable = $this->writeNullable($property);
+        $nullable = $this->writeNullable($property, $requestOnly);
 
         if ($type->kind === PhpType::MIXED) {
             return ['native' => 'mixed', 'doc' => null];
@@ -370,11 +376,12 @@ final class ModelWriter
     }
 
     /**
-     * Lists and maps are cleared with an empty value rather than null.
+     * Whether null can be sent. A shared model clears lists and maps with an
+     * empty value rather than null, since its properties read them as never null.
      */
-    private function writeNullable(PropertyDefinition $property): bool
+    private function writeNullable(PropertyDefinition $property, bool $requestOnly = false): bool
     {
-        return $property->nullable && !$property->type->isCollection() && $property->type->kind !== PhpType::MIXED;
+        return $property->nullable && ($requestOnly || !$property->type->isCollection()) && $property->type->kind !== PhpType::MIXED;
     }
 
     private function readExpression(PropertyDefinition $property, ModelDefinition $model, CodeFile $file, bool $raw = false): string

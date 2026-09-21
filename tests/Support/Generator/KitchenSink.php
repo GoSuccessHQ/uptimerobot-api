@@ -247,6 +247,18 @@ final class KitchenSink
                         'headers' => ['type' => 'object'],
                         'retry' => $ref('RetryPolicyDto'),
                         'fallbacks' => ['type' => 'array', 'items' => $ref('RetryPolicyDto')],
+                        // null means "remove", unlike an empty value.
+                        'aliases' => ['type' => 'array', 'items' => ['type' => 'string'], 'nullable' => true],
+                        'overrides' => ['type' => 'array', 'items' => $ref('RetryPolicyDto'), 'nullable' => true],
+                        'weights' => ['type' => 'object', 'additionalProperties' => ['type' => 'number'], 'nullable' => true],
+                    ],
+                ],
+                // Sent by hand-written code only.
+                'BulkWidgetUpdateDto' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'interval' => ['type' => 'number'],
+                        'retry' => $ref('RetryPolicyDto'),
                     ],
                 ],
                 'RetryPolicyDto' => [
@@ -366,13 +378,14 @@ final class KitchenSink
                 'EventLogDto.data[]<CREATED>.at' => ['type' => 'string', 'format' => 'date-time'],
                 'WidgetsController_list.status' => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => ['UP', 'LOOKS_DOWN', 'PAUSED']]],
             ],
-            'integers' => ['*.id', '*Ids[]', 'WidgetsController_list.limit', 'WidgetsController_list.group_id', 'TagsController_list.cursor', 'CreateHttpWidgetDto.interval', 'SettingsDto.threshold'],
+            'integers' => ['*.id', '*Ids[]', 'WidgetsController_list.limit', 'WidgetsController_list.group_id', 'TagsController_list.cursor', 'CreateHttpWidgetDto.interval', 'SettingsDto.threshold', 'UpdateWidgetDto.weights{}', 'BulkWidgetUpdateDto.interval'],
             'floats' => ['WidgetDto.score'],
             'mixed' => ['WidgetDto.meta'],
             'additions' => [
                 'properties' => ['WidgetDto.apiKey' => ['type' => 'string', 'description' => 'Sent, but not documented.']],
             ],
             'excludedProperties' => ['CreatePageDto.logo'],
+            'extraRequestModels' => ['BulkWidgetUpdateDto'],
             'commaSeparated' => ['WidgetsController_list.status'],
             'unions' => [
                 'WidgetsController_create.body' => [

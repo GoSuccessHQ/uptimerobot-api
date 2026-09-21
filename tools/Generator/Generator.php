@@ -76,6 +76,10 @@ final class Generator
             $registry->markUsage(new PhpType(PhpType::MODEL, $registry->requireModel($schema)), false);
         }
 
+        foreach ($config->extraRequestModels as $schema) {
+            $registry->markUsage(new PhpType(PhpType::MODEL, $registry->requireModel($schema)), true);
+        }
+
         $problems = [...self::coverageProblems($spec, $config, $resources), ...$registry->problems()];
 
         if ($problems !== []) {
@@ -185,6 +189,7 @@ final class Generator
             ...array_keys($config->schemas),
             ...array_keys($config->properties),
             ...$config->extraModels,
+            ...$config->extraRequestModels,
             ...array_keys($config->unions),
         ]);
         $unknown = array_unique(array_filter($names, static fn(string $name): bool => !$spec->hasSchema($name) && !$spec->hasOperation($name)));

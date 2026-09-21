@@ -205,6 +205,31 @@ final class GeneratedFeaturesTest extends TestCase
         self::assertSame('{"retry":{},"fallbacks":[{}]}', $http->requests[0]->body);
     }
 
+    public function testSendsNullForNullableListsAndMapsOfRequestOnlyModels(): void
+    {
+        $update = KitchenSink::class('Model\\WidgetUpdate');
+        $retry = KitchenSink::class('Model\\RetryPolicy');
+        $http = new MockHttpClient(new Response(200, '{"id": 7}'), new Response(200, '{"id": 7}'));
+        $widgets = self::resource('widgets', $http);
+
+        self::call($widgets, 'update', 7, new $update(aliases: null, overrides: null, weights: null));
+        self::call($widgets, 'update', 7, new $update(aliases: [], overrides: [new $retry()], weights: []));
+
+        self::assertSame('{"aliases":null,"overrides":null,"weights":null}', $http->requests[0]->body);
+        self::assertSame('{"aliases":[],"overrides":[{}],"weights":{}}', $http->requests[1]->body);
+    }
+
+    public function testGeneratesRequestModelsForHandWrittenCode(): void
+    {
+        $bulk = KitchenSink::class('Model\\BulkWidgetUpdate');
+        $retry = KitchenSink::class('Model\\RetryPolicy');
+        $changes = new $bulk(interval: 60, retry: new $retry(onTimeout: true));
+
+        self::assertInstanceOf(RequestModel::class, $changes);
+        self::assertNotInstanceOf(ResponseModel::class, $changes);
+        self::assertSame(['interval' => 60, 'retry' => ['onTimeout' => true]], $changes->toArray());
+    }
+
     public function testSendsMapBodiesAsObjects(): void
     {
         $http = new MockHttpClient(new Response(200), new Response(200), new Response(200));

@@ -95,14 +95,22 @@ final readonly class Expressions
             PhpType::OBJECT => $nullable
                 ? "{$expression} === null ? null : {$file->alias(self::JSON)}::map({$expression})"
                 : "{$file->alias(self::JSON)}::map({$expression})",
-            PhpType::LIST => self::needsMapping($type->itemOrFail())
-                ? "array_map({$this->serializer($type->itemOrFail(), $file)}, {$expression})"
-                : $expression,
-            PhpType::MAP => self::needsMapping($type->itemOrFail())
-                ? "{$file->alias(self::JSON)}::map(array_map({$this->serializer($type->itemOrFail(), $file)}, {$expression}))"
-                : "{$file->alias(self::JSON)}::map({$expression})",
+            PhpType::LIST, PhpType::MAP => $this->collection($type, $expression, $nullable, $file),
             default => throw new LogicException("Unknown kind {$type->kind}."),
         };
+    }
+
+    /**
+     * A list as a JSON array, a map as a JSON object (`{}` when empty); a null
+     * is sent as it is.
+     */
+    private function collection(PhpType $type, string $expression, bool $nullable, CodeFile $file): string
+    {
+        $item = $type->itemOrFail();
+        $mapped = self::needsMapping($item) ? "array_map({$this->serializer($item, $file)}, {$expression})" : $expression;
+        $value = $type->kind === PhpType::MAP ? "{$file->alias(self::JSON)}::map({$mapped})" : $mapped;
+
+        return $nullable && $value !== $expression ? "{$expression} === null ? null : {$value}" : $value;
     }
 
     /**

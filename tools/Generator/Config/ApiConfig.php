@@ -55,7 +55,11 @@ final readonly class ApiConfig
      *                                                                        comma-separated value.
      * @param array<string, UnionConfig>               $unions                Location of a `oneOf` of objects => how to
      *                                                                        generate it.
-     * @param list<string>                             $extraModels           Schemas generated for hand-written code.
+     * @param list<string>                             $extraModels           Schemas generated as response models for
+     *                                                                        hand-written code.
+     * @param list<string>                             $extraRequestModels    Schemas generated as request models for
+     *                                                                        hand-written code, e.g. a body the method
+     *                                                                        completes itself.
      * @param array<string, array<array-key, mixed>>   $additionalSchemas     Schemas the specification lacks, by name.
      * @param array<string, array<array-key, mixed>>   $additionalProperties  Properties the specification lacks, by
      *                                                                        "Schema.property".
@@ -88,6 +92,7 @@ final readonly class ApiConfig
         public array $commaSeparated,
         public array $unions,
         public array $extraModels,
+        public array $extraRequestModels,
         public array $additionalSchemas,
         public array $additionalProperties,
         public array $pagination,
@@ -173,6 +178,7 @@ final readonly class ApiConfig
             commaSeparated: $reader->stringList('commaSeparated'),
             unions: $unions,
             extraModels: $reader->stringList('extraModels'),
+            extraRequestModels: $reader->stringList('extraRequestModels'),
             additionalSchemas: $additionalSchemas,
             additionalProperties: $additionalProperties,
             pagination: $pagination,
