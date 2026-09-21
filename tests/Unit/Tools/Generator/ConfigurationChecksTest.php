@@ -198,6 +198,26 @@ final class ConfigurationChecksTest extends TestCase
         self::assertTrue($model->properties[3]->readOnly);
     }
 
+    public function testLeavesOutDescriptionsThatOnlyNameAType(): void
+    {
+        // zod writes the name of a registered schema into its description.
+        $analysis = $this->analyze([
+            'ThingDto' => ['description' => 'ThingPublic', ...self::object([
+                'owner' => ['description' => 'ThingOwnerPublic', ...self::object(['name' => ['type' => 'string', 'description' => 'Deprecated']])],
+                'label' => ['type' => 'string', 'description' => 'The label, e.g. ThingPublic.'],
+            ])],
+        ]);
+
+        $thing = $analysis->registry->models['GoSuccess\\UptimeRobot\\Tests\\Fixture\\Unused\\Model\\Thing'];
+        $owner = $analysis->registry->models['GoSuccess\\UptimeRobot\\Tests\\Fixture\\Unused\\Model\\ThingOwner'];
+
+        self::assertNull($thing->description);
+        self::assertNull($owner->description);
+        self::assertSame([null, 'The label, e.g. ThingPublic.'], array_map(static fn($property): ?string => $property->description, $thing->properties));
+        // A single word is text, not a type name.
+        self::assertSame('Deprecated', $owner->properties[0]->description);
+    }
+
     public function testRejectsATypeTheSpecificationAlreadyHas(): void
     {
         $this->expectException(RuntimeException::class);

@@ -6,11 +6,7 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Model;
 
-/**
- * AllAlertContactItem
- *
- * Schema: AllAlertContactDto.alertContacts[]
- */
+/** Schema: AllAlertContactDto.alertContacts[] */
 final readonly class AllAlertContactItem implements ResponseModel
 {
     public function __construct(

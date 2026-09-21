@@ -8,11 +8,7 @@ namespace GoSuccess\UptimeRobot\Model;
 
 use GoSuccess\UptimeRobot\Enum\NotificationEvent;
 
-/**
- * AlertContactPublic
- *
- * Schema: AlertContactDto
- */
+/** Schema: AlertContactDto */
 final readonly class AlertContact implements ResponseModel
 {
     public function __construct(

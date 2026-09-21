@@ -98,6 +98,12 @@ final class GeneratedFeaturesTest extends TestCase
         self::assertTrue(self::property($owner, 'manualSelected'));
     }
 
+    public function testLeavesTheTypeNamesOfZodOutOfDocblocks(): void
+    {
+        // The specification describes WidgetDto as "WidgetPublic".
+        self::assertStringNotContainsString('WidgetPublic', (string) new ReflectionClass(KitchenSink::class('Model\\Widget'))->getDocComment());
+    }
+
     public function testVariantsSendTheirDiscriminatorInsteadOfTakingIt(): void
     {
         $class = KitchenSink::class('Model\\HttpWidgetCreate');

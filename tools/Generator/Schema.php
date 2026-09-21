@@ -129,9 +129,15 @@ final class Schema
         return ($this->node['readOnly'] ?? false) === true;
     }
 
+    /**
+     * The description, unless it merely names a type: zod writes the name of
+     * a registered schema there, e.g. "UserPublic", which documents nothing.
+     */
     public function description(): ?string
     {
-        return $this->string('description');
+        $description = $this->string('description');
+
+        return $description !== null && preg_match('/^[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]*)+$/D', trim($description)) === 1 ? null : $description;
     }
 
     public function title(): ?string

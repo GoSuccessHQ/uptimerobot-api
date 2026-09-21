@@ -6,11 +6,7 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Model;
 
-/**
- * UserPublic
- *
- * Schema: UserDto
- */
+/** Schema: UserDto */
 final readonly class User implements ResponseModel
 {
     public function __construct(
