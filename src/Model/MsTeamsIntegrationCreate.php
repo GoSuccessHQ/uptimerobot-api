@@ -8,7 +8,7 @@ namespace GoSuccess\UptimeRobot\Model;
 
 use GoSuccess\UptimeRobot\Enum\NotificationEvent;
 
-/** Schema: CreateMsTeamsIntegrationDto ("data": MsTeamsBaseIntegrationDto) */
+/** Schema: CreateMSTeamsIntegrationDto ("data": MsTeamsBaseIntegrationDto) */
 final readonly class MsTeamsIntegrationCreate implements IntegrationCreate
 {
     /** The "type" of this variant of {@see IntegrationCreate}. */

@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace GoSuccess\UptimeRobot\Tests\Unit\Resource;
 
 use DateTimeImmutable;
+use GoSuccess\UptimeRobot\Enum\DependencyIncidentSeverity;
+use GoSuccess\UptimeRobot\Enum\DependencyNotificationSeverity;
+use GoSuccess\UptimeRobot\Enum\DependencyState;
 use GoSuccess\UptimeRobot\Enum\HttpAuthType;
 use GoSuccess\UptimeRobot\Enum\HttpMethod;
 use GoSuccess\UptimeRobot\Enum\IpVersion;
@@ -21,6 +24,9 @@ use GoSuccess\UptimeRobot\Enum\UptimeTimeFrame;
 use GoSuccess\UptimeRobot\Exception\BadRequestException;
 use GoSuccess\UptimeRobot\Exception\NotFoundException;
 use GoSuccess\UptimeRobot\Http\Response;
+use GoSuccess\UptimeRobot\Model\DependencyMonitorConfig;
+use GoSuccess\UptimeRobot\Model\DependencyMonitorCreate;
+use GoSuccess\UptimeRobot\Model\DependencySettings;
 use GoSuccess\UptimeRobot\Model\HttpMonitorConfig;
 use GoSuccess\UptimeRobot\Model\KeywordMonitorCreate;
 use GoSuccess\UptimeRobot\Model\MonitorConfigUpdate;
@@ -395,6 +401,103 @@ final class MonitorResourceTest extends TestCase
         self::assertSame(2080, $stats->all->summary->max);
         // Without includeTimeSeries, there is none (verified live).
         self::assertSame([], $stats->eu->timeSeries);
+    }
+
+    /**
+     * The dependency monitor of the test account, which tracks bunny.net
+     * (verified live on September 28, 2026): UptimeRobot resolves the URL to
+     * the status page of the provider itself, and a monitor that tracks every
+     * component sends null for trackedComponentIds.
+     */
+    public function testReadsADependencyMonitorAsTheApiSendsIt(): void
+    {
+        $http = new MockHttpClient(new Response(200, '{"id":804093942,"type":"DEPENDENCY","friendlyName":"bunny.net","url":"https://status.bunnycdn.com/",'
+            . '"heartbeatUrl":null,"interval":300,"timeout":30,"status":"UP","config":{"dependency":{"providerUrlname":"bunny-net","trackedComponentIds":null,'
+            . '"currentState":"operational","needsReview":false,"notify":{"severity":"all","incrementalUpdates":false},"maintenanceNotificationsEnabled":true}}}'));
+
+        $monitor = self::client($http)->monitors->get(804093942);
+
+        self::assertSame(MonitorType::Dependency, $monitor->type);
+        self::assertSame('https://status.bunnycdn.com/', $monitor->url);
+        self::assertNull($monitor->heartbeatUrl);
+        self::assertNotNull($monitor->config);
+        self::assertSame('bunny-net', $monitor->config->dependency->providerUrlname);
+        // null on the wire: every component; lists are never null when read.
+        self::assertSame([], $monitor->config->dependency->trackedComponentIds);
+        self::assertSame(DependencyState::Operational, $monitor->config->dependency->currentState);
+        self::assertSame(DependencyNotificationSeverity::All, $monitor->config->dependency->notify->severity);
+        self::assertFalse($monitor->config->dependency->notify->incrementalUpdates);
+        self::assertTrue($monitor->config->dependency->maintenanceNotificationsEnabled);
+    }
+
+    /**
+     * The specification allows a monitor without a URL; none was seen live.
+     */
+    public function testReadsAMonitorWithoutAUrl(): void
+    {
+        $monitor = self::client(new MockHttpClient(new Response(200, '{"id":1,"type":"DEPENDENCY","url":null}')))->monitors->get(1);
+
+        self::assertNull($monitor->url);
+    }
+
+    public function testCreatesADependencyMonitorForAProviderOfTheCatalog(): void
+    {
+        $http = new MockHttpClient(new Response(201, '{"id":805000001,"type":"DEPENDENCY","url":null,"config":{}}'));
+
+        self::client($http)->monitors->create(new DependencyMonitorCreate(
+            friendlyName: 'Stripe',
+            interval: 300,
+            // Required on the wire, but discarded by the API (specification).
+            url: 'https://status.stripe.com',
+            timeout: 30,
+            config: new DependencyMonitorConfig(new DependencySettings(providerUrlname: 'stripe', trackedComponentIds: null)),
+        ));
+
+        self::assertSame(
+            '{"type":"DEPENDENCY","friendlyName":"Stripe","interval":300,"url":"https://status.stripe.com","timeout":30,'
+            . '"config":{"dependency":{"providerUrlname":"stripe","trackedComponentIds":null}}}',
+            $http->requests[0]->body,
+        );
+    }
+
+    /**
+     * The state and the incidents of bunny.net as its dependency monitor
+     * reported them (verified live on September 28, 2026; the incident cut to
+     * its first update).
+     */
+    public function testReadsTheStateAndTheIncidentsOfATrackedProvider(): void
+    {
+        $http = new MockHttpClient(
+            new Response(200, '{"currentState":"operational"}'),
+            new Response(200, '{"data":[{"id":"361887720743641106","title":"Degraded Optimizer Response times","severity":"minor","resolved":true,'
+                . '"startedAt":"2026-09-25T14:49:50.000Z","resolvedAt":"2026-09-25T17:16:37.000Z","updates":[{"status":"investigating",'
+                . '"description":"We are currently investigating degraded optimizer processing.","createdAt":"2026-09-25T14:49:50.706Z"}]}]}'),
+            new Response(200, '{"data":[]}'),
+            new Response(404, '{"message":"Resource you were trying to access is not found.","code":"000-004"}'),
+        );
+        $monitors = self::client($http)->monitors;
+
+        $status = $monitors->dependencyStatus(804093942);
+        $incidents = $monitors->dependencyIncidents(804093942);
+
+        self::assertSame('https://api.uptimerobot.com/v3/monitors/804093942/dependency/status', $http->requests[0]->uri);
+        self::assertSame(DependencyState::Operational, $status->currentState);
+        self::assertSame('https://api.uptimerobot.com/v3/monitors/804093942/dependency/incidents', $http->requests[1]->uri);
+        self::assertCount(1, $incidents);
+        self::assertSame('361887720743641106', $incidents[0]->id);
+        self::assertSame(DependencyIncidentSeverity::Minor, $incidents[0]->severity);
+        self::assertTrue($incidents[0]->resolved);
+        self::assertEquals(new DateTimeImmutable('2026-09-25T14:49:50Z'), $incidents[0]->startedAt);
+        self::assertEquals(new DateTimeImmutable('2026-09-25T17:16:37Z'), $incidents[0]->resolvedAt);
+        self::assertCount(1, $incidents[0]->updates);
+        self::assertSame('investigating', $incidents[0]->updates[0]->status);
+        self::assertEquals(new DateTimeImmutable('2026-09-25T14:49:50.706Z'), $incidents[0]->updates[0]->createdAt);
+        // "An empty history returns an empty array with a 200, never an error."
+        self::assertSame([], $monitors->dependencyIncidents(804093942));
+
+        // A monitor of another type has no provider (verified live on a keyword monitor).
+        $this->expectException(NotFoundException::class);
+        $monitors->dependencyStatus(804045264);
     }
 
     private static function client(MockHttpClient $http): UptimeRobot

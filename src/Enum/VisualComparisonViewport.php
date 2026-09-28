@@ -6,7 +6,9 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Enum;
 
-/** Schema: MonitorDto.config.visualComparison.viewport, VisualComparisonFieldsDto.viewport */
+/**
+ * Schema: MonitorDto.config.visualComparison.viewport, VisualComparisonFieldsDto.viewport, PermissiveVisualComparisonFieldsDto.viewport
+ */
 enum VisualComparisonViewport: string
 {
     case Desktop = 'desktop';

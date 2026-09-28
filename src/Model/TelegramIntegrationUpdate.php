@@ -8,7 +8,7 @@ namespace GoSuccess\UptimeRobot\Model;
 
 use GoSuccess\UptimeRobot\Enum\NotificationEvent;
 
-/** Schema: UpdateTelegramIntegrationSchema ("data": UpdateTelegramIntegrationDataDto) */
+/** Schema: UpdateTelegramIntegrationDto ("data": UpdateTelegramIntegrationDataDto) */
 final readonly class TelegramIntegrationUpdate implements IntegrationUpdate
 {
     /** The "type" of this variant of {@see IntegrationUpdate}. */

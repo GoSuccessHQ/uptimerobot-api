@@ -8,52 +8,50 @@ namespace GoSuccess\UptimeRobot\Model;
 
 use GoSuccess\UptimeRobot\Enum\IpVersion;
 
-/**
- * Changes to the settings of a monitor type, merged into the current ones key by key: a key left out is kept, a key set to null is removed (verified live).
- *
- * Schema: UpdateMonitorConfigDto
- */
+/** Schema: PermissiveMonitorConfigDto */
 final readonly class MonitorConfigUpdate implements RequestModel
 {
     public function __construct(
+        /** DNS records configuration. DNS monitors only. Send null to remove. */
+        public DnsRecords|Undefined|null $dnsRecords = Undefined::Value,
         /**
-         * Days before the SSL certificate expires on which to send a reminder (0-365, at most 10 items). HTTP, keyword and API monitors.
+         * Days before certificate expiry to send SSL expiration reminders (0-365, max 10 items). Requires the top-level `sslExpirationReminder` flag to be enabled. HTTP, Keyword and API monitors only. Send null to remove.
          *
          * @var list<int>|Undefined|null
          */
         public array|Undefined|null $sslExpirationPeriodDays = Undefined::Value,
-        /** IP version preference; null restores the default behavior (IPv4 priority, falls back to IPv6). */
-        public IpVersion|Undefined|null $ipVersion = Undefined::Value,
-        /** Number of retries on application errors (HTTP 4xx/5xx), 0-3. HTTP, keyword and API monitors. */
-        public int|Undefined|null $applicationErrorRetries = Undefined::Value,
-        /** The expected DNS records of a DNS monitor. */
-        public DnsRecords|Undefined|null $dnsRecords = Undefined::Value,
-        /** The assertions of an API monitor; replaces the current ones as a whole (verified live). */
+        /**
+         * The assertions of an API monitor; replaces the current ones as a whole (verified live). The merged config must still contain them; null removes them.
+         */
         public ApiAssertions|Undefined|null $apiAssertions = Undefined::Value,
-        /** The settings of a UDP monitor. */
+        /** UDP monitor configuration. UDP monitors only. Send null to remove. */
         public UdpSettings|Undefined|null $udp = Undefined::Value,
-        /** The settings of a visual comparison monitor. */
-        public VisualComparisonSettings|Undefined|null $visualComparison = Undefined::Value,
+        /**
+         * IP version preference. Omit for default behavior (IPv4 priority, falls back to IPv6). Not supported by DNS, Heartbeat, Visual Comparison or Dependency monitors. Send null to remove.
+         */
+        public IpVersion|Undefined|null $ipVersion = Undefined::Value,
+        /**
+         * Number of retries on application errors (HTTP 4xx/5xx). 0-3. Connection errors always retry 3 times regardless of this setting. HTTP, Keyword and API monitors only. Send null to remove.
+         */
+        public int|Undefined|null $applicationErrorRetries = Undefined::Value,
+        /** Visual comparison configuration. Visual Comparison monitors only. Send null to remove. */
+        public VisualComparisonSettingsUpdate|Undefined|null $visualComparison = Undefined::Value,
+        /**
+         * Dependency monitor configuration - the isdown provider to track and, optionally, which of its components to scope tracking to. Dependency monitors only. Send null to remove.
+         */
+        public DependencySettings|Undefined|null $dependency = Undefined::Value,
     ) {}
 
     public function toArray(): array
     {
         $data = [];
 
-        if (!$this->sslExpirationPeriodDays instanceof Undefined) {
-            $data['sslExpirationPeriodDays'] = $this->sslExpirationPeriodDays;
-        }
-
-        if (!$this->ipVersion instanceof Undefined) {
-            $data['ipVersion'] = $this->ipVersion?->value;
-        }
-
-        if (!$this->applicationErrorRetries instanceof Undefined) {
-            $data['applicationErrorRetries'] = $this->applicationErrorRetries;
-        }
-
         if (!$this->dnsRecords instanceof Undefined) {
             $data['dnsRecords'] = $this->dnsRecords === null ? null : Json::map($this->dnsRecords->toArray());
+        }
+
+        if (!$this->sslExpirationPeriodDays instanceof Undefined) {
+            $data['sslExpirationPeriodDays'] = $this->sslExpirationPeriodDays;
         }
 
         if (!$this->apiAssertions instanceof Undefined) {
@@ -64,8 +62,20 @@ final readonly class MonitorConfigUpdate implements RequestModel
             $data['udp'] = $this->udp === null ? null : Json::map($this->udp->toArray());
         }
 
+        if (!$this->ipVersion instanceof Undefined) {
+            $data['ipVersion'] = $this->ipVersion?->value;
+        }
+
+        if (!$this->applicationErrorRetries instanceof Undefined) {
+            $data['applicationErrorRetries'] = $this->applicationErrorRetries;
+        }
+
         if (!$this->visualComparison instanceof Undefined) {
             $data['visualComparison'] = $this->visualComparison === null ? null : Json::map($this->visualComparison->toArray());
+        }
+
+        if (!$this->dependency instanceof Undefined) {
+            $data['dependency'] = $this->dependency === null ? null : Json::map($this->dependency->toArray());
         }
 
         return $data;

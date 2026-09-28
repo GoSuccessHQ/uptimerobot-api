@@ -8,7 +8,7 @@ namespace GoSuccess\UptimeRobot\Model;
 
 use GoSuccess\UptimeRobot\Enum\NotificationEvent;
 
-/** Schema: UpdateGoogleChatIntegrationSchema ("data": PartialTypeClass) */
+/** Schema: UpdateGoogleChatIntegrationDto ("data": UpdateGoogleChatIntegrationDataDto) */
 final readonly class GoogleChatIntegrationUpdate implements IntegrationUpdate
 {
     /** The "type" of this variant of {@see IntegrationUpdate}. */

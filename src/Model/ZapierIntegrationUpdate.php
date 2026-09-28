@@ -8,7 +8,7 @@ namespace GoSuccess\UptimeRobot\Model;
 
 use GoSuccess\UptimeRobot\Enum\NotificationEvent;
 
-/** Schema: UpdateZapierIntegrationSchema ("data": UpdateZapierIntegrationDataDto) */
+/** Schema: UpdateZapierIntegrationDto ("data": UpdateZapierIntegrationDataDto) */
 final readonly class ZapierIntegrationUpdate implements IntegrationUpdate
 {
     /** The "type" of this variant of {@see IntegrationUpdate}. */

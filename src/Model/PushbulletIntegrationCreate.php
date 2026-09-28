@@ -8,7 +8,7 @@ namespace GoSuccess\UptimeRobot\Model;
 
 use GoSuccess\UptimeRobot\Enum\NotificationEvent;
 
-/** Schema: CreatePushbulletIntegrationDto ("data": PushbulletBaseIntegrationDto) */
+/** Schema: CreatePushBulletIntegrationDto ("data": PushbulletBaseIntegrationDto) */
 final readonly class PushbulletIntegrationCreate implements IntegrationCreate
 {
     /** The "type" of this variant of {@see IntegrationCreate}. */

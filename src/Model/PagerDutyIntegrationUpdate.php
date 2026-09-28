@@ -9,7 +9,7 @@ namespace GoSuccess\UptimeRobot\Model;
 use GoSuccess\UptimeRobot\Enum\NotificationEvent;
 use GoSuccess\UptimeRobot\Enum\PagerDutyLocation;
 
-/** Schema: UpdatePagerdutyIntegrationSchema ("data": UpdatePagerdutyIntegrationDataDto) */
+/** Schema: UpdatePagerdutyIntegrationDto ("data": UpdatePagerdutyIntegrationDataDto) */
 final readonly class PagerDutyIntegrationUpdate implements IntegrationUpdate
 {
     /** The "type" of this variant of {@see IntegrationUpdate}. */

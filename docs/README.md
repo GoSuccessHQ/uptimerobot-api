@@ -22,6 +22,8 @@ Monitors: create, read, change, pause, start and delete them, and read their upt
 - [`uptimeStats()`](monitors/uptimeStats.md) — Get the uptime statistics of all monitors
 - [`uptime()`](monitors/uptime.md) — Get monitor uptime statistics
 - [`responseTimeStats()`](monitors/responseTimeStats.md) — Get monitor response time statistics
+- [`dependencyStatus()`](monitors/dependencyStatus.md) — Get the current status of a dependency monitor
+- [`dependencyIncidents()`](monitors/dependencyIncidents.md) — Get the incident history of a dependency monitor
 - [`responseTimeStatsByRegion()`](monitors/responseTimeStatsByRegion.md) — Get monitor response time statistics by region
 
 ## `bulkMonitors`

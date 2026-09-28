@@ -11,6 +11,8 @@ use GoSuccess\UptimeRobot\Enum\MonitorStatus;
 use GoSuccess\UptimeRobot\Enum\ResponseTimeRegion;
 use GoSuccess\UptimeRobot\Http\Method;
 use GoSuccess\UptimeRobot\Model\Cast;
+use GoSuccess\UptimeRobot\Model\DependencyIncident;
+use GoSuccess\UptimeRobot\Model\DependencyStatus;
 use GoSuccess\UptimeRobot\Model\Monitor;
 use GoSuccess\UptimeRobot\Model\MonitorCreate;
 use GoSuccess\UptimeRobot\Model\MonitorUpdate;
@@ -279,6 +281,44 @@ final class MonitorResource extends AbstractResource
         ]);
 
         return self::toModel(ResponseTimeStats::class, $data);
+    }
+
+    /**
+     * Get the current status of a dependency monitor
+     *
+     * Returns the fine-grained 4-state (operational, minor, major, maintenance) for a type-10 dependency monitor, read from monitorConfig.dependency.currentState. Distinct from the coarse monitor status field, which cannot tell a partial degradation from a full outage.
+     *
+     * Only for DEPENDENCY monitors: the state of the tracked provider, which tells a partial degradation (minor) from a full outage (major), unlike the status of the monitor. For a monitor of another type, the API raises a NotFoundException (000-004) (verified live).
+     *
+     * `GET /monitors/{id}/dependency/status`
+     *
+     * @param int $id
+     */
+    public function dependencyStatus(int $id): DependencyStatus
+    {
+        $data = $this->connection->json(Method::Get, "monitors/{$id}/dependency/status");
+
+        return self::toModel(DependencyStatus::class, $data);
+    }
+
+    /**
+     * Get the incident history of a dependency monitor
+     *
+     * Returns every incident (resolved and unresolved) recorded for the provider a type-10 dependency monitor tracks, newest first, with verbatim provider updates. An empty history returns an empty array with a 200, never an error.
+     *
+     * Only for DEPENDENCY monitors: every incident of the tracked provider, resolved or not, newest first, with the updates the provider published; empty if there were none. Verified live on a monitor tracking bunny.net: three resolved incidents with severity minor.
+     *
+     * `GET /monitors/{id}/dependency/incidents`
+     *
+     * @param int $id
+     *
+     * @return list<DependencyIncident>
+     */
+    public function dependencyIncidents(int $id): array
+    {
+        $data = $this->connection->json(Method::Get, "monitors/{$id}/dependency/incidents");
+
+        return Cast::modelList(DependencyIncident::class, self::expectObject($data)['data'] ?? null);
     }
 
     /**

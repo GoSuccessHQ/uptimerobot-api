@@ -8,7 +8,7 @@ namespace GoSuccess\UptimeRobot\Model;
 
 use GoSuccess\UptimeRobot\Enum\NotificationEvent;
 
-/** Schema: UpdateWebhookIntegrationSchema ("data": UpdateWebhookIntegrationDataDto) */
+/** Schema: UpdateWebhookIntegrationDto ("data": UpdateWebhookIntegrationDataDto) */
 final readonly class WebhookIntegrationUpdate implements IntegrationUpdate
 {
     /** The "type" of this variant of {@see IntegrationUpdate}. */

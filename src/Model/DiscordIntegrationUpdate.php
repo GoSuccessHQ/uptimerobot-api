@@ -8,7 +8,7 @@ namespace GoSuccess\UptimeRobot\Model;
 
 use GoSuccess\UptimeRobot\Enum\NotificationEvent;
 
-/** Schema: UpdateDiscordIntegrationSchema ("data": UpdateDiscordIntegrationDataDto) */
+/** Schema: UpdateDiscordIntegrationDto ("data": UpdateDiscordIntegrationDataDto) */
 final readonly class DiscordIntegrationUpdate implements IntegrationUpdate
 {
     /** The "type" of this variant of {@see IntegrationUpdate}. */

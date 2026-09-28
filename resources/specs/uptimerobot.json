@@ -26,6 +26,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -64,6 +74,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -99,6 +119,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/BulkOperationResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -183,6 +213,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -218,6 +258,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/IncidentDetailDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -285,10 +335,34 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthorized - missing or invalid authentication"
+                        "description": "Unauthorized - missing or invalid authentication",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Incident not found"
+                        "description": "Incident not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -330,16 +404,54 @@
                         "description": "Comment created successfully"
                     },
                     "400": {
-                        "description": "Invalid request body"
+                        "description": "Invalid request body",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "401": {
-                        "description": "Unauthorized - missing or invalid authentication"
+                        "description": "Unauthorized - missing or invalid authentication",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "403": {
-                        "description": "Forbidden - no write permission"
+                        "description": "Forbidden - no write permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Incident not found"
+                        "description": "Incident not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -378,6 +490,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -413,6 +535,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/PublicSentAlertsResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -473,6 +605,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -513,13 +655,44 @@
                         "description": "Comment deleted successfully"
                     },
                     "401": {
-                        "description": "Unauthorized - missing or invalid authentication"
+                        "description": "Unauthorized - missing or invalid authentication",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "403": {
-                        "description": "Forbidden - no write permission"
+                        "description": "Forbidden - no write permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Incident or comment not found"
+                        "description": "Incident or comment not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -560,16 +733,54 @@
                         }
                     },
                     "400": {
-                        "description": "Validation error (invalid name, monitorIds, or groupIds)"
+                        "description": "Validation error (invalid name, monitorIds, or groupIds)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "401": {
-                        "description": "Unauthorized - invalid or missing authentication"
+                        "description": "Unauthorized - invalid or missing authentication",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "403": {
-                        "description": "Forbidden - no write permission or monitor-groups feature not available"
+                        "description": "Forbidden - no write permission or monitor-groups feature not available",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "429": {
-                        "description": "Rate limit exceeded"
+                        "description": "Rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -603,6 +814,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/MonitorGroupPaginationDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -641,6 +862,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/MonitorGroupDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -690,6 +921,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -732,16 +973,54 @@
                         "description": "Monitor group deleted successfully"
                     },
                     "400": {
-                        "description": "Cannot delete default group or invalid new group"
+                        "description": "Cannot delete default group or invalid new group",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "401": {
-                        "description": "Unauthorized - invalid or missing authentication"
+                        "description": "Unauthorized - invalid or missing authentication",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "403": {
-                        "description": "Forbidden - no write permission or monitor-groups feature not available"
+                        "description": "Forbidden - no write permission or monitor-groups feature not available",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "Monitor group not found"
+                        "description": "Monitor group not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -767,6 +1046,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/StormProtectionSettingsResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -803,6 +1092,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/StormProtectionSettingsResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -917,6 +1216,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -966,6 +1275,9 @@
                                     },
                                     {
                                         "$ref": "#/components/schemas/CreateVisualComparisonMonitorDto"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/CreateDependencyMonitorDto"
                                     }
                                 ],
                                 "discriminator": {
@@ -979,7 +1291,8 @@
                                         "DNS": "#/components/schemas/CreateDnsMonitorDto",
                                         "API": "#/components/schemas/CreateApiMonitorDto",
                                         "UDP": "#/components/schemas/CreateUdpMonitorDto",
-                                        "VISUAL_COMPARISON": "#/components/schemas/CreateVisualComparisonMonitorDto"
+                                        "VISUAL_COMPARISON": "#/components/schemas/CreateVisualComparisonMonitorDto",
+                                        "DEPENDENCY": "#/components/schemas/CreateDependencyMonitorDto"
                                     }
                                 }
                             },
@@ -1150,6 +1463,20 @@
                                             }
                                         }
                                     }
+                                },
+                                "Dependency Monitor": {
+                                    "value": {
+                                        "friendlyName": "My Stripe dependency",
+                                        "type": "DEPENDENCY",
+                                        "url": "https://status.stripe.com",
+                                        "interval": 60,
+                                        "timeout": 30,
+                                        "config": {
+                                            "dependency": {
+                                                "providerUrlname": "stripe"
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1162,6 +1489,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/MonitorDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -1245,6 +1582,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -1300,6 +1647,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/MonitorUptimeStatsDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -1368,6 +1725,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/MonitorResponseTimeStatsByRegionDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -1456,6 +1823,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -1464,6 +1841,100 @@
                     }
                 ],
                 "summary": "Get monitor response time statistics",
+                "tags": [
+                    "Monitors"
+                ]
+            }
+        },
+        "/monitors/{id}/dependency/status": {
+            "get": {
+                "description": "Returns the fine-grained 4-state (operational, minor, major, maintenance) for a type-10 dependency monitor, read from monitorConfig.dependency.currentState. Distinct from the coarse monitor status field, which cannot tell a partial degradation from a full outage.",
+                "operationId": "MonitorsController_getDependencyStatus",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MonitorDependencyStatusDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Get the current status of a dependency monitor",
+                "tags": [
+                    "Monitors"
+                ]
+            }
+        },
+        "/monitors/{id}/dependency/incidents": {
+            "get": {
+                "description": "Returns every incident (resolved and unresolved) recorded for the provider a type-10 dependency monitor tracks, newest first, with verbatim provider updates. An empty history returns an empty array with a 200, never an error.",
+                "operationId": "MonitorsController_getDependencyIncidents",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MonitorDependencyIncidentsDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Get the incident history of a dependency monitor",
                 "tags": [
                     "Monitors"
                 ]
@@ -1490,6 +1961,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/MonitorDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -1537,6 +2018,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -1564,6 +2055,16 @@
                 "responses": {
                     "200": {
                         "description": ""
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -1605,6 +2106,16 @@
                 "responses": {
                     "201": {
                         "description": ""
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -1650,6 +2161,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/MonitorDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -1701,6 +2222,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -1736,6 +2267,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/PspPaginationDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -1780,6 +2321,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -1814,6 +2365,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/PspDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -1867,6 +2428,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -1895,6 +2466,16 @@
                 "responses": {
                     "200": {
                         "description": ""
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -1959,16 +2540,54 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid status value"
+                        "description": "Invalid status value",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "401": {
-                        "description": "Unauthorized - missing or invalid authentication"
+                        "description": "Unauthorized - missing or invalid authentication",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "PSP not found"
+                        "description": "PSP not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "429": {
-                        "description": "Too Many Requests - rate limit exceeded"
+                        "description": "Too Many Requests - rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2017,16 +2636,54 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid request body"
+                        "description": "Invalid request body",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "401": {
-                        "description": "Unauthorized - missing or invalid authentication"
+                        "description": "Unauthorized - missing or invalid authentication",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "403": {
-                        "description": "Forbidden - no write permission"
+                        "description": "Forbidden - no write permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "PSP not found"
+                        "description": "PSP not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2076,13 +2733,44 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthorized - missing or invalid authentication"
+                        "description": "Unauthorized - missing or invalid authentication",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "PSP or announcement not found"
+                        "description": "PSP or announcement not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "429": {
-                        "description": "Too Many Requests - rate limit exceeded"
+                        "description": "Too Many Requests - rate limit exceeded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2140,16 +2828,54 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid request body"
+                        "description": "Invalid request body",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "401": {
-                        "description": "Unauthorized - missing or invalid authentication"
+                        "description": "Unauthorized - missing or invalid authentication",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "403": {
-                        "description": "Forbidden - no write permission"
+                        "description": "Forbidden - no write permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "PSP or announcement not found"
+                        "description": "PSP or announcement not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2192,13 +2918,44 @@
                         "description": "Announcement pinned successfully"
                     },
                     "401": {
-                        "description": "Unauthorized - missing or invalid authentication"
+                        "description": "Unauthorized - missing or invalid authentication",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "403": {
-                        "description": "Forbidden - no write permission"
+                        "description": "Forbidden - no write permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "PSP or announcement not found"
+                        "description": "PSP or announcement not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2241,13 +2998,44 @@
                         "description": "Announcement unpinned successfully"
                     },
                     "401": {
-                        "description": "Unauthorized - missing or invalid authentication"
+                        "description": "Unauthorized - missing or invalid authentication",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "403": {
-                        "description": "Forbidden - no write permission"
+                        "description": "Forbidden - no write permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     },
                     "404": {
-                        "description": "PSP or announcement not found"
+                        "description": "PSP or announcement not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2282,6 +3070,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/MaintenanceWindowPaginationDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -2321,6 +3119,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2356,6 +3164,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/MaintenanceWindowDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -2405,6 +3223,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2433,6 +3261,16 @@
                 "responses": {
                     "204": {
                         "description": ""
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2458,6 +3296,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/UserDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -2492,6 +3340,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2520,6 +3378,16 @@
                                     "items": {
                                         "$ref": "#/components/schemas/AllAlertContactDto"
                                     }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -2570,6 +3438,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2588,6 +3466,7 @@
                 "parameters": [],
                 "requestBody": {
                     "required": true,
+                    "description": "Integration to create. The `type` field selects which shape `data` must take — each integration type requires a different set of fields.",
                     "content": {
                         "application/json": {
                             "schema": {
@@ -2599,7 +3478,7 @@
                                         "$ref": "#/components/schemas/CreateTelegramIntegrationDto"
                                     },
                                     {
-                                        "$ref": "#/components/schemas/CreateMsTeamsIntegrationDto"
+                                        "$ref": "#/components/schemas/CreateMSTeamsIntegrationDto"
                                     },
                                     {
                                         "$ref": "#/components/schemas/CreateWebhookIntegrationDto"
@@ -2620,7 +3499,7 @@
                                         "$ref": "#/components/schemas/CreateSplunkIntegrationDto"
                                     },
                                     {
-                                        "$ref": "#/components/schemas/CreatePushbulletIntegrationDto"
+                                        "$ref": "#/components/schemas/CreatePushBulletIntegrationDto"
                                     },
                                     {
                                         "$ref": "#/components/schemas/CreatePushoverIntegrationDto"
@@ -2628,7 +3507,24 @@
                                     {
                                         "$ref": "#/components/schemas/CreateMattermostIntegrationDto"
                                     }
-                                ]
+                                ],
+                                "discriminator": {
+                                    "propertyName": "type",
+                                    "mapping": {
+                                        "Slack": "#/components/schemas/CreateSlackIntegrationDto",
+                                        "Telegram": "#/components/schemas/CreateTelegramIntegrationDto",
+                                        "MSTeams": "#/components/schemas/CreateMSTeamsIntegrationDto",
+                                        "Webhook": "#/components/schemas/CreateWebhookIntegrationDto",
+                                        "Zapier": "#/components/schemas/CreateZapierIntegrationDto",
+                                        "Pagerduty": "#/components/schemas/CreatePagerdutyIntegrationDto",
+                                        "GoogleChat": "#/components/schemas/CreateGoogleChatIntegrationDto",
+                                        "Discord": "#/components/schemas/CreateDiscordIntegrationDto",
+                                        "Splunk": "#/components/schemas/CreateSplunkIntegrationDto",
+                                        "PushBullet": "#/components/schemas/CreatePushBulletIntegrationDto",
+                                        "Pushover": "#/components/schemas/CreatePushoverIntegrationDto",
+                                        "Mattermost": "#/components/schemas/CreateMattermostIntegrationDto"
+                                    }
+                                }
                             }
                         }
                     }
@@ -2640,6 +3536,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/IntegrationDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -2681,6 +3587,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2709,48 +3625,65 @@
                 ],
                 "requestBody": {
                     "required": true,
+                    "description": "Integration fields to update. The `type` field selects which shape `data` must take — each integration type accepts a different set of fields.",
                     "content": {
                         "application/json": {
                             "schema": {
                                 "oneOf": [
                                     {
-                                        "$ref": "#/components/schemas/UpdateSlackIntegrationSchema",
-                                        "title": "Slack"
+                                        "$ref": "#/components/schemas/UpdateSlackIntegrationDto"
                                     },
                                     {
-                                        "$ref": "#/components/schemas/UpdateTelegramIntegrationSchema"
+                                        "$ref": "#/components/schemas/UpdateTelegramIntegrationDto"
                                     },
                                     {
-                                        "$ref": "#/components/schemas/UpdateMsTeamsIntegrationSchema"
+                                        "$ref": "#/components/schemas/UpdateMSTeamsIntegrationDto"
                                     },
                                     {
-                                        "$ref": "#/components/schemas/UpdateWebhookIntegrationSchema"
+                                        "$ref": "#/components/schemas/UpdateWebhookIntegrationDto"
                                     },
                                     {
-                                        "$ref": "#/components/schemas/UpdateZapierIntegrationSchema"
+                                        "$ref": "#/components/schemas/UpdateZapierIntegrationDto"
                                     },
                                     {
-                                        "$ref": "#/components/schemas/UpdatePagerdutyIntegrationSchema"
+                                        "$ref": "#/components/schemas/UpdatePagerdutyIntegrationDto"
                                     },
                                     {
-                                        "$ref": "#/components/schemas/UpdateGoogleChatIntegrationSchema"
+                                        "$ref": "#/components/schemas/UpdateGoogleChatIntegrationDto"
                                     },
                                     {
-                                        "$ref": "#/components/schemas/UpdateDiscordIntegrationSchema"
+                                        "$ref": "#/components/schemas/UpdateDiscordIntegrationDto"
                                     },
                                     {
-                                        "$ref": "#/components/schemas/UpdateSplunkIntegrationSchema"
+                                        "$ref": "#/components/schemas/UpdateSplunkIntegrationDto"
                                     },
                                     {
-                                        "$ref": "#/components/schemas/UpdatePushbulletIntegrationSchema"
+                                        "$ref": "#/components/schemas/UpdatePushBulletIntegrationDto"
                                     },
                                     {
-                                        "$ref": "#/components/schemas/UpdatePushoverIntegrationSchema"
+                                        "$ref": "#/components/schemas/UpdatePushoverIntegrationDto"
                                     },
                                     {
-                                        "$ref": "#/components/schemas/UpdateMattermostIntegrationSchema"
+                                        "$ref": "#/components/schemas/UpdateMattermostIntegrationDto"
                                     }
-                                ]
+                                ],
+                                "discriminator": {
+                                    "propertyName": "type",
+                                    "mapping": {
+                                        "Slack": "#/components/schemas/UpdateSlackIntegrationDto",
+                                        "Telegram": "#/components/schemas/UpdateTelegramIntegrationDto",
+                                        "MSTeams": "#/components/schemas/UpdateMSTeamsIntegrationDto",
+                                        "Webhook": "#/components/schemas/UpdateWebhookIntegrationDto",
+                                        "Zapier": "#/components/schemas/UpdateZapierIntegrationDto",
+                                        "Pagerduty": "#/components/schemas/UpdatePagerdutyIntegrationDto",
+                                        "GoogleChat": "#/components/schemas/UpdateGoogleChatIntegrationDto",
+                                        "Discord": "#/components/schemas/UpdateDiscordIntegrationDto",
+                                        "Splunk": "#/components/schemas/UpdateSplunkIntegrationDto",
+                                        "PushBullet": "#/components/schemas/UpdatePushBulletIntegrationDto",
+                                        "Pushover": "#/components/schemas/UpdatePushoverIntegrationDto",
+                                        "Mattermost": "#/components/schemas/UpdateMattermostIntegrationDto"
+                                    }
+                                }
                             }
                         }
                     }
@@ -2762,6 +3695,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/IntegrationDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -2793,6 +3736,16 @@
                 "responses": {
                     "200": {
                         "description": ""
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2828,6 +3781,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/AlertContactPaginationDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -2867,6 +3830,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2902,6 +3875,16 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/AlertContactDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
                                 }
                             }
                         }
@@ -2951,6 +3934,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -2980,6 +3973,16 @@
                 "responses": {
                     "200": {
                         "description": ""
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -3018,6 +4021,16 @@
                                 }
                             }
                         }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -3049,6 +4062,16 @@
                 "responses": {
                     "204": {
                         "description": "Tag deleted successfully"
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -3110,6 +4133,342 @@
             }
         },
         "schemas": {
+            "ApiErrorResponseDto": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "A stable, machine-readable error code. Always a member of the published vocabulary.",
+                        "enum": [
+                            "000-001",
+                            "000-002",
+                            "000-003",
+                            "000-004",
+                            "000-005",
+                            "000-006",
+                            "000-007",
+                            "000-008",
+                            "000-009",
+                            "000-010",
+                            "000-011",
+                            "000-012",
+                            "000-013",
+                            "000-014",
+                            "003-001",
+                            "003-002",
+                            "003-003",
+                            "003-004",
+                            "003-005",
+                            "003-006",
+                            "003-007",
+                            "003-008",
+                            "003-009",
+                            "003-010",
+                            "003-011",
+                            "003-012",
+                            "003-013",
+                            "003-014",
+                            "003-015",
+                            "003-016",
+                            "003-017",
+                            "003-018",
+                            "003-019",
+                            "003-020",
+                            "004-001",
+                            "004-002",
+                            "004-033",
+                            "004-034",
+                            "004-035",
+                            "004-036",
+                            "004-037",
+                            "004-038",
+                            "004-039",
+                            "004-040",
+                            "004-041",
+                            "004-042",
+                            "004-003",
+                            "004-004",
+                            "004-005",
+                            "004-006",
+                            "004-007",
+                            "004-008",
+                            "004-009",
+                            "004-010",
+                            "004-011",
+                            "004-012",
+                            "004-013",
+                            "004-014",
+                            "004-015",
+                            "004-016",
+                            "004-017",
+                            "004-018",
+                            "004-019",
+                            "004-020",
+                            "004-021",
+                            "004-022",
+                            "004-023",
+                            "004-024",
+                            "004-025",
+                            "004-026",
+                            "004-027",
+                            "004-028",
+                            "004-029",
+                            "004-030",
+                            "004-031",
+                            "004-032",
+                            "004-043",
+                            "004-044",
+                            "005-001",
+                            "005-002",
+                            "006-001",
+                            "009-001",
+                            "009-002",
+                            "009-003",
+                            "009-004",
+                            "009-005",
+                            "009-006",
+                            "009-007",
+                            "009-008",
+                            "009-009",
+                            "009-010",
+                            "009-011",
+                            "009-012",
+                            "009-013",
+                            "009-014",
+                            "009-015",
+                            "009-016",
+                            "009-017",
+                            "009-022",
+                            "009-023",
+                            "009-024",
+                            "009-025",
+                            "009-018",
+                            "009-019",
+                            "009-020",
+                            "009-026",
+                            "009-027",
+                            "009-028",
+                            "009-033",
+                            "009-034",
+                            "009-021",
+                            "009-033",
+                            "009-030",
+                            "011-001",
+                            "011-002",
+                            "011-003",
+                            "011-004",
+                            "011-005",
+                            "011-006",
+                            "011-007",
+                            "011-008",
+                            "011-009",
+                            "011-010",
+                            "011-011",
+                            "011-012",
+                            "011-013",
+                            "011-014",
+                            "011-015",
+                            "011-016",
+                            "011-017",
+                            "011-018",
+                            "011-019",
+                            "011-020",
+                            "011-021",
+                            "011-022",
+                            "011-023",
+                            "011-024",
+                            "011-025",
+                            "011-026",
+                            "011-027",
+                            "011-028",
+                            "013-001",
+                            "013-002",
+                            "013-003",
+                            "013-004",
+                            "013-005",
+                            "013-006",
+                            "013-007",
+                            "013-008",
+                            "017-001",
+                            "017-002",
+                            "018-001",
+                            "018-002",
+                            "018-003",
+                            "018-004",
+                            "018-005",
+                            "018-006",
+                            "018-007",
+                            "018-008",
+                            "018-009",
+                            "018-010",
+                            "018-011",
+                            "018-012",
+                            "021-001",
+                            "021-002",
+                            "021-003",
+                            "021-004",
+                            "021-005",
+                            "021-006",
+                            "021-007",
+                            "021-008",
+                            "021-009",
+                            "021-010",
+                            "021-011",
+                            "021-012",
+                            "021-013",
+                            "021-014",
+                            "021-015",
+                            "021-016",
+                            "021-017",
+                            "021-018",
+                            "021-019",
+                            "021-020",
+                            "021-021",
+                            "021-022",
+                            "021-023",
+                            "021-024",
+                            "021-025",
+                            "021-026",
+                            "021-027",
+                            "021-028",
+                            "021-029",
+                            "021-030",
+                            "021-031",
+                            "021-032",
+                            "021-033",
+                            "021-034",
+                            "021-035",
+                            "021-036",
+                            "021-037",
+                            "021-038",
+                            "021-039",
+                            "021-040",
+                            "021-041",
+                            "021-042",
+                            "021-043",
+                            "021-044",
+                            "021-045",
+                            "021-046",
+                            "021-047",
+                            "021-048",
+                            "021-049",
+                            "021-050",
+                            "021-051",
+                            "021-052",
+                            "022-001",
+                            "024-001",
+                            "024-002",
+                            "024-003",
+                            "025-002",
+                            "025-003",
+                            "025-004",
+                            "025-005",
+                            "025-006",
+                            "025-007",
+                            "025-008",
+                            "025-009",
+                            "025-010",
+                            "025-011",
+                            "025-012",
+                            "025-013",
+                            "025-014",
+                            "025-015",
+                            "025-016",
+                            "025-017",
+                            "025-018",
+                            "025-019",
+                            "025-020",
+                            "025-021",
+                            "025-022",
+                            "021-053",
+                            "021-054",
+                            "021-055",
+                            "021-056",
+                            "021-057",
+                            "021-058",
+                            "021-059",
+                            "021-060",
+                            "021-061",
+                            "021-062",
+                            "021-065",
+                            "021-066",
+                            "021-067",
+                            "021-068",
+                            "026-001",
+                            "026-002",
+                            "026-003",
+                            "026-004",
+                            "026-005",
+                            "026-006",
+                            "026-007",
+                            "026-008",
+                            "026-009",
+                            "026-016",
+                            "026-017",
+                            "026-018",
+                            "026-019",
+                            "026-020",
+                            "027-001",
+                            "027-002",
+                            "027-003",
+                            "027-004",
+                            "027-005",
+                            "027-006",
+                            "027-007",
+                            "027-008",
+                            "027-009",
+                            "027-010",
+                            "027-011",
+                            "027-012",
+                            "027-013",
+                            "027-014",
+                            "028-001",
+                            "028-002",
+                            "029-001",
+                            "029-002",
+                            "029-003",
+                            "029-004",
+                            "029-005",
+                            "029-006",
+                            "029-007",
+                            "029-008",
+                            "029-009",
+                            "029-010",
+                            "029-011",
+                            "029-012",
+                            "029-013",
+                            "029-014",
+                            "029-015"
+                        ]
+                    },
+                    "message": {
+                        "description": "Human-readable error detail. An array of per-field messages for validation failures, a single string otherwise.",
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        ]
+                    },
+                    "statusCode": {
+                        "type": "number",
+                        "description": "The HTTP status code, present on validation failures."
+                    },
+                    "error": {
+                        "type": "string",
+                        "description": "The HTTP status text, present on validation failures."
+                    }
+                },
+                "required": [
+                    "code",
+                    "message"
+                ]
+            },
             "PublicBulkPauseDto": {
                 "type": "object",
                 "properties": {
@@ -4817,6 +6176,63 @@
                                                 "sensitivityThreshold",
                                                 "viewport"
                                             ]
+                                        },
+                                        "dependency": {
+                                            "type": "object",
+                                            "properties": {
+                                                "providerUrlname": {
+                                                    "type": "string",
+                                                    "minLength": 1
+                                                },
+                                                "trackedComponentIds": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "integer"
+                                                    },
+                                                    "nullable": true
+                                                },
+                                                "currentState": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "operational",
+                                                        "minor",
+                                                        "major",
+                                                        "maintenance"
+                                                    ]
+                                                },
+                                                "needsReview": {
+                                                    "type": "boolean"
+                                                },
+                                                "notify": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "severity": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "all",
+                                                                "major",
+                                                                "none"
+                                                            ]
+                                                        },
+                                                        "incrementalUpdates": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "severity",
+                                                        "incrementalUpdates"
+                                                    ]
+                                                },
+                                                "maintenanceNotificationsEnabled": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "required": [
+                                                "providerUrlname",
+                                                "currentState",
+                                                "needsReview",
+                                                "notify"
+                                            ]
                                         }
                                     },
                                     "nullable": true
@@ -4870,6 +6286,11 @@
                                     "required": [
                                         "REGION"
                                     ]
+                                },
+                                "heartbeatUrl": {
+                                    "description": "Complete heartbeat ping URL for HEARTBEAT monitors; null for every other type",
+                                    "type": "string",
+                                    "nullable": true
                                 },
                                 "maintenanceWindows": {
                                     "type": "array",
@@ -5233,7 +6654,8 @@
                                 },
                                 "status": {},
                                 "url": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "nullable": true
                                 },
                                 "currentStateDuration": {
                                     "type": "number"
@@ -5454,6 +6876,7 @@
                                 "responseTimeThreshold",
                                 "config",
                                 "regionalData",
+                                "heartbeatUrl",
                                 "maintenanceWindows",
                                 "psps",
                                 "id",
@@ -6027,6 +7450,93 @@
                     "to"
                 ]
             },
+            "MonitorDependencyStatusDto": {
+                "type": "object",
+                "properties": {
+                    "currentState": {
+                        "type": "string",
+                        "enum": [
+                            "operational",
+                            "minor",
+                            "major",
+                            "maintenance"
+                        ]
+                    }
+                },
+                "required": [
+                    "currentState"
+                ]
+            },
+            "MonitorDependencyIncidentsDto": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "title": {
+                                    "type": "string"
+                                },
+                                "severity": {
+                                    "type": "string",
+                                    "enum": [
+                                        "minor",
+                                        "major"
+                                    ]
+                                },
+                                "resolved": {
+                                    "type": "boolean"
+                                },
+                                "startedAt": {
+                                    "type": "string"
+                                },
+                                "resolvedAt": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "updates": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "status": {
+                                                "type": "string"
+                                            },
+                                            "description": {
+                                                "type": "string"
+                                            },
+                                            "createdAt": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "status",
+                                            "description",
+                                            "createdAt"
+                                        ]
+                                    }
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "title",
+                                "severity",
+                                "resolved",
+                                "startedAt",
+                                "resolvedAt",
+                                "updates"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "data"
+                ]
+            },
             "MonitorDto": {
                 "type": "object",
                 "properties": {
@@ -6508,6 +8018,63 @@
                                     "sensitivityThreshold",
                                     "viewport"
                                 ]
+                            },
+                            "dependency": {
+                                "type": "object",
+                                "properties": {
+                                    "providerUrlname": {
+                                        "type": "string",
+                                        "minLength": 1
+                                    },
+                                    "trackedComponentIds": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        },
+                                        "nullable": true
+                                    },
+                                    "currentState": {
+                                        "type": "string",
+                                        "enum": [
+                                            "operational",
+                                            "minor",
+                                            "major",
+                                            "maintenance"
+                                        ]
+                                    },
+                                    "needsReview": {
+                                        "type": "boolean"
+                                    },
+                                    "notify": {
+                                        "type": "object",
+                                        "properties": {
+                                            "severity": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "all",
+                                                    "major",
+                                                    "none"
+                                                ]
+                                            },
+                                            "incrementalUpdates": {
+                                                "type": "boolean"
+                                            }
+                                        },
+                                        "required": [
+                                            "severity",
+                                            "incrementalUpdates"
+                                        ]
+                                    },
+                                    "maintenanceNotificationsEnabled": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "required": [
+                                    "providerUrlname",
+                                    "currentState",
+                                    "needsReview",
+                                    "notify"
+                                ]
                             }
                         },
                         "nullable": true
@@ -6561,6 +8128,11 @@
                         "required": [
                             "REGION"
                         ]
+                    },
+                    "heartbeatUrl": {
+                        "description": "Complete heartbeat ping URL for HEARTBEAT monitors; null for every other type",
+                        "type": "string",
+                        "nullable": true
                     },
                     "maintenanceWindows": {
                         "type": "array",
@@ -6924,7 +8496,8 @@
                     },
                     "status": {},
                     "url": {
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "currentStateDuration": {
                         "type": "number"
@@ -7145,6 +8718,7 @@
                     "responseTimeThreshold",
                     "config",
                     "regionalData",
+                    "heartbeatUrl",
                     "maintenanceWindows",
                     "psps",
                     "id",
@@ -9031,6 +10605,273 @@
                     "config"
                 ]
             },
+            "DependencyConfigFieldsDto": {
+                "type": "object",
+                "properties": {
+                    "providerUrlname": {
+                        "type": "string",
+                        "example": "stripe",
+                        "description": "isdown provider catalog slug. Required to create a dependency monitor — resolved authoritatively against the isdown catalog, so the friendly name and status page URL always reflect the real provider rather than caller-supplied values. Not sent on a scope-only update."
+                    },
+                    "trackedComponentIds": {
+                        "nullable": true,
+                        "example": [
+                            555,
+                            556
+                        ],
+                        "description": "Component ids to scope tracking to (isdown components.id, not external_id). Omit or set to null to track every component.",
+                        "type": "array",
+                        "items": {
+                            "type": "number"
+                        }
+                    }
+                }
+            },
+            "DependencyMonitorConfigDto": {
+                "type": "object",
+                "properties": {
+                    "dependency": {
+                        "description": "Dependency monitor configuration — the isdown provider to track and, optionally, which of its components to scope tracking to.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/DependencyConfigFieldsDto"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "dependency"
+                ]
+            },
+            "CreateDependencyMonitorDto": {
+                "type": "object",
+                "properties": {
+                    "friendlyName": {
+                        "type": "string",
+                        "example": "My monitor",
+                        "description": "Friendly name of the monitor",
+                        "maxLength": 250
+                    },
+                    "interval": {
+                        "type": "number",
+                        "example": 60,
+                        "minimum": 30,
+                        "description": "Interval of check in seconds"
+                    },
+                    "assignedAlertContacts": {
+                        "description": "Alert contacts to be assigned to the monitor. Threshold and recurrence are only available in the paid plans, they are always 0 in the Free Plan",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AlertContactSettings"
+                        }
+                    },
+                    "tagNames": {
+                        "example": [
+                            "tag1",
+                            "tag2"
+                        ],
+                        "description": "Tags to be assigned to the monitor",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "maintenanceWindowsIds": {
+                        "example": [
+                            123,
+                            234
+                        ],
+                        "description": "Maintenance windows to be assigned to the monitor",
+                        "type": "array",
+                        "items": {
+                            "type": "number"
+                        }
+                    },
+                    "regionData": {
+                        "description": "Regional data for monitoring",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/RegionalDataDto"
+                            }
+                        ]
+                    },
+                    "regionalData": {
+                        "enum": [
+                            "na",
+                            "eu",
+                            "as",
+                            "oc"
+                        ],
+                        "type": "string",
+                        "example": "na",
+                        "deprecated": true,
+                        "description": "Region for monitoring: na (North America), eu (Europe), as (Asia), oc (Oceania). Note: If both regionalData and regionData are provided, regionData takes priority."
+                    },
+                    "responseTimeThreshold": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 60000,
+                        "description": "Response time threshold in milliseconds. When provided, the value is applied to all active regions as regionData.THRESHOLD. Always returns 0 — use regionData.THRESHOLD for per-region control."
+                    },
+                    "groupId": {
+                        "type": "number",
+                        "example": 0,
+                        "minimum": 0,
+                        "description": "Monitor group ID to assign the monitor to. Default is 0 (no group)."
+                    },
+                    "customFields": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "example": {
+                            "environment": "production",
+                            "team": "platform"
+                        },
+                        "description": "Custom key-value metadata for the monitor. Max 20 keys. Keys: alphanumeric + underscore + hyphen, max 64 chars. Values: max 255 chars. Paid plans only."
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "DEPENDENCY"
+                        ],
+                        "example": "DEPENDENCY"
+                    },
+                    "url": {
+                        "type": "string",
+                        "example": "https://status.stripe.com",
+                        "maxLength": 10000,
+                        "description": "Required at the wire level like every other type, but discarded: a dependency is provider-driven and never polled, so the created monitor's real url is resolved server-side from isdown instead."
+                    },
+                    "timeout": {
+                        "type": "number",
+                        "example": 30,
+                        "minimum": 0,
+                        "maximum": 60,
+                        "description": "Required at the wire level like every other type, but discarded: a dependency is provider-driven and never polled, so there is no active check for this value to configure."
+                    },
+                    "config": {
+                        "description": "Dependency monitor configuration. `config.dependency.providerUrlname` (required) names the isdown provider to track; `config.dependency.trackedComponentIds` optionally scopes tracking to specific components.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/DependencyMonitorConfigDto"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "friendlyName",
+                    "interval",
+                    "type",
+                    "url",
+                    "timeout",
+                    "config"
+                ]
+            },
+            "PermissiveVisualComparisonFieldsDto": {
+                "type": "object",
+                "properties": {
+                    "sensitivityThreshold": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                    },
+                    "viewport": {
+                        "type": "string",
+                        "enum": [
+                            "desktop",
+                            "mobile"
+                        ]
+                    },
+                    "areaCoordinates": {
+                        "$ref": "#/components/schemas/VisualComparisonAreaCoordinatesDto"
+                    }
+                }
+            },
+            "PermissiveMonitorConfigDto": {
+                "type": "object",
+                "properties": {
+                    "dnsRecords": {
+                        "description": "DNS records configuration. DNS monitors only. Send null to remove.",
+                        "nullable": true,
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/DnsRecordsDto"
+                            }
+                        ]
+                    },
+                    "sslExpirationPeriodDays": {
+                        "maxItems": 10,
+                        "description": "Days before certificate expiry to send SSL expiration reminders (0-365, max 10 items). Requires the top-level `sslExpirationReminder` flag to be enabled. HTTP, Keyword and API monitors only. Send null to remove.",
+                        "nullable": true,
+                        "example": [
+                            7,
+                            14,
+                            30
+                        ],
+                        "type": "array",
+                        "items": {
+                            "type": "number",
+                            "maximum": 365,
+                            "minimum": 0
+                        }
+                    },
+                    "apiAssertions": {
+                        "nullable": true,
+                        "description": "API monitor assertions configuration. Required for API monitors — the merged config must still contain it. Send null to remove.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PublicApiAssertionsDto"
+                            }
+                        ]
+                    },
+                    "udp": {
+                        "description": "UDP monitor configuration. UDP monitors only. Send null to remove.",
+                        "nullable": true,
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UdpConfigFieldsDto"
+                            }
+                        ]
+                    },
+                    "ipVersion": {
+                        "type": "string",
+                        "enum": [
+                            "ipv4Only",
+                            "ipv6Only"
+                        ],
+                        "description": "IP version preference. Omit for default behavior (IPv4 priority, falls back to IPv6). Not supported by DNS, Heartbeat, Visual Comparison or Dependency monitors. Send null to remove.",
+                        "nullable": true,
+                        "example": "ipv4Only"
+                    },
+                    "applicationErrorRetries": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 3,
+                        "description": "Number of retries on application errors (HTTP 4xx/5xx). 0-3. Connection errors always retry 3 times regardless of this setting. HTTP, Keyword and API monitors only. Send null to remove.",
+                        "nullable": true,
+                        "example": 1
+                    },
+                    "visualComparison": {
+                        "description": "Visual comparison configuration. Visual Comparison monitors only. Send null to remove.",
+                        "nullable": true,
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PermissiveVisualComparisonFieldsDto"
+                            }
+                        ]
+                    },
+                    "dependency": {
+                        "description": "Dependency monitor configuration - the isdown provider to track and, optionally, which of its components to scope tracking to. Dependency monitors only. Send null to remove.",
+                        "nullable": true,
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/DependencyConfigFieldsDto"
+                            }
+                        ]
+                    }
+                }
+            },
             "UpdateMonitorDto": {
                 "type": "object",
                 "properties": {
@@ -9056,7 +10897,8 @@
                             "DNS",
                             "API",
                             "UDP",
-                            "VISUAL_COMPARISON"
+                            "VISUAL_COMPARISON",
+                            "DEPENDENCY"
                         ],
                         "type": "string",
                         "example": "HTTP"
@@ -9263,8 +11105,13 @@
                         }
                     },
                     "config": {
-                        "type": "object",
-                        "description": "Monitor configuration patch. Top-level shallow merge with existing config: omit keys to leave unchanged, set a key to null to remove it, or send `config: null` to clear all config."
+                        "nullable": true,
+                        "description": "Monitor configuration patch. Accepted keys depend on the monitor type - HTTP/Keyword: sslExpirationPeriodDays, ipVersion, applicationErrorRetries. API: apiAssertions, sslExpirationPeriodDays, ipVersion, applicationErrorRetries. DNS: dnsRecords. UDP: udp, ipVersion. PING/PORT: ipVersion. Visual Comparison: visualComparison. Dependency: dependency. Heartbeat: none. Top-level shallow merge with existing config: omit keys to leave unchanged, set a key to null to remove it, or send `config: null` to clear all config.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PermissiveMonitorConfigDto"
+                            }
+                        ]
                     }
                 }
             },
@@ -10834,9 +12681,18 @@
                         "type": "string"
                     },
                     "monitorsCount": {
+                        "description": "Monitors this account is using. Third party services are counted separately, in dependencyMonitorsCount, because they spend their own allowance rather than a monitor slot.",
                         "type": "number"
                     },
                     "monitorLimit": {
+                        "type": "number"
+                    },
+                    "dependencyMonitorsCount": {
+                        "description": "Third party services this account is tracking.",
+                        "type": "number"
+                    },
+                    "dependencyMonitorLimit": {
+                        "description": "Third party services this account may track. Independent of monitorLimit — spending one does not reduce the other.",
                         "type": "number"
                     },
                     "smsCredits": {
@@ -10870,6 +12726,8 @@
                     "fullName",
                     "monitorsCount",
                     "monitorLimit",
+                    "dependencyMonitorsCount",
+                    "dependencyMonitorLimit",
                     "smsCredits",
                     "activeSubscription"
                 ]
@@ -11213,10 +13071,10 @@
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "Slack"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/SlackBaseIntegrationDto"
@@ -11256,10 +13114,10 @@
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "Telegram"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/TelegramBaseIntegrationDto"
@@ -11304,14 +13162,14 @@
                     "webhookURL"
                 ]
             },
-            "CreateMsTeamsIntegrationDto": {
+            "CreateMSTeamsIntegrationDto": {
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "MSTeams"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/MsTeamsBaseIntegrationDto"
@@ -11375,10 +13233,10 @@
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "Webhook"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/WebhookBaseIntegrationDto"
@@ -11425,10 +13283,10 @@
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "Zapier"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/ZapierBaseIntegrationDto"
@@ -11490,10 +13348,10 @@
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "Pagerduty"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/CreatePagerdutyBaseIntegrationDto"
@@ -11549,10 +13407,10 @@
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "GoogleChat"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/GoogleChatBaseIntegrationDto"
@@ -11604,10 +13462,10 @@
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "Discord"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/DiscordBaseIntegrationDto"
@@ -11654,10 +13512,10 @@
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "Splunk"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/SplunkBaseIntegrationDto"
@@ -11702,14 +13560,14 @@
                     "accessToken"
                 ]
             },
-            "CreatePushbulletIntegrationDto": {
+            "CreatePushBulletIntegrationDto": {
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "PushBullet"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/PushbulletBaseIntegrationDto"
@@ -11768,10 +13626,10 @@
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "Pushover"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/CreatePushoverBaseIntegrationDto"
@@ -11823,10 +13681,10 @@
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "Mattermost"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/MattermostBaseIntegrationDto"
@@ -11870,20 +13728,21 @@
                     }
                 }
             },
-            "UpdateSlackIntegrationSchema": {
+            "UpdateSlackIntegrationDto": {
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "Slack"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/UpdateSlackIntegrationDataDto"
                     }
                 },
                 "required": [
+                    "type",
                     "data"
                 ]
             },
@@ -11912,20 +13771,21 @@
                     }
                 }
             },
-            "UpdateTelegramIntegrationSchema": {
+            "UpdateTelegramIntegrationDto": {
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "Telegram"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/UpdateTelegramIntegrationDataDto"
                     }
                 },
                 "required": [
+                    "type",
                     "data"
                 ]
             },
@@ -11960,20 +13820,21 @@
                     }
                 }
             },
-            "UpdateMsTeamsIntegrationSchema": {
+            "UpdateMSTeamsIntegrationDto": {
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "MSTeams"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/UpdateMsTeamsIntegrationDataDto"
                     }
                 },
                 "required": [
+                    "type",
                     "data"
                 ]
             },
@@ -12022,20 +13883,21 @@
                     }
                 }
             },
-            "UpdateWebhookIntegrationSchema": {
+            "UpdateWebhookIntegrationDto": {
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "Webhook"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/UpdateWebhookIntegrationDataDto"
                     }
                 },
                 "required": [
+                    "type",
                     "data"
                 ]
             },
@@ -12068,20 +13930,21 @@
                     }
                 }
             },
-            "UpdateZapierIntegrationSchema": {
+            "UpdateZapierIntegrationDto": {
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "Zapier"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/UpdateZapierIntegrationDataDto"
                     }
                 },
                 "required": [
+                    "type",
                     "data"
                 ]
             },
@@ -12129,24 +13992,25 @@
                     }
                 }
             },
-            "UpdatePagerdutyIntegrationSchema": {
+            "UpdatePagerdutyIntegrationDto": {
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "Pagerduty"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/UpdatePagerdutyIntegrationDataDto"
                     }
                 },
                 "required": [
+                    "type",
                     "data"
                 ]
             },
-            "PartialTypeClass": {
+            "UpdateGoogleChatIntegrationDataDto": {
                 "type": "object",
                 "properties": {
                     "friendlyName": {
@@ -12183,20 +14047,21 @@
                     }
                 }
             },
-            "UpdateGoogleChatIntegrationSchema": {
+            "UpdateGoogleChatIntegrationDto": {
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "GoogleChat"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
-                        "$ref": "#/components/schemas/PartialTypeClass"
+                        "$ref": "#/components/schemas/UpdateGoogleChatIntegrationDataDto"
                     }
                 },
                 "required": [
+                    "type",
                     "data"
                 ]
             },
@@ -12233,34 +14098,64 @@
                     }
                 }
             },
-            "UpdateDiscordIntegrationSchema": {
+            "UpdateDiscordIntegrationDto": {
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "Discord"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/UpdateDiscordIntegrationDataDto"
                     }
                 },
                 "required": [
+                    "type",
                     "data"
                 ]
             },
-            "UpdateSplunkIntegrationSchema": {
+            "UpdateSplunkIntegrationDataDto": {
                 "type": "object",
                 "properties": {
-                    "type": {
+                    "friendlyName": {
+                        "type": "string",
+                        "maxLength": 60,
+                        "description": "The friendly name of the integration",
+                        "example": "My Integration from API"
+                    },
+                    "enableNotificationsFor": {
                         "enum": [
-                            "Splunk"
+                            "UpAndDown",
+                            "Down",
+                            "Up",
+                            "None"
                         ],
                         "type": "string"
                     },
+                    "sslExpirationReminder": {
+                        "type": "boolean",
+                        "description": "Send a notification about SSL & Domain expiry",
+                        "example": true
+                    },
+                    "urlToNotify": {
+                        "type": "string",
+                        "maxLength": 1500
+                    }
+                }
+            },
+            "UpdateSplunkIntegrationDto": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "Splunk"
+                        ]
+                    },
                     "data": {
-                        "$ref": "#/components/schemas/PartialTypeClass"
+                        "$ref": "#/components/schemas/UpdateSplunkIntegrationDataDto"
                     }
                 },
                 "required": [
@@ -12299,20 +14194,21 @@
                     }
                 }
             },
-            "UpdatePushbulletIntegrationSchema": {
+            "UpdatePushBulletIntegrationDto": {
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "PushBullet"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/UpdatePushbulletIntegrationDataDto"
                     }
                 },
                 "required": [
+                    "type",
                     "data"
                 ]
             },
@@ -12357,20 +14253,21 @@
                     }
                 }
             },
-            "UpdatePushoverIntegrationSchema": {
+            "UpdatePushoverIntegrationDto": {
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "Pushover"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/UpdatePushoverIntegrationDataDto"
                     }
                 },
                 "required": [
+                    "type",
                     "data"
                 ]
             },
@@ -12407,20 +14304,21 @@
                     }
                 }
             },
-            "UpdateMattermostIntegrationSchema": {
+            "UpdateMattermostIntegrationDto": {
                 "type": "object",
                 "properties": {
                     "type": {
+                        "type": "string",
                         "enum": [
                             "Mattermost"
-                        ],
-                        "type": "string"
+                        ]
                     },
                     "data": {
                         "$ref": "#/components/schemas/UpdateMattermostIntegrationDataDto"
                     }
                 },
                 "required": [
+                    "type",
                     "data"
                 ]
             },

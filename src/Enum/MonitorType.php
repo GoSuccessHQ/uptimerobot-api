@@ -18,4 +18,5 @@ enum MonitorType: string
     case Api = 'API';
     case Udp = 'UDP';
     case VisualComparison = 'VISUAL_COMPARISON';
+    case Dependency = 'DEPENDENCY';
 }

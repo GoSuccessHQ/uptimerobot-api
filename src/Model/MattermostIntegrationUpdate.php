@@ -8,7 +8,7 @@ namespace GoSuccess\UptimeRobot\Model;
 
 use GoSuccess\UptimeRobot\Enum\NotificationEvent;
 
-/** Schema: UpdateMattermostIntegrationSchema ("data": UpdateMattermostIntegrationDataDto) */
+/** Schema: UpdateMattermostIntegrationDto ("data": UpdateMattermostIntegrationDataDto) */
 final readonly class MattermostIntegrationUpdate implements IntegrationUpdate
 {
     /** The "type" of this variant of {@see IntegrationUpdate}. */

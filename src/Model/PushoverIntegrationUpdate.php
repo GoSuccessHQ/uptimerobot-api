@@ -9,7 +9,7 @@ namespace GoSuccess\UptimeRobot\Model;
 use GoSuccess\UptimeRobot\Enum\NotificationEvent;
 use GoSuccess\UptimeRobot\Enum\PushoverPriority;
 
-/** Schema: UpdatePushoverIntegrationSchema ("data": UpdatePushoverIntegrationDataDto) */
+/** Schema: UpdatePushoverIntegrationDto ("data": UpdatePushoverIntegrationDataDto) */
 final readonly class PushoverIntegrationUpdate implements IntegrationUpdate
 {
     /** The "type" of this variant of {@see IntegrationUpdate}. */

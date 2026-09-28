@@ -8,7 +8,7 @@ namespace GoSuccess\UptimeRobot\Model;
 
 use GoSuccess\UptimeRobot\Enum\NotificationEvent;
 
-/** Schema: UpdateSlackIntegrationSchema ("data": UpdateSlackIntegrationDataDto) */
+/** Schema: UpdateSlackIntegrationDto ("data": UpdateSlackIntegrationDataDto) */
 final readonly class SlackIntegrationUpdate implements IntegrationUpdate
 {
     /** The "type" of this variant of {@see IntegrationUpdate}. */

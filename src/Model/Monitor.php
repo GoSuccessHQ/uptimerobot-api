@@ -76,6 +76,10 @@ final readonly class Monitor implements ResponseModel
         public ?MonitorConfig $config = null,
         /** The regions the checks run from. */
         public RegionalData $regionalData = new RegionalData(),
+        /**
+         * The complete URL a heartbeat monitor expects its pings at; null for every other type (verified live).
+         */
+        public ?string $heartbeatUrl = null,
         /** @var list<MaintenanceWindow> */
         public array $maintenanceWindows = [],
         /** @var list<StatusPage> */
@@ -87,9 +91,9 @@ final readonly class Monitor implements ResponseModel
          */
         public ?MonitorStatus $status = null,
         /**
-         * The URL, host name or IP address that is checked; for heartbeat monitors, the token of the URL the heartbeats are sent to (verified live).
+         * The URL, host name or IP address that is checked; for heartbeat monitors, the token of the URL the heartbeats are sent to; for dependency monitors, the status page of the provider, which UptimeRobot resolves itself (all verified live). The specification allows null.
          */
-        public string $url = '',
+        public ?string $url = null,
         /** Seconds since the status last changed; 0 for a new monitor. */
         public int $currentStateDuration = 0,
         /**
@@ -140,12 +144,13 @@ final readonly class Monitor implements ResponseModel
             responseTimeThreshold: Cast::int($data['responseTimeThreshold'] ?? null) ?? 0,
             config: Cast::model(MonitorConfig::class, $data['config'] ?? null),
             regionalData: Cast::model(RegionalData::class, $data['regionalData'] ?? null) ?? new RegionalData(),
+            heartbeatUrl: Cast::string($data['heartbeatUrl'] ?? null),
             maintenanceWindows: Cast::modelList(MaintenanceWindow::class, $data['maintenanceWindows'] ?? null),
             psps: Cast::modelList(StatusPage::class, $data['psps'] ?? null),
             id: Cast::int($data['id'] ?? null) ?? 0,
             friendlyName: Cast::string($data['friendlyName'] ?? null) ?? '',
             status: Cast::stringEnum(MonitorStatus::class, $data['status'] ?? null),
-            url: Cast::string($data['url'] ?? null) ?? '',
+            url: Cast::string($data['url'] ?? null),
             currentStateDuration: Cast::int($data['currentStateDuration'] ?? null) ?? 0,
             lastIncidentId: Cast::string($data['lastIncidentId'] ?? null),
             userId: Cast::int($data['userId'] ?? null) ?? 0,

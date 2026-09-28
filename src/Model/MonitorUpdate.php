@@ -108,7 +108,7 @@ final readonly class MonitorUpdate implements RequestModel
          */
         public array|Undefined $customFields = Undefined::Value,
         /**
-         * Monitor configuration patch. Top-level shallow merge with existing config: omit keys to leave unchanged, set a key to null to remove it, or send `config: null` to clear all config.
+         * Monitor configuration patch. Accepted keys depend on the monitor type - HTTP/Keyword: sslExpirationPeriodDays, ipVersion, applicationErrorRetries. API: apiAssertions, sslExpirationPeriodDays, ipVersion, applicationErrorRetries. DNS: dnsRecords. UDP: udp, ipVersion. PING/PORT: ipVersion. Visual Comparison: visualComparison. Dependency: dependency. Heartbeat: none. Top-level shallow merge with existing config: omit keys to leave unchanged, set a key to null to remove it, or send `config: null` to clear all config.
          */
         public MonitorConfigUpdate|Undefined|null $config = Undefined::Value,
     ) {}

@@ -8,7 +8,7 @@ namespace GoSuccess\UptimeRobot\Model;
 
 use GoSuccess\UptimeRobot\Enum\NotificationEvent;
 
-/** Schema: UpdateSplunkIntegrationSchema ("data": UpdateSplunkIntegrationDataDto) */
+/** Schema: UpdateSplunkIntegrationDto ("data": UpdateSplunkIntegrationDataDto) */
 final readonly class SplunkIntegrationUpdate implements IntegrationUpdate
 {
     /** The "type" of this variant of {@see IntegrationUpdate}. */

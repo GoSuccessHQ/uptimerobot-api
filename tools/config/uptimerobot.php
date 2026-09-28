@@ -70,7 +70,7 @@ declare(strict_types=1);
 
 // Value sets that several locations share; an enum shared by locations needs
 // the same values in the same order.
-$monitorTypes = ['HTTP', 'KEYWORD', 'PING', 'PORT', 'HEARTBEAT', 'DNS', 'API', 'UDP', 'VISUAL_COMPARISON'];
+$monitorTypes = ['HTTP', 'KEYWORD', 'PING', 'PORT', 'HEARTBEAT', 'DNS', 'API', 'UDP', 'VISUAL_COMPARISON', 'DEPENDENCY'];
 // The values the validator of the list filter names, in its order.
 $monitorStatuses = ['PAUSED', 'STARTED', 'UP', 'LOOKS_DOWN', 'DOWN'];
 $monitorStatus = 'The status of the monitor: UP, DOWN, LOOKS_DOWN, PAUSED, or STARTED, which a new or restarted monitor reports until its first check (verified live).';
@@ -169,6 +169,13 @@ return [
         // Monitors: response models
         'MonitorDto.config' => 'MonitorConfig',
         'MonitorDto.config.visualComparison' => 'MonitorVisualComparison',
+        'MonitorDto.config.dependency' => 'MonitorDependency',
+        'MonitorDto.config.dependency.notify' => 'DependencyNotifications',
+        // Dependency monitors: the fine-grained state and the incidents of the
+        // provider a monitor tracks.
+        'MonitorDependencyStatusDto' => 'DependencyStatus',
+        'MonitorDependencyIncidentsDto.data[]' => 'DependencyIncident',
+        'MonitorDependencyIncidentsDto.data[].updates[]' => 'DependencyIncidentUpdate',
         'MonitorDto.tags[]' => 'MonitorTag',
         'MonitorDto.tags[].monitors[]' => 'TaggedMonitor',
         'MonitorDto.lastIncident' => 'LastIncident',
@@ -195,7 +202,11 @@ return [
         'UpdateStormProtectionDto' => 'StormProtectionUpdate',
         'UpdateStormProtectionConfigDto' => 'StormProtectionConfigUpdate',
         'UpdateMonitorDto' => 'MonitorUpdate',
-        'UpdateMonitorConfigDto' => 'MonitorConfigUpdate',
+        // The specification describes the patch since September 28, 2026; until
+        // then it was a bare object, and this configuration added its keys.
+        'PermissiveMonitorConfigDto' => 'MonitorConfigUpdate',
+        'PermissiveVisualComparisonFieldsDto' => 'VisualComparisonSettingsUpdate',
+        'DependencyConfigFieldsDto' => 'DependencySettings',
         // Used by HTTP and keyword monitors.
         'HttpKeywordMonitorConfigDto' => 'HttpMonitorConfig',
         'VisualComparisonFieldsDto' => 'VisualComparisonSettings',
@@ -278,7 +289,7 @@ return [
         'ZapierBaseIntegrationDto.hookURL' => 'hookUrl',
         'UpdateZapierIntegrationDataDto.hookURL' => 'hookUrl',
         'GoogleChatBaseIntegrationDto.roomURL' => 'roomUrl',
-        'PartialTypeClass.roomURL' => 'roomUrl',
+        'UpdateGoogleChatIntegrationDataDto.roomURL' => 'roomUrl',
         'WebhookBaseIntegrationDto.sendAsJSON' => 'sendAsJson',
         'UpdateWebhookIntegrationDataDto.sendAsJSON' => 'sendAsJson',
     ],
@@ -326,6 +337,13 @@ return [
         'RegionalDataDto.REGION[]' => 'Region',
         'RegionalDataDto.INFRASTRUCTURE' => 'RegionInfrastructure',
         'PublicApiAssertionsDto.logic' => 'AssertionLogic',
+        'PermissiveVisualComparisonFieldsDto.viewport' => 'VisualComparisonViewport',
+        // Dependency monitors: the four states of the tracked provider, the
+        // severity its alerts start at, and that of an incident.
+        'MonitorDto.config.dependency.currentState' => 'DependencyState',
+        'MonitorDependencyStatusDto.currentState' => 'DependencyState',
+        'MonitorDto.config.dependency.notify.severity' => 'DependencyNotificationSeverity',
+        'MonitorDependencyIncidentsDto.data[].severity' => 'DependencyIncidentSeverity',
         'PublicApiAssertionCheckDto.comparison' => 'AssertionComparison',
         'VisualComparisonFieldsDto.viewport' => 'VisualComparisonViewport',
         'MonitorDto.config.visualComparison.viewport' => 'VisualComparisonViewport',
@@ -552,7 +570,6 @@ return [
         // settings with every type.
         '*BaseIntegrationDto.enableNotificationsFor' => ['type' => 'string', 'enum' => $notificationEvents, 'description' => $integrationEvents],
         'Update*IntegrationDataDto.enableNotificationsFor' => ['type' => 'string', 'enum' => $notificationEvents, 'description' => $integrationEvents],
-        'PartialTypeClass.enableNotificationsFor' => ['type' => 'string', 'enum' => $notificationEvents, 'description' => $integrationEvents],
         // Required on create, although "Optional." (Discord, Mattermost, Google
         // Chat) or undocumented (Slack). The provider leaves Slack's, Discord's
         // and Mattermost's out when it is not configured and clears
@@ -564,8 +581,7 @@ return [
         '*Slack*Integration*.customValue' => ['type' => 'string', 'description' => $slackText],
         '*Discord*Integration*.customValue' => ['type' => 'string', 'description' => $integrationText],
         '*Mattermost*Integration*.customValue' => ['type' => 'string', 'description' => $integrationText],
-        'GoogleChatBaseIntegrationDto.customMessage' => ['type' => 'string', 'description' => $integrationText],
-        'PartialTypeClass.customMessage' => ['type' => 'string', 'description' => $integrationText],
+        '*GoogleChat*Integration*.customMessage' => ['type' => 'string', 'description' => $integrationText],
         '*Slack*Integration*.webhookURL' => ['type' => 'string', 'description' => 'The Slack incoming webhook URL.'],
         '*Zapier*Integration*.hookURL' => ['type' => 'string', 'description' => 'The Zapier webhook URL of the Zap.'],
         '*Splunk*Integration*.urlToNotify' => ['type' => 'string', 'description' => 'The Splunk URL the alerts are posted to.'],
@@ -592,19 +608,6 @@ return [
             'enum' => ['Lowest', 'Low', 'Normal', 'High', 'Emergency'],
             'description' => 'The Pushover priority of the notifications.',
         ],
-        // The update of a Splunk integration points to PartialTypeClass, the
-        // fields of Google Chat (roomURL, customMessage), in place of Splunk's
-        // urlToNotify: every other update names the fields of its create request
-        // (Update<X>IntegrationDataDto equals <X>BaseIntegrationDto without
-        // "required"), Google Chat's update points to PartialTypeClass as well,
-        // and the Terraform provider sends {friendlyName, urlToNotify,
-        // enableNotificationsFor, sslExpirationReminder} to create and to update
-        // a Splunk integration. Two NestJS PartialType() classes presumably got
-        // the same name, so one replaced the other. PATCH /integrations/
-        // 999999999 {"type": "Splunk", "data": {"urlToNotify": 5, "roomURL": 5}}
-        // reached the lookup (404): the API checks the settings after it found
-        // the integration, so this could not be verified live.
-        'UpdateSplunkIntegrationSchema.data' => ['$ref' => '#/components/schemas/UpdateSplunkIntegrationDataDto'],
         // A plain string in the specification; an ISO 8601 date in UTC
         // (verified live: "2027-08-18T12:14:17Z").
         'UserDto.activeSubscription.expirationDate' => ['type' => 'string', 'format' => 'date-time'],
@@ -669,8 +672,25 @@ return [
         ],
         'MonitorDto.url' => [
             'type' => 'string',
-            'description' => 'The URL, host name or IP address that is checked; for heartbeat monitors, the token of the URL the heartbeats are sent to (verified live).',
+            'description' => 'The URL, host name or IP address that is checked; for heartbeat monitors, the token of the URL the heartbeats are sent to; for dependency monitors, the status page of the provider, which UptimeRobot resolves itself (all verified live). The specification allows null.',
         ],
+        'MonitorDto.heartbeatUrl' => [
+            'type' => 'string',
+            'description' => 'The complete URL a heartbeat monitor expects its pings at; null for every other type (verified live).',
+        ],
+        // Read as a list like every other (never null), so the empty list
+        // stands for null here (verified live: null on a monitor that tracks
+        // bunny.net as a whole).
+        'MonitorDto.config.dependency.trackedComponentIds' => [
+            'type' => 'array',
+            'items' => ['type' => 'integer'],
+            'description' => 'The components of the provider the monitor is scoped to (isdown component IDs); empty if it tracks every component, which the API sends as null (verified live).',
+        ],
+        // ISO 8601 in UTC, as a string in the specification (verified live:
+        // "2026-09-25T14:49:50.000Z" on the incidents of bunny.net).
+        'MonitorDependencyIncidentsDto.data[].startedAt' => $date,
+        'MonitorDependencyIncidentsDto.data[].resolvedAt' => $date,
+        'MonitorDependencyIncidentsDto.data[].updates[].createdAt' => $date,
         'MonitorDto.interval' => ['type' => 'number', 'description' => 'Seconds between two checks.'],
         'MonitorDto.responseTimeThreshold' => ['type' => 'number', 'description' => 'Always 0; the thresholds are in regionalData (verified live).'],
         'MonitorDto.currentStateDuration' => ['type' => 'number', 'description' => 'Seconds since the status last changed; 0 for a new monitor.'],
@@ -765,7 +785,13 @@ return [
         ],
 
         // Monitor updates, verified live on own monitors.
-        'UpdateMonitorDto.config' => ['$ref' => '#/components/schemas/UpdateMonitorConfigDto', 'nullable' => true],
+        // Verified live before the specification described the patch: the
+        // assertions of an API monitor are replaced as a whole, not merged.
+        'PermissiveMonitorConfigDto.apiAssertions' => [
+            '$ref' => '#/components/schemas/PublicApiAssertionsDto',
+            'nullable' => true,
+            'description' => 'The assertions of an API monitor; replaces the current ones as a whole (verified live). The merged config must still contain them; null removes them.',
+        ],
         'UpdateMonitorDto.customHttpHeaders' => [
             'type' => 'object',
             'additionalProperties' => ['type' => 'string'],
@@ -1179,6 +1205,8 @@ return [
         // Counts and limits (verified live: 9, 10 and 28; the plan's limit 10).
         'UserDto.monitorsCount',
         'UserDto.monitorLimit',
+        'UserDto.dependencyMonitorsCount',
+        'UserDto.dependencyMonitorLimit',
         'UserDto.smsCredits',
         'UserDto.activeSubscription.monitorLimit',
         // Minutes to wait before alerting and between repeated alerts, as whole
@@ -1206,6 +1234,7 @@ return [
         '*.applicationErrorRetries',
         // 0-100; an integer in the response copy.
         'VisualComparisonFieldsDto.sensitivityThreshold',
+        'PermissiveVisualComparisonFieldsDto.sensitivityThreshold',
         // Seconds, counts and codes (verified live: 1852819, 333333, 64, 0).
         'MonitorDto.currentStateDuration',
         'MonitorDto.lastIncident.cause',
@@ -1430,6 +1459,7 @@ return [
                 'API' => 'ApiMonitorCreate',
                 'UDP' => 'UdpMonitorCreate',
                 'VISUAL_COMPARISON' => 'VisualComparisonMonitorCreate',
+                'DEPENDENCY' => 'DependencyMonitorCreate',
             ],
             'description' => 'A monitor to create: one model per monitor type, each with the fields that type requires.',
         ],
@@ -1518,58 +1548,6 @@ return [
 
     'additions' => [
         'schemas' => [
-            // The update of a Splunk integration, which the specification gets
-            // wrong (see 'types'): SplunkBaseIntegrationDto without "required", as
-            // every other update relates to its create request.
-            'UpdateSplunkIntegrationDataDto' => [
-                'type' => 'object',
-                'properties' => [
-                    'friendlyName' => ['type' => 'string', 'maxLength' => 60, 'description' => 'The friendly name of the integration'],
-                    'enableNotificationsFor' => ['type' => 'string', 'enum' => ['UpAndDown', 'Down', 'Up', 'None']],
-                    'sslExpirationReminder' => ['type' => 'boolean', 'description' => 'Send a notification about SSL & Domain expiry'],
-                    'urlToNotify' => ['type' => 'string', 'maxLength' => 1500, 'description' => 'The Splunk URL the alerts are posted to.'],
-                ],
-            ],
-            // UpdateMonitorDto.config is a bare object that the API merges into
-            // the current config key by key: a key left out is kept, a key set
-            // to null is removed, and "config": null clears all of them; an API
-            // monitor's apiAssertions are replaced as a whole (all verified
-            // live). The keys are those of the config DTOs of the monitor types.
-            'UpdateMonitorConfigDto' => [
-                'type' => 'object',
-                'description' => 'Changes to the settings of a monitor type, merged into the current ones key by key: a key left out is kept, a key set to null is removed (verified live).',
-                'properties' => [
-                    'sslExpirationPeriodDays' => [
-                        'type' => 'array',
-                        'items' => ['type' => 'integer'],
-                        'nullable' => true,
-                        'description' => 'Days before the SSL certificate expires on which to send a reminder (0-365, at most 10 items). HTTP, keyword and API monitors.',
-                    ],
-                    'ipVersion' => [
-                        'type' => 'string',
-                        'enum' => ['ipv4Only', 'ipv6Only'],
-                        'nullable' => true,
-                        'description' => 'IP version preference; null restores the default behavior (IPv4 priority, falls back to IPv6).',
-                    ],
-                    'applicationErrorRetries' => [
-                        'type' => 'integer',
-                        'nullable' => true,
-                        'description' => 'Number of retries on application errors (HTTP 4xx/5xx), 0-3. HTTP, keyword and API monitors.',
-                    ],
-                    'dnsRecords' => ['$ref' => '#/components/schemas/DnsRecordsDto', 'nullable' => true, 'description' => 'The expected DNS records of a DNS monitor.'],
-                    'apiAssertions' => [
-                        '$ref' => '#/components/schemas/PublicApiAssertionsDto',
-                        'nullable' => true,
-                        'description' => 'The assertions of an API monitor; replaces the current ones as a whole (verified live).',
-                    ],
-                    'udp' => ['$ref' => '#/components/schemas/UdpConfigFieldsDto', 'nullable' => true, 'description' => 'The settings of a UDP monitor.'],
-                    'visualComparison' => [
-                        '$ref' => '#/components/schemas/VisualComparisonFieldsDto',
-                        'nullable' => true,
-                        'description' => 'The settings of a visual comparison monitor.',
-                    ],
-                ],
-            ],
         ],
         'properties' => [
             // In the create request and the response, but not in the update
@@ -1679,6 +1657,15 @@ return [
                 'responseTimeStats' => [
                     'operation' => 'MonitorsController_getMonitorResponseTimeStats',
                     'note' => 'Times are in milliseconds. Pass from and to together or neither: from alone is rejected with "to must be a Date instance", to alone with "Maximum range is 90 days". timeSeries is empty unless includeTimeSeries is true; the spacing of its points is not documented and varied: 1, 5 and 30 minutes were seen (all verified live).',
+                ],
+                'dependencyStatus' => [
+                    'operation' => 'MonitorsController_getDependencyStatus',
+                    'note' => 'Only for DEPENDENCY monitors: the state of the tracked provider, which tells a partial degradation (minor) from a full outage (major), unlike the status of the monitor. For a monitor of another type, the API raises a NotFoundException (000-004) (verified live).',
+                ],
+                'dependencyIncidents' => [
+                    'operation' => 'MonitorsController_getDependencyIncidents',
+                    'unwrap' => 'data',
+                    'note' => 'Only for DEPENDENCY monitors: every incident of the tracked provider, resolved or not, newest first, with the updates the provider published; empty if there were none. Verified live on a monitor tracking bunny.net: three resolved incidents with severity minor.',
                 ],
                 'responseTimeStatsByRegion' => [
                     'operation' => 'MonitorsController_getMonitorResponseTimeStatsByRegion',

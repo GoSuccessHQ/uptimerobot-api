@@ -12,8 +12,17 @@ final readonly class User implements ResponseModel
     public function __construct(
         public string $email = '',
         public string $fullName = '',
+        /**
+         * Monitors this account is using. Third party services are counted separately, in dependencyMonitorsCount, because they spend their own allowance rather than a monitor slot.
+         */
         public int $monitorsCount = 0,
         public int $monitorLimit = 0,
+        /** Third party services this account is tracking. */
+        public int $dependencyMonitorsCount = 0,
+        /**
+         * Third party services this account may track. Independent of monitorLimit — spending one does not reduce the other.
+         */
+        public int $dependencyMonitorLimit = 0,
         public int $smsCredits = 0,
         public Subscription $activeSubscription = new Subscription(),
     ) {}
@@ -25,6 +34,8 @@ final readonly class User implements ResponseModel
             fullName: Cast::string($data['fullName'] ?? null) ?? '',
             monitorsCount: Cast::int($data['monitorsCount'] ?? null) ?? 0,
             monitorLimit: Cast::int($data['monitorLimit'] ?? null) ?? 0,
+            dependencyMonitorsCount: Cast::int($data['dependencyMonitorsCount'] ?? null) ?? 0,
+            dependencyMonitorLimit: Cast::int($data['dependencyMonitorLimit'] ?? null) ?? 0,
             smsCredits: Cast::int($data['smsCredits'] ?? null) ?? 0,
             activeSubscription: Cast::model(Subscription::class, $data['activeSubscription'] ?? null) ?? new Subscription(),
         );

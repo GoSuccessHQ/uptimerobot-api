@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace GoSuccess\UptimeRobot\Enum;
 
 /**
- * Schema: MonitorDto.config.ipVersion, HttpKeywordMonitorConfigDto.ipVersion, IpVersionMonitorConfigDto.ipVersion, ApiMonitorConfigDto.ipVersion, UdpMonitorConfigDto.ipVersion, UpdateMonitorConfigDto.ipVersion
+ * Schema: MonitorDto.config.ipVersion, HttpKeywordMonitorConfigDto.ipVersion, IpVersionMonitorConfigDto.ipVersion, ApiMonitorConfigDto.ipVersion, UdpMonitorConfigDto.ipVersion, PermissiveMonitorConfigDto.ipVersion
  */
 enum IpVersion: string
 {

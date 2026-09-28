@@ -119,6 +119,7 @@ requires what the type requires:
 | API | `ApiMonitorCreate` | `url`, `timeout`, `config` with the assertions |
 | UDP | `UdpMonitorCreate` | `url`, `port`, `timeout`, `config` with the packet loss threshold |
 | Visual comparison | `VisualComparisonMonitorCreate` | `url`, `config` with sensitivity and viewport |
+| Dependency | `DependencyMonitorCreate` | `url`, `timeout`, `config` with the provider of the isdown catalog |
 
 ```php
 use GoSuccess\UptimeRobot\Enum\HttpMethod;
@@ -159,6 +160,9 @@ use GoSuccess\UptimeRobot\Model\ApiAssertionCheck;
 use GoSuccess\UptimeRobot\Model\ApiAssertions;
 use GoSuccess\UptimeRobot\Model\ApiMonitorConfig;
 use GoSuccess\UptimeRobot\Model\ApiMonitorCreate;
+use GoSuccess\UptimeRobot\Model\DependencyMonitorConfig;
+use GoSuccess\UptimeRobot\Model\DependencyMonitorCreate;
+use GoSuccess\UptimeRobot\Model\DependencySettings;
 use GoSuccess\UptimeRobot\Model\DnsMonitorConfig;
 use GoSuccess\UptimeRobot\Model\DnsMonitorCreate;
 use GoSuccess\UptimeRobot\Model\DnsRecords;
@@ -230,6 +234,17 @@ $uptimeRobot->monitors->create(new VisualComparisonMonitorCreate(
         viewport: VisualComparisonViewport::Desktop,
     )),
 ));
+
+// Tracks the status page of a third-party service instead of checking a URL.
+// url and timeout are required on the wire, but UptimeRobot discards them and
+// sets the status page of the provider; null tracks every component.
+$uptimeRobot->monitors->create(new DependencyMonitorCreate(
+    friendlyName: 'Stripe',
+    interval: 300,
+    url: 'https://status.stripe.com',
+    timeout: 30,
+    config: new DependencyMonitorConfig(dependency: new DependencySettings(providerUrlname: 'stripe', trackedComponentIds: null)),
+));
 ```
 
 A new monitor reports the status `STARTED` until its first check and, unless
@@ -239,6 +254,31 @@ token of its heartbeat URL as `url`. Monitors of the types HTTP, keyword, ping,
 port, heartbeat, DNS and API were created on the live API during development,
 the keyword monitor through this client and the others with requests of the
 same shape; UDP and visual comparison monitors follow the specification.
+A dependency monitor was read live but not created: it counts against an
+allowance of its own (`dependencyMonitorLimit`), which the test account had
+spent.
+
+A heartbeat monitor also reports the complete URL for its pings as
+`heartbeatUrl`, `null` for every other type. A dependency monitor reports the
+status page of its provider as `url` (verified live); the specification allows
+`url` to be `null`.
+
+### Dependency monitors
+
+```php
+// operational, minor, major or maintenance: a partial degradation (minor) is
+// no longer the same as a full outage (major), unlike the monitor status.
+$state = $uptimeRobot->monitors->dependencyStatus($monitor->id)->currentState;
+
+// Every incident of the provider, newest first, with its published updates.
+foreach ($uptimeRobot->monitors->dependencyIncidents($monitor->id) as $incident) {
+    echo $incident->startedAt?->format('Y-m-d'), ' ', $incident->severity?->value, ' ', $incident->title, PHP_EOL;
+}
+```
+
+Both only answer for dependency monitors; for any other monitor, the API raises
+a `NotFoundException` (verified live, as were both responses on a monitor
+tracking bunny.net).
 
 ### Reading and filtering
 
@@ -713,11 +753,13 @@ tags, so only the empty list was verified live.
 $user = $uptimeRobot->user->me();
 
 printf(
-    "%s, %s plan: %d of %d monitors\n",
+    "%s, %s plan: %d of %d monitors, %d of %d dependencies\n",
     $user->email,
     $user->activeSubscription->plan,
     $user->monitorsCount,
     $user->monitorLimit,
+    $user->dependencyMonitorsCount,  // a separate allowance
+    $user->dependencyMonitorLimit,
 );
 
 $contacts = $uptimeRobot->user->alertContacts();
