@@ -14,6 +14,7 @@ public function all(
     ?string $monitorName = null,
     ?DateTimeInterface $startedAfter = null,
     ?DateTimeInterface $startedBefore = null,
+    ?IncidentStatusFilter $status = null,
 ): Paginator
 ```
 
@@ -25,6 +26,7 @@ public function all(
 | `$monitorName` | `string\|null` | no | Filter incidents by monitor name (partial match) |
 | `$startedAfter` | `DateTimeInterface\|null` | no | Only incidents that started at or after this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC. To continue after an incident, pass its startedAt plus one millisecond. |
 | `$startedBefore` | `DateTimeInterface\|null` | no | Only incidents that started at or before this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC. |
+| `$status` | `IncidentStatusFilter\|null` | no | Filter incidents by status. "open" returns only currently ongoing incidents, regardless of started_after/started_before. |
 
 ## Returns
 

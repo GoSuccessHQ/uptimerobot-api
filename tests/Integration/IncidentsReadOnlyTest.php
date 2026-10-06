@@ -144,7 +144,7 @@ final class IncidentsReadOnlyTest extends IntegrationTestCase
 
     public function testReadsTheActivityLogNewestFirst(): void
     {
-        $entries = self::client()->incidents->activityLog(self::incidents()[0]->id);
+        $entries = self::client()->incidents->activityLog(self::incidents()[0]->id)->items;
 
         self::assertNotSame([], $entries);
 
@@ -178,11 +178,13 @@ final class IncidentsReadOnlyTest extends IntegrationTestCase
         }
     }
 
-    public function testReadsTheSentAlertsOldestFirst(): void
+    public function testReadsTheSentAlertsNewestFirst(): void
     {
         // Up to the first incident with alerts, which spares the rate limit.
         foreach (\array_slice(self::incidents(), 0, 5) as $incident) {
-            $alerts = self::client()->incidents->alerts($incident->id);
+            // Newest first since the specification of October 5, 2026; oldest
+            // first before it (verified live then).
+            $alerts = self::client()->incidents->alerts($incident->id)->items;
             $timestamps = [];
 
             foreach ($alerts as $alert) {
@@ -194,7 +196,7 @@ final class IncidentsReadOnlyTest extends IntegrationTestCase
             }
 
             $sorted = $timestamps;
-            sort($sorted);
+            rsort($sorted);
             self::assertEquals($sorted, $timestamps, "The alerts of incident {$incident->id} are out of order.");
 
             if ($alerts !== []) {

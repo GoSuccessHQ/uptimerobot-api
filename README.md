@@ -532,7 +532,7 @@ live); the specification documents none of them.
 use GoSuccess\UptimeRobot\Model\NotificationActivity;
 use GoSuccess\UptimeRobot\Model\StatusUpdateActivity;
 
-foreach ($uptimeRobot->incidents->activityLog($incident->id) as $entry) {
+foreach ($uptimeRobot->incidents->allActivity($incident->id) as $entry) {
     // Every entry has a date and a region; the rest depends on its type.
     $what = match (true) {
         $entry instanceof StatusUpdateActivity => "{$entry->alertLogType}: {$entry->reason}",
@@ -543,17 +543,22 @@ foreach ($uptimeRobot->incidents->activityLog($incident->id) as $entry) {
     echo $entry->date?->format('H:i:s'), ' ', $entry->region->value ?? '-', ' ', $what, PHP_EOL;
 }
 
-foreach ($uptimeRobot->incidents->alerts($incident->id) as $alert) {
+foreach ($uptimeRobot->incidents->allAlerts($incident->id) as $alert) {
     echo $alert->channelType, ' to ', $alert->recipientName, ': ', $alert->status->value ?? '?', PHP_EOL;
 }
 ```
 
-The activity log comes newest first, the alerts oldest first. Entries are
+Both come newest first and in pages since the specification of October 5,
+2026: `activityLog()` and `alerts()` return one `Page` (`limit` 1 to 200,
+default 50), `allActivity()` and `allAlerts()` follow `nextLink`. The first
+page of the log pages only through the notifications and carries every
+comment, status update and system event on top, so it can hold more than
+`limit` entries. Before that specification, the API ignored cursor and limit
+and sent the alerts oldest first (verified live then; no log had more than 6
+entries); the pages are not verified live yet. Entries are
 `StatusUpdateActivity`, `NotificationActivity` or `CommentActivity`; an entry
 of a type the client does not know becomes an `UnknownActivityLogEntry` with
-the raw data, so a new type never breaks the log. Only the first page of the
-log is available: the API ignores its cursor (verified live; no log had more
-than 6 entries).
+the raw data, so a new type never breaks the log.
 
 All of this was verified live with the 14 resolved incidents of the account.
 Unresolved incidents, comment entries and the assertion diagnostics of API

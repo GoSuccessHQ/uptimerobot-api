@@ -9,8 +9,14 @@ The cursor is the ID of the last status page of the previous page, as the offici
 ## Signature
 
 ```php
-public function all(): Paginator
+public function all(?int $limit = null): Paginator
 ```
+
+## Parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `$limit` | `int\|null` | no | Maximum number of status pages to return per page. Default: 50, Min: 1, Max: 200. |
 
 ## Returns
 

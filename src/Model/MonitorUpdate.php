@@ -10,6 +10,7 @@ use GoSuccess\UptimeRobot\Enum\HttpAuthType;
 use GoSuccess\UptimeRobot\Enum\HttpMethod;
 use GoSuccess\UptimeRobot\Enum\KeywordCaseType;
 use GoSuccess\UptimeRobot\Enum\KeywordType;
+use GoSuccess\UptimeRobot\Enum\MonitorPortAlertCondition;
 use GoSuccess\UptimeRobot\Enum\MonitorType;
 use GoSuccess\UptimeRobot\Enum\PostValueType;
 use stdClass;
@@ -25,6 +26,10 @@ final readonly class MonitorUpdate implements RequestModel
         public MonitorType|Undefined $type = Undefined::Value,
         /** Required for Port and UDP monitors */
         public int|Undefined $port = Undefined::Value,
+        /**
+         * Alerting condition for Port monitors. Only valid when type is Port; defaults to CLOSED when omitted.
+         */
+        public MonitorPortAlertCondition|Undefined $portAlertCondition = Undefined::Value,
         /** Required for Keyword monitor */
         public KeywordType|Undefined $keywordType = Undefined::Value,
         /** Required for Keyword monitor */
@@ -131,6 +136,10 @@ final readonly class MonitorUpdate implements RequestModel
 
         if (!$this->port instanceof Undefined) {
             $data['port'] = $this->port;
+        }
+
+        if (!$this->portAlertCondition instanceof Undefined) {
+            $data['portAlertCondition'] = $this->portAlertCondition->value;
         }
 
         if (!$this->keywordType instanceof Undefined) {

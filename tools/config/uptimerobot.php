@@ -327,6 +327,11 @@ return [
         'MonitorDto.keywordType' => 'KeywordType',
         'CreateKeywordMonitorDto.keywordType' => 'KeywordType',
         'UpdateMonitorDto.keywordType' => 'KeywordType',
+        // Port monitors since the specification of October 5, 2026: the
+        // condition that alerts, CLOSED or OPEN; the response has no schema
+        // (see 'types').
+        'MonitorDto.portAlertCondition' => 'MonitorPortAlertCondition',
+        'UpdateMonitorDto.portAlertCondition' => 'MonitorPortAlertCondition',
         'MonitorDto.keywordCaseType' => 'KeywordCaseType',
         'CreateKeywordMonitorDto.keywordCaseType' => 'KeywordCaseType',
         'UpdateMonitorDto.keywordCaseType' => 'KeywordCaseType',
@@ -377,6 +382,8 @@ return [
         '*PspAnnouncementRequestDto.status' => 'AnnouncementStatus',
         '*PspAnnouncementRequestDto.type' => 'AnnouncementType',
         'PspAnnouncementsController_list.status' => 'AnnouncementStatusFilter',
+        // The only value is "open", the incidents still ongoing.
+        'IncidentsController_list.status' => 'IncidentStatusFilter',
         // The assertion diagnostics of an incident share the logic and the
         // operators of the assertions an API monitor is created with; the
         // response names its cases in upper case (x-enumNames), which become the
@@ -1191,6 +1198,14 @@ return [
             'enum' => ['OFFLINE', 'PENDING', 'PUBLISHED', 'ARCHIVED'],
             'description' => 'An announcement status as the list filter takes it, in upper case, unlike AnnouncementStatus (per the specification; not verified live).',
         ],
+        // An empty schema ({}) in the response; the values are those of
+        // UpdateMonitorDto, which defaults to CLOSED for port monitors.
+        'MonitorDto.portAlertCondition' => [
+            'type' => 'string',
+            'enum' => ['CLOSED', 'OPEN'],
+            'nullable' => true,
+            'description' => 'Whether a port monitor alerts when the port is closed or when it is open. The specification gives the response no schema; the values are those of the update request, and null is expected on monitors of other types (not verified live).',
+        ],
     ],
 
     // The specification types every number of the request DTOs, and most of the
@@ -1304,6 +1319,17 @@ return [
         // includeOrgMembers: cursor=6554089 returned the items with greater IDs),
         // as the provider reads it from nextLink.
         'IntegrationsController_list.cursor',
+        // Page sizes, 1 to 200 with 50 as the default, since the specification
+        // of October 5, 2026 (not verified live).
+        'MonitorGroupsController_list.limit',
+        'MaintenanceWindowsController_list.limit',
+        'IncidentsController_getActivityLog.limit',
+        'IncidentsController_getAlerts.limit',
+        'PspController_list.limit',
+        'PspAnnouncementsController_list.limit',
+        'AlertContactsController_list.limit',
+        'IntegrationsController_list.limit',
+        'TagsController_getTags.limit',
     ],
 
     'floats' => [
@@ -1783,18 +1809,21 @@ return [
                     'operation' => 'IncidentsController_get',
                     'note' => 'Unlike the items of list(), an incident has neither type nor monitor; cause 0 marks a slow response. rootCause, null according to the specification, was present on every incident read, with an empty url and null headers for a slow response; assertionDiagnostics is only expected for API monitors and was always null. An unknown ID raises a NotFoundException (all verified live).',
                 ],
+                // {"nextLink": null, "data": [...]}. Until the specification of
+                // October 5, 2026 declared cursor and limit, ?cursor=1 and
+                // ?limit=2 returned the same entries (verified live then); the
+                // pages that specification describes are not verified live.
                 'activityLog' => [
                     'operation' => 'IncidentsController_getActivityLog',
-                    'unwrap' => 'data',
-                    // {"nextLink": null, "data": [...]}; ?cursor=1 and ?limit=2
-                    // returned the same entries (verified live), and the
-                    // specification declares neither.
-                    'note' => 'Newest first: status updates of the checks (remoteNode is null on Up entries, responseTime only set on Slow ones), notifications and, with the plan feature incident-comments, comments. Only the first page is available: the API reports a nextLink, but ignores cursor and limit (verified live). No incident read had more than 6 entries, and nextLink was always null.',
+                    'pagination' => 'nextLink',
+                    'all' => 'allActivity',
+                    'note' => 'Newest first: status updates of the checks (remoteNode is null on Up entries, responseTime only set on Slow ones), notifications and, with the plan feature incident-comments, comments (verified live). According to the specification of October 5, 2026, limit and cursor page through the notifications, and the first page also carries every comment, status update and system event, so it can hold more than limit entries; before that specification, the API ignored both and nextLink was always null (verified live then, on incidents with up to 6 entries). The pages are not verified live.',
                 ],
                 'alerts' => [
                     'operation' => 'IncidentsController_getAlerts',
-                    'unwrap' => 'data',
-                    'note' => 'Oldest first, all in one response; empty if no alert was sent (verified live).',
+                    'pagination' => 'nextLink',
+                    'all' => 'allAlerts',
+                    'note' => 'Newest first in pages, according to the specification of October 5, 2026; before it, the API sent every alert in one response, oldest first, and an empty list if no alert was sent (verified live then). The order and the pages are not verified live since.',
                 ],
             ],
         ],
@@ -1903,6 +1932,10 @@ return [
                     'operation' => 'PspAnnouncementsController_unpin',
                     'body' => 'empty',
                     'note' => 'Sends an empty JSON object, which the API insists on although the specification declares no body (verified live). ' . $announcementPlan,
+                ],
+                'delete' => [
+                    'operation' => 'PspAnnouncementsController_delete',
+                    'note' => 'Permanent; an unknown status page or announcement raises a NotFoundException, according to the specification. ' . $announcementPlan,
                 ],
             ],
         ],

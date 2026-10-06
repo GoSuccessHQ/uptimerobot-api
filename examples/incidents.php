@@ -52,7 +52,7 @@ if ($rootCause !== null && $rootCause->url !== '') {
     printf("  Response: %s\n", $rootCause->httpResponseCode ?? 'none');
 }
 
-foreach ($uptimeRobot->incidents->activityLog($newest->id) as $entry) {
+foreach ($uptimeRobot->incidents->allActivity($newest->id) as $entry) {
     // Every entry has a date and a region; the rest depends on its kind.
     $line = match (true) {
         $entry instanceof StatusUpdateActivity => sprintf(

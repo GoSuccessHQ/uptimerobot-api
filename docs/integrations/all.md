@@ -9,13 +9,14 @@ Ascending by ID; the cursor is the ID of the last item of the previous page. Wit
 ## Signature
 
 ```php
-public function all(?bool $includeOrgMembers = null): Paginator
+public function all(?int $limit = null, ?bool $includeOrgMembers = null): Paginator
 ```
 
 ## Parameters
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `$limit` | `int\|null` | no | Maximum number of integrations to return per page. Default: 50, Min: 1, Max: 200. |
 | `$includeOrgMembers` | `bool\|null` | no | With true, the personal alert contacts are listed along with the integrations, in the same shape. Verified live on an account in no organization, which got all its own contacts, mobile app contacts included; the specification promises the contacts of the members of an organization the caller owns. |
 
 ## Returns

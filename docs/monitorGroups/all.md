@@ -9,8 +9,14 @@ The groups carry neither their monitors nor their number; MonitorResource::list(
 ## Signature
 
 ```php
-public function all(): Paginator
+public function all(?int $limit = null): Paginator
 ```
+
+## Parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `$limit` | `int\|null` | no | Maximum number of monitor groups to return per page. Default: 50, Min: 1, Max: 200. |
 
 ## Returns
 

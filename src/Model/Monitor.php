@@ -11,6 +11,7 @@ use GoSuccess\UptimeRobot\Enum\HttpAuthType;
 use GoSuccess\UptimeRobot\Enum\HttpMethod;
 use GoSuccess\UptimeRobot\Enum\KeywordCaseType;
 use GoSuccess\UptimeRobot\Enum\KeywordType;
+use GoSuccess\UptimeRobot\Enum\MonitorPortAlertCondition;
 use GoSuccess\UptimeRobot\Enum\MonitorStatus;
 use GoSuccess\UptimeRobot\Enum\MonitorType;
 use GoSuccess\UptimeRobot\Enum\PostValueType;
@@ -60,6 +61,10 @@ final readonly class Monitor implements ResponseModel
         public ?array $postValueData = null,
         public ?PostValueType $postValueType = null,
         public ?int $port = null,
+        /**
+         * Whether a port monitor alerts when the port is closed or when it is open. The specification gives the response no schema; the values are those of the update request, and null is expected on monitors of other types (not verified live).
+         */
+        public ?MonitorPortAlertCondition $portAlertCondition = null,
         public ?int $gracePeriod = null,
         /** The keyword to look for; empty on monitors of other types (verified live). */
         public ?string $keywordValue = null,
@@ -137,6 +142,7 @@ final readonly class Monitor implements ResponseModel
             postValueData: Cast::object($data['postValueData'] ?? null),
             postValueType: Cast::stringEnum(PostValueType::class, $data['postValueType'] ?? null),
             port: Cast::int($data['port'] ?? null),
+            portAlertCondition: Cast::stringEnum(MonitorPortAlertCondition::class, $data['portAlertCondition'] ?? null),
             gracePeriod: Cast::int($data['gracePeriod'] ?? null),
             keywordValue: Cast::string($data['keywordValue'] ?? null),
             keywordCaseType: Cast::intEnum(KeywordCaseType::class, $data['keywordCaseType'] ?? null),

@@ -28,14 +28,16 @@ final class IntegrationResource extends AbstractResource
      * `GET /integrations`
      *
      * @param int|null  $cursor            The cursor of the page to return, as the previous page reported it; null for the first page.
+     * @param int|null  $limit             Maximum number of integrations to return per page. Default: 50, Min: 1, Max: 200.
      * @param bool|null $includeOrgMembers With true, the personal alert contacts are listed along with the integrations, in the same shape. Verified live on an account in no organization, which got all its own contacts, mobile app contacts included; the specification promises the contacts of the members of an organization the caller owns.
      *
      * @return Page<Integration>
      */
-    public function list(?int $cursor = null, ?bool $includeOrgMembers = null): Page
+    public function list(?int $cursor = null, ?int $limit = null, ?bool $includeOrgMembers = null): Page
     {
         $data = self::expectObject($this->connection->json(Method::Get, 'integrations', [
             'cursor' => $cursor,
+            'limit' => $limit,
             'includeOrgMembers' => $includeOrgMembers,
         ]));
 
@@ -49,14 +51,16 @@ final class IntegrationResource extends AbstractResource
      *
      * `GET /integrations`
      *
+     * @param int|null  $limit             Maximum number of integrations to return per page. Default: 50, Min: 1, Max: 200.
      * @param bool|null $includeOrgMembers With true, the personal alert contacts are listed along with the integrations, in the same shape. Verified live on an account in no organization, which got all its own contacts, mobile app contacts included; the specification promises the contacts of the members of an organization the caller owns.
      *
      * @return Paginator<Integration>
      */
-    public function all(?bool $includeOrgMembers = null): Paginator
+    public function all(?int $limit = null, ?bool $includeOrgMembers = null): Paginator
     {
         return new Paginator(fn(int|string|null $cursor): Page => $this->list(
             cursor: \is_int($cursor) ? $cursor : null,
+            limit: $limit,
             includeOrgMembers: $includeOrgMembers,
         ));
     }

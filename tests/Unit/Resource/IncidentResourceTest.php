@@ -11,6 +11,7 @@ use GoSuccess\UptimeRobot\Enum\AssertionFailureReason;
 use GoSuccess\UptimeRobot\Enum\AssertionLogic;
 use GoSuccess\UptimeRobot\Enum\AssertionSource;
 use GoSuccess\UptimeRobot\Enum\AssertionValueType;
+use GoSuccess\UptimeRobot\Enum\IncidentStatusFilter;
 use GoSuccess\UptimeRobot\Enum\Region;
 use GoSuccess\UptimeRobot\Exception\BadRequestException;
 use GoSuccess\UptimeRobot\Exception\NotFoundException;
@@ -320,7 +321,7 @@ final class IncidentResourceTest extends TestCase
             . '{"type":"ESCALATION","date":"2026-08-21T20:40:00.000Z","level":2}'
             . ']}'));
 
-        $entries = self::client($http)->incidents->activityLog('349291092551826516');
+        $entries = self::client($http)->incidents->activityLog('349291092551826516')->items;
 
         self::assertSame('https://api.uptimerobot.com/v3/incidents/349291092551826516/activity-log', $http->requests[0]->uri);
         self::assertCount(7, $entries);
@@ -398,7 +399,7 @@ final class IncidentResourceTest extends TestCase
         );
         $incidents = self::client($http)->incidents;
 
-        $alerts = $incidents->alerts('350723639116339234');
+        $alerts = $incidents->alerts('350723639116339234')->items;
 
         self::assertSame('https://api.uptimerobot.com/v3/incidents/350723639116339234/alerts', $http->requests[0]->uri);
         self::assertSame(['2026-08-25T19:30:31+00:00', '2026-08-27T17:50:57+00:00'], array_map(
@@ -411,7 +412,54 @@ final class IncidentResourceTest extends TestCase
         self::assertSame(AlertDeliveryStatus::Success, $alerts[0]->status);
         self::assertSame(AlertDeliveryStatus::NotDelivered, $alerts[1]->status);
 
-        self::assertSame([], $incidents->alerts('358532761126055015'));
+        // Without nextLink, as the API answered before the specification of
+        // October 5, 2026 (verified live then): one page, nothing more.
+        $empty = $incidents->alerts('358532761126055015');
+        self::assertSame([], $empty->items);
+        self::assertFalse($empty->hasMore);
+    }
+
+    public function testPagesThroughTheActivityLogWithTheOpaqueCursor(): void
+    {
+        $http = new MockHttpClient(
+            new Response(200, '{"nextLink":"https://api.uptimerobot.com/v3/incidents/349291092551826516/activity-log?limit=1&cursor=MjAyNi0wOS0xMnw0Mg","data":['
+                . '{"type":"STATUS_UPDATE","date":"2026-08-21T20:51:10.979Z","region":"oc","alertLogType":"Up","cause":0,"reason":"Monitor is UP"}]}'),
+            new Response(200, '{"nextLink":null,"data":['
+                . '{"type":"NOTIFICATION","date":"2026-08-21T20:38:06.000Z","region":"oc","sentToFullName":"Phone of Jane",'
+                . '"sentToValue":"device-token","notificationType":"MobileApp","notificationStatus":"SUCCESS"}]}'),
+        );
+
+        $entries = iterator_to_array(self::client($http)->incidents->allActivity('349291092551826516', limit: 1), false);
+
+        self::assertCount(2, $entries);
+        self::assertInstanceOf(StatusUpdateActivity::class, $entries[0]);
+        self::assertInstanceOf(NotificationActivity::class, $entries[1]);
+        self::assertSame('https://api.uptimerobot.com/v3/incidents/349291092551826516/activity-log?limit=1', $http->requests[0]->uri);
+        self::assertSame('https://api.uptimerobot.com/v3/incidents/349291092551826516/activity-log?cursor=MjAyNi0wOS0xMnw0Mg&limit=1', $http->requests[1]->uri);
+    }
+
+    public function testPagesThroughTheSentAlerts(): void
+    {
+        $http = new MockHttpClient(
+            new Response(200, '{"nextLink":"https://api.uptimerobot.com/v3/incidents/350723639116339234/alerts?limit=1&cursor=MjAyNi0wOC0yN3wx","data":[{"timestamp":"2026-08-27T17:50:57.000Z",'
+                . '"recipientName":"Phone of Jane","recipientValue":"device-token","channelType":"MobileApp","status":"NOT_DELIVERED"}]}'),
+            new Response(200, '{"nextLink":null,"data":[{"timestamp":"2026-08-25T19:30:31.000Z","recipientName":"Phone of Jane","recipientValue":"device-token",'
+                . '"channelType":"MobileApp","status":"SUCCESS"}]}'),
+        );
+
+        $alerts = iterator_to_array(self::client($http)->incidents->allAlerts('350723639116339234', limit: 1), false);
+
+        self::assertSame([AlertDeliveryStatus::NotDelivered, AlertDeliveryStatus::Success], array_map(static fn(SentAlert $alert): ?AlertDeliveryStatus => $alert->status, $alerts));
+        self::assertSame('https://api.uptimerobot.com/v3/incidents/350723639116339234/alerts?cursor=MjAyNi0wOC0yN3wx&limit=1', $http->requests[1]->uri);
+    }
+
+    public function testFiltersTheOngoingIncidents(): void
+    {
+        $http = new MockHttpClient(new Response(200, '{"data":[],"nextLink":null}'));
+
+        self::client($http)->incidents->list(status: IncidentStatusFilter::Open);
+
+        self::assertSame('https://api.uptimerobot.com/v3/incidents?status=open', $http->requests[0]->uri);
     }
 
     private static function client(MockHttpClient $http): UptimeRobot

@@ -14,6 +14,7 @@ Newest first, according to the specification. The status filter takes the upper-
 public function list(
     int $statusPageId,
     ?int $cursor = null,
+    ?int $limit = null,
     ?AnnouncementStatusFilter $status = null,
 ): Page
 ```
@@ -24,6 +25,7 @@ public function list(
 | --- | --- | --- | --- |
 | `$statusPageId` | `int` | yes | ID of the Public Status Page |
 | `$cursor` | `int\|null` | no | The cursor of the page to return, as the previous page reported it; null for the first page. |
+| `$limit` | `int\|null` | no | Maximum number of announcements to return per page. Default: 50, Min: 1, Max: 200. |
 | `$status` | `AnnouncementStatusFilter\|null` | no | Filter announcements by status |
 
 ## Returns

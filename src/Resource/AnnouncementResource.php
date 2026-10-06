@@ -32,14 +32,20 @@ final class AnnouncementResource extends AbstractResource
      *
      * @param int                           $statusPageId ID of the Public Status Page
      * @param int|null                      $cursor       The cursor of the page to return, as the previous page reported it; null for the first page.
+     * @param int|null                      $limit        Maximum number of announcements to return per page. Default: 50, Min: 1, Max: 200.
      * @param AnnouncementStatusFilter|null $status       Filter announcements by status
      *
      * @return Page<Announcement>
      */
-    public function list(int $statusPageId, ?int $cursor = null, ?AnnouncementStatusFilter $status = null): Page
-    {
+    public function list(
+        int $statusPageId,
+        ?int $cursor = null,
+        ?int $limit = null,
+        ?AnnouncementStatusFilter $status = null,
+    ): Page {
         $data = self::expectObject($this->connection->json(Method::Get, "psps/{$statusPageId}/announcements", [
             'cursor' => $cursor,
+            'limit' => $limit,
             'status' => $status,
         ]));
 
@@ -54,15 +60,17 @@ final class AnnouncementResource extends AbstractResource
      * `GET /psps/{pspId}/announcements`
      *
      * @param int                           $statusPageId ID of the Public Status Page
+     * @param int|null                      $limit        Maximum number of announcements to return per page. Default: 50, Min: 1, Max: 200.
      * @param AnnouncementStatusFilter|null $status       Filter announcements by status
      *
      * @return Paginator<Announcement>
      */
-    public function all(int $statusPageId, ?AnnouncementStatusFilter $status = null): Paginator
+    public function all(int $statusPageId, ?int $limit = null, ?AnnouncementStatusFilter $status = null): Paginator
     {
         return new Paginator(fn(int|string|null $cursor): Page => $this->list(
             statusPageId: $statusPageId,
             cursor: \is_int($cursor) ? $cursor : null,
+            limit: $limit,
             status: $status,
         ));
     }
@@ -157,5 +165,22 @@ final class AnnouncementResource extends AbstractResource
     public function unpin(int $statusPageId, int $id): void
     {
         $this->connection->json(Method::Post, "psps/{$statusPageId}/announcements/{$id}/unpin", body: []);
+    }
+
+    /**
+     * Delete an announcement
+     *
+     * Permanently delete an announcement from a Public Status Page. This cannot be undone.
+     *
+     * Permanent; an unknown status page or announcement raises a NotFoundException, according to the specification. Requires the plan feature psp-subscribers; without it, the API raises a ForbiddenException with the code 000-003 before it looks at the status page or the request (verified live). Not verified live beyond that: the test account lacks the feature.
+     *
+     * `DELETE /psps/{pspId}/announcements/{id}`
+     *
+     * @param int $statusPageId ID of the Public Status Page
+     * @param int $id           ID of the announcement to delete
+     */
+    public function delete(int $statusPageId, int $id): void
+    {
+        $this->connection->json(Method::Delete, "psps/{$statusPageId}/announcements/{$id}");
     }
 }

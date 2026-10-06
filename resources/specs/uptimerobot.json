@@ -201,6 +201,18 @@
                             "example": "2024-12-31T23:59:59Z",
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "status",
+                        "required": false,
+                        "in": "query",
+                        "description": "Filter incidents by status. \"open\" returns only currently ongoing incidents, regardless of started_after/started_before.",
+                        "schema": {
+                            "enum": [
+                                "open"
+                            ],
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -467,7 +479,7 @@
         },
         "/incidents/{id}/activity-log": {
             "get": {
-                "description": "Returns the activity log for an incident, including status updates, comments, and notifications. Sorted by date descending.",
+                "description": "Returns the activity log for an incident, including status updates, comments, and notifications. Sorted by date descending, newest first. Values can be paginated with the cursor parameter.",
                 "operationId": "IncidentsController_getActivityLog",
                 "parameters": [
                     {
@@ -477,6 +489,30 @@
                         "description": "ID of the incident",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cursor",
+                        "required": false,
+                        "in": "query",
+                        "description": "Cursor to paginate through further notification entries (comments, status updates and system events are only returned on the first page)",
+                        "schema": {
+                            "pattern": "/^[A-Za-z0-9_-]+$/",
+                            "example": "MjAyNi0wOS0xMiAxMDowMjowMXw0MjAwMDAwMDAwMDAwMDExfDQ0fDIwMA",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Maximum number of notification entries per page (1-200, default 50). The first page also carries every comment, status update and system event on top of those, so it can hold more than `limit` entries.",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 200,
+                            "default": 50,
+                            "example": 50,
+                            "type": "number"
                         }
                     }
                 ],
@@ -515,7 +551,7 @@
         },
         "/incidents/{id}/alerts": {
             "get": {
-                "description": "Returns all alerts that were sent for a specific incident, including recipient information and delivery status.",
+                "description": "Returns alerts that were sent for a specific incident, including recipient information and delivery status. Sorted by date descending, newest first. Values can be paginated with the cursor parameter.",
                 "operationId": "IncidentsController_getAlerts",
                 "parameters": [
                     {
@@ -525,6 +561,30 @@
                         "description": "ID of the incident",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cursor",
+                        "required": false,
+                        "in": "query",
+                        "description": "Cursor to paginate through sent alerts",
+                        "schema": {
+                            "pattern": "/^[A-Za-z0-9_-]+$/",
+                            "example": "MjAyNi0wOS0xMiAxMDowMjowMXw0MjAwMDAwMDAwMDAwMDExfDQ0fDIwMA",
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of sent alerts to return (1-200, default 50)",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 200,
+                            "default": 50,
+                            "example": 50,
+                            "type": "number"
                         }
                     }
                 ],
@@ -797,6 +857,18 @@
                 "description": "List all monitor groups in a user's account. Values can be paginated with the cursor parameter.",
                 "operationId": "MonitorGroupsController_list",
                 "parameters": [
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Maximum number of monitor groups to return per page. Default: 50, Min: 1, Max: 200.",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 200,
+                            "example": 50,
+                            "type": "number"
+                        }
+                    },
                     {
                         "name": "cursor",
                         "required": false,
@@ -2251,6 +2323,18 @@
                 "operationId": "PspController_list",
                 "parameters": [
                     {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Maximum number of status pages to return per page. Default: 50, Min: 1, Max: 200.",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 200,
+                            "example": 50,
+                            "type": "number"
+                        }
+                    },
+                    {
                         "name": "cursor",
                         "required": false,
                         "in": "query",
@@ -2500,6 +2584,18 @@
                         "in": "path",
                         "description": "ID of the Public Status Page",
                         "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Maximum number of announcements to return per page. Default: 50, Min: 1, Max: 200.",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 200,
+                            "example": 50,
                             "type": "number"
                         }
                     },
@@ -2887,6 +2983,84 @@
                 "tags": [
                     "PSP Announcements"
                 ]
+            },
+            "delete": {
+                "description": "Permanently delete an announcement from a Public Status Page. This cannot be undone.",
+                "operationId": "PspAnnouncementsController_delete",
+                "parameters": [
+                    {
+                        "name": "pspId",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID of the Public Status Page",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "ID of the announcement to delete",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The announcement has been successfully deleted"
+                    },
+                    "401": {
+                        "description": "Unauthorized - missing or invalid authentication",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - no write permission",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "PSP or announcement not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Delete an announcement",
+                "tags": [
+                    "PSP Announcements"
+                ]
             }
         },
         "/psps/{pspId}/announcements/{id}/pin": {
@@ -3054,6 +3228,18 @@
                 "description": "List maintenance windows",
                 "operationId": "MaintenanceWindowsController_list",
                 "parameters": [
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Maximum number of maintenance windows to return per page. Default: 50, Min: 1, Max: 200.",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 200,
+                            "example": 50,
+                            "type": "number"
+                        }
+                    },
                     {
                         "name": "cursor",
                         "required": false,
@@ -3410,6 +3596,18 @@
                 "operationId": "IntegrationsController_list",
                 "parameters": [
                     {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Maximum number of integrations to return per page. Default: 50, Min: 1, Max: 200.",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 200,
+                            "example": 50,
+                            "type": "number"
+                        }
+                    },
+                    {
                         "name": "includeOrgMembers",
                         "required": false,
                         "in": "query",
@@ -3765,6 +3963,18 @@
                 "operationId": "AlertContactsController_list",
                 "parameters": [
                     {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Maximum number of alert contacts to return per page. Default: 50, Min: 1, Max: 200.",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 200,
+                            "example": 50,
+                            "type": "number"
+                        }
+                    },
+                    {
                         "name": "cursor",
                         "required": false,
                         "in": "query",
@@ -4002,6 +4212,18 @@
                 "operationId": "TagsController_getTags",
                 "parameters": [
                     {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Maximum number of tags to return per page. Default: 50, Min: 1, Max: 200.",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 200,
+                            "example": 50,
+                            "type": "number"
+                        }
+                    },
+                    {
                         "name": "cursor",
                         "required": false,
                         "in": "query",
@@ -4174,6 +4396,7 @@
                             "003-018",
                             "003-019",
                             "003-020",
+                            "003-021",
                             "004-001",
                             "004-002",
                             "004-033",
@@ -4218,6 +4441,7 @@
                             "004-032",
                             "004-043",
                             "004-044",
+                            "004-045",
                             "005-001",
                             "005-002",
                             "006-001",
@@ -4253,6 +4477,7 @@
                             "009-021",
                             "009-033",
                             "009-030",
+                            "009-036",
                             "011-001",
                             "011-002",
                             "011-003",
@@ -5337,6 +5562,10 @@
             "PublicSentAlertsResponseDto": {
                 "type": "object",
                 "properties": {
+                    "nextLink": {
+                        "type": "string",
+                        "nullable": true
+                    },
                     "data": {
                         "type": "array",
                         "items": {
@@ -5373,6 +5602,7 @@
                     }
                 },
                 "required": [
+                    "nextLink",
                     "data"
                 ]
             },
@@ -5829,6 +6059,7 @@
                                     "exclusiveMaximum": false,
                                     "nullable": true
                                 },
+                                "portAlertCondition": {},
                                 "gracePeriod": {
                                     "type": "number",
                                     "minimum": 0,
@@ -7671,6 +7902,7 @@
                         "exclusiveMaximum": false,
                         "nullable": true
                     },
+                    "portAlertCondition": {},
                     "gracePeriod": {
                         "type": "number",
                         "minimum": 0,
@@ -10908,6 +11140,15 @@
                         "minimum": 1,
                         "maximum": 65535,
                         "description": "Required for Port and UDP monitors"
+                    },
+                    "portAlertCondition": {
+                        "enum": [
+                            "CLOSED",
+                            "OPEN"
+                        ],
+                        "type": "string",
+                        "example": "CLOSED",
+                        "description": "Alerting condition for Port monitors. Only valid when type is Port; defaults to CLOSED when omitted."
                     },
                     "keywordType": {
                         "enum": [

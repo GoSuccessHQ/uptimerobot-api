@@ -30,13 +30,15 @@ final class MonitorGroupResource extends AbstractResource
      * `GET /monitor-groups`
      *
      * @param int|null $cursor The cursor of the page to return, as the previous page reported it; null for the first page.
+     * @param int|null $limit  Maximum number of monitor groups to return per page. Default: 50, Min: 1, Max: 200.
      *
      * @return Page<MonitorGroup>
      */
-    public function list(?int $cursor = null): Page
+    public function list(?int $cursor = null, ?int $limit = null): Page
     {
         $data = self::expectObject($this->connection->json(Method::Get, 'monitor-groups', [
             'cursor' => $cursor,
+            'limit' => $limit,
         ]));
 
         return Cursor::fromNextLink($data, Cast::modelList(MonitorGroup::class, $data['data'] ?? null), integerCursor: true);
@@ -49,12 +51,15 @@ final class MonitorGroupResource extends AbstractResource
      *
      * `GET /monitor-groups`
      *
+     * @param int|null $limit Maximum number of monitor groups to return per page. Default: 50, Min: 1, Max: 200.
+     *
      * @return Paginator<MonitorGroup>
      */
-    public function all(): Paginator
+    public function all(?int $limit = null): Paginator
     {
         return new Paginator(fn(int|string|null $cursor): Page => $this->list(
             cursor: \is_int($cursor) ? $cursor : null,
+            limit: $limit,
         ));
     }
 

@@ -30,13 +30,15 @@ final class AlertContactResource extends AbstractResource
      * `GET /alert-contacts`
      *
      * @param int|null $cursor The cursor of the page to return, as the previous page reported it; null for the first page.
+     * @param int|null $limit  Maximum number of alert contacts to return per page. Default: 50, Min: 1, Max: 200.
      *
      * @return Page<AlertContact>
      */
-    public function list(?int $cursor = null): Page
+    public function list(?int $cursor = null, ?int $limit = null): Page
     {
         $data = self::expectObject($this->connection->json(Method::Get, 'alert-contacts', [
             'cursor' => $cursor,
+            'limit' => $limit,
         ]));
 
         return Cursor::fromNextLink($data, Cast::modelList(AlertContact::class, $data['data'] ?? null), integerCursor: true);
@@ -49,12 +51,15 @@ final class AlertContactResource extends AbstractResource
      *
      * `GET /alert-contacts`
      *
+     * @param int|null $limit Maximum number of alert contacts to return per page. Default: 50, Min: 1, Max: 200.
+     *
      * @return Paginator<AlertContact>
      */
-    public function all(): Paginator
+    public function all(?int $limit = null): Paginator
     {
         return new Paginator(fn(int|string|null $cursor): Page => $this->list(
             cursor: \is_int($cursor) ? $cursor : null,
+            limit: $limit,
         ));
     }
 

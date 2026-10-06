@@ -9,8 +9,14 @@ Ascending by ID; the cursor is the ID of the last contact of the previous page, 
 ## Signature
 
 ```php
-public function all(): Paginator
+public function all(?int $limit = null): Paginator
 ```
+
+## Parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `$limit` | `int\|null` | no | Maximum number of alert contacts to return per page. Default: 50, Min: 1, Max: 200. |
 
 ## Returns
 

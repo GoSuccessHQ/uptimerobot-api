@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace GoSuccess\UptimeRobot\Resource;
 
 use DateTimeInterface;
+use GoSuccess\UptimeRobot\Enum\IncidentStatusFilter;
 use GoSuccess\UptimeRobot\Http\Method;
 use GoSuccess\UptimeRobot\Model\ActivityLogEntry;
 use GoSuccess\UptimeRobot\Model\Cast;
@@ -35,11 +36,12 @@ final class IncidentResource extends AbstractResource
      *
      * `GET /incidents`
      *
-     * @param string|null            $cursor        The cursor of the page to return, as the previous page reported it; null for the first page.
-     * @param int|null               $monitorId     Filter incidents by monitor ID
-     * @param string|null            $monitorName   Filter incidents by monitor name (partial match)
-     * @param DateTimeInterface|null $startedAfter  Only incidents that started at or after this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC. To continue after an incident, pass its startedAt plus one millisecond.
-     * @param DateTimeInterface|null $startedBefore Only incidents that started at or before this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC.
+     * @param string|null               $cursor        The cursor of the page to return, as the previous page reported it; null for the first page.
+     * @param int|null                  $monitorId     Filter incidents by monitor ID
+     * @param string|null               $monitorName   Filter incidents by monitor name (partial match)
+     * @param DateTimeInterface|null    $startedAfter  Only incidents that started at or after this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC. To continue after an incident, pass its startedAt plus one millisecond.
+     * @param DateTimeInterface|null    $startedBefore Only incidents that started at or before this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC.
+     * @param IncidentStatusFilter|null $status        Filter incidents by status. "open" returns only currently ongoing incidents, regardless of started_after/started_before.
      *
      * @return Page<IncidentSummary>
      */
@@ -49,6 +51,7 @@ final class IncidentResource extends AbstractResource
         ?string $monitorName = null,
         ?DateTimeInterface $startedAfter = null,
         ?DateTimeInterface $startedBefore = null,
+        ?IncidentStatusFilter $status = null,
     ): Page {
         $data = self::expectObject($this->connection->json(Method::Get, 'incidents', [
             'cursor' => $cursor,
@@ -56,6 +59,7 @@ final class IncidentResource extends AbstractResource
             'monitor_name' => $monitorName,
             'started_after' => $startedAfter,
             'started_before' => $startedBefore,
+            'status' => $status,
         ]));
 
         return Cursor::fromNextLink($data, Cast::modelList(IncidentSummary::class, $data['data'] ?? null), integerCursor: false);
@@ -68,10 +72,11 @@ final class IncidentResource extends AbstractResource
      *
      * `GET /incidents`
      *
-     * @param int|null               $monitorId     Filter incidents by monitor ID
-     * @param string|null            $monitorName   Filter incidents by monitor name (partial match)
-     * @param DateTimeInterface|null $startedAfter  Only incidents that started at or after this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC. To continue after an incident, pass its startedAt plus one millisecond.
-     * @param DateTimeInterface|null $startedBefore Only incidents that started at or before this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC.
+     * @param int|null                  $monitorId     Filter incidents by monitor ID
+     * @param string|null               $monitorName   Filter incidents by monitor name (partial match)
+     * @param DateTimeInterface|null    $startedAfter  Only incidents that started at or after this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC. To continue after an incident, pass its startedAt plus one millisecond.
+     * @param DateTimeInterface|null    $startedBefore Only incidents that started at or before this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC.
+     * @param IncidentStatusFilter|null $status        Filter incidents by status. "open" returns only currently ongoing incidents, regardless of started_after/started_before.
      *
      * @return Paginator<IncidentSummary>
      */
@@ -80,6 +85,7 @@ final class IncidentResource extends AbstractResource
         ?string $monitorName = null,
         ?DateTimeInterface $startedAfter = null,
         ?DateTimeInterface $startedBefore = null,
+        ?IncidentStatusFilter $status = null,
     ): Paginator {
         return new Paginator(fn(int|string|null $cursor): Page => $this->list(
             cursor: \is_string($cursor) ? $cursor : null,
@@ -87,6 +93,7 @@ final class IncidentResource extends AbstractResource
             monitorName: $monitorName,
             startedAfter: $startedAfter,
             startedBefore: $startedBefore,
+            status: $status,
         ));
     }
 
@@ -111,40 +118,92 @@ final class IncidentResource extends AbstractResource
     /**
      * Get incident activity log
      *
-     * Returns the activity log for an incident, including status updates, comments, and notifications. Sorted by date descending.
+     * Returns the activity log for an incident, including status updates, comments, and notifications. Sorted by date descending, newest first. Values can be paginated with the cursor parameter.
      *
-     * Newest first: status updates of the checks (remoteNode is null on Up entries, responseTime only set on Slow ones), notifications and, with the plan feature incident-comments, comments. Only the first page is available: the API reports a nextLink, but ignores cursor and limit (verified live). No incident read had more than 6 entries, and nextLink was always null.
+     * Newest first: status updates of the checks (remoteNode is null on Up entries, responseTime only set on Slow ones), notifications and, with the plan feature incident-comments, comments (verified live). According to the specification of October 5, 2026, limit and cursor page through the notifications, and the first page also carries every comment, status update and system event, so it can hold more than limit entries; before that specification, the API ignored both and nextLink was always null (verified live then, on incidents with up to 6 entries). The pages are not verified live.
      *
      * `GET /incidents/{id}/activity-log`
      *
-     * @param string $id ID of the incident
+     * @param string      $id     ID of the incident
+     * @param string|null $cursor The cursor of the page to return, as the previous page reported it; null for the first page.
+     * @param int|null    $limit  Maximum number of notification entries per page (1-200, default 50). The first page also carries every comment, status update and system event on top of those, so it can hold more than `limit` entries.
      *
-     * @return list<ActivityLogEntry>
+     * @return Page<ActivityLogEntry>
      */
-    public function activityLog(string $id): array
+    public function activityLog(string $id, ?string $cursor = null, ?int $limit = null): Page
     {
-        $data = $this->connection->json(Method::Get, "incidents/{$this->segment($id)}/activity-log");
+        $data = self::expectObject($this->connection->json(Method::Get, "incidents/{$this->segment($id)}/activity-log", [
+            'cursor' => $cursor,
+            'limit' => $limit,
+        ]));
 
-        return Cast::listOf(self::expectObject($data)['data'] ?? null, static fn(mixed $value): ?ActivityLogEntry => Cast::union($value, 'type', [StatusUpdateActivity::TYPE => StatusUpdateActivity::class, CommentActivity::TYPE => CommentActivity::class, NotificationActivity::TYPE => NotificationActivity::class], UnknownActivityLogEntry::class));
+        return Cursor::fromNextLink($data, Cast::listOf($data['data'] ?? null, static fn(mixed $value): ?ActivityLogEntry => Cast::union($value, 'type', [StatusUpdateActivity::TYPE => StatusUpdateActivity::class, CommentActivity::TYPE => CommentActivity::class, NotificationActivity::TYPE => NotificationActivity::class], UnknownActivityLogEntry::class)), integerCursor: false);
+    }
+
+    /**
+     * Iterate lazily over every item of activityLog(), across all pages.
+     *
+     * Newest first: status updates of the checks (remoteNode is null on Up entries, responseTime only set on Slow ones), notifications and, with the plan feature incident-comments, comments (verified live). According to the specification of October 5, 2026, limit and cursor page through the notifications, and the first page also carries every comment, status update and system event, so it can hold more than limit entries; before that specification, the API ignored both and nextLink was always null (verified live then, on incidents with up to 6 entries). The pages are not verified live.
+     *
+     * `GET /incidents/{id}/activity-log`
+     *
+     * @param string   $id    ID of the incident
+     * @param int|null $limit Maximum number of notification entries per page (1-200, default 50). The first page also carries every comment, status update and system event on top of those, so it can hold more than `limit` entries.
+     *
+     * @return Paginator<ActivityLogEntry>
+     */
+    public function allActivity(string $id, ?int $limit = null): Paginator
+    {
+        return new Paginator(fn(int|string|null $cursor): Page => $this->activityLog(
+            id: $id,
+            cursor: \is_string($cursor) ? $cursor : null,
+            limit: $limit,
+        ));
     }
 
     /**
      * Get incident sent alerts
      *
-     * Returns all alerts that were sent for a specific incident, including recipient information and delivery status.
+     * Returns alerts that were sent for a specific incident, including recipient information and delivery status. Sorted by date descending, newest first. Values can be paginated with the cursor parameter.
      *
-     * Oldest first, all in one response; empty if no alert was sent (verified live).
+     * Newest first in pages, according to the specification of October 5, 2026; before it, the API sent every alert in one response, oldest first, and an empty list if no alert was sent (verified live then). The order and the pages are not verified live since.
      *
      * `GET /incidents/{id}/alerts`
      *
-     * @param string $id ID of the incident
+     * @param string      $id     ID of the incident
+     * @param string|null $cursor The cursor of the page to return, as the previous page reported it; null for the first page.
+     * @param int|null    $limit  Number of sent alerts to return (1-200, default 50)
      *
-     * @return list<SentAlert>
+     * @return Page<SentAlert>
      */
-    public function alerts(string $id): array
+    public function alerts(string $id, ?string $cursor = null, ?int $limit = null): Page
     {
-        $data = $this->connection->json(Method::Get, "incidents/{$this->segment($id)}/alerts");
+        $data = self::expectObject($this->connection->json(Method::Get, "incidents/{$this->segment($id)}/alerts", [
+            'cursor' => $cursor,
+            'limit' => $limit,
+        ]));
 
-        return Cast::modelList(SentAlert::class, self::expectObject($data)['data'] ?? null);
+        return Cursor::fromNextLink($data, Cast::modelList(SentAlert::class, $data['data'] ?? null), integerCursor: false);
+    }
+
+    /**
+     * Iterate lazily over every item of alerts(), across all pages.
+     *
+     * Newest first in pages, according to the specification of October 5, 2026; before it, the API sent every alert in one response, oldest first, and an empty list if no alert was sent (verified live then). The order and the pages are not verified live since.
+     *
+     * `GET /incidents/{id}/alerts`
+     *
+     * @param string   $id    ID of the incident
+     * @param int|null $limit Number of sent alerts to return (1-200, default 50)
+     *
+     * @return Paginator<SentAlert>
+     */
+    public function allAlerts(string $id, ?int $limit = null): Paginator
+    {
+        return new Paginator(fn(int|string|null $cursor): Page => $this->alerts(
+            id: $id,
+            cursor: \is_string($cursor) ? $cursor : null,
+            limit: $limit,
+        ));
     }
 }

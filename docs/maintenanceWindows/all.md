@@ -9,8 +9,14 @@ The cursor is the ID of the last window of the previous page, as the official Te
 ## Signature
 
 ```php
-public function all(): Paginator
+public function all(?int $limit = null): Paginator
 ```
+
+## Parameters
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `$limit` | `int\|null` | no | Maximum number of maintenance windows to return per page. Default: 50, Min: 1, Max: 200. |
 
 ## Returns
 

@@ -13,6 +13,7 @@ use GoSuccess\UptimeRobot\Enum\HttpMethod;
 use GoSuccess\UptimeRobot\Enum\IpVersion;
 use GoSuccess\UptimeRobot\Enum\KeywordCaseType;
 use GoSuccess\UptimeRobot\Enum\KeywordType;
+use GoSuccess\UptimeRobot\Enum\MonitorPortAlertCondition;
 use GoSuccess\UptimeRobot\Enum\MonitorStatus;
 use GoSuccess\UptimeRobot\Enum\MonitorType;
 use GoSuccess\UptimeRobot\Enum\PostValueType;
@@ -80,6 +81,8 @@ final class MonitorResourceTest extends TestCase
         // 0 on monitors of other types than keyword.
         self::assertSame(KeywordCaseType::CaseSensitive, $monitor->keywordCaseType);
         self::assertNull($monitor->keywordType);
+        // Absent on monitors of other types than port (per the specification of October 5, 2026).
+        self::assertNull($monitor->portAlertCondition);
         self::assertSame(['a' => 1, 'b' => 'x'], $monitor->postValueData);
         self::assertSame(PostValueType::RawJson, $monitor->postValueType);
         self::assertSame(['X-Test' => '1', 'X-Num' => '2'], $monitor->customHttpHeaders);
@@ -179,6 +182,8 @@ final class MonitorResourceTest extends TestCase
             new MonitorUpdate(httpMethodType: null, keywordCaseType: KeywordCaseType::CaseSensitive, checkSslErrors: false),
             '{"keywordCaseType":0,"httpMethodType":null,"checkSSLErrors":false}',
         ];
+
+        yield 'port alert condition' => [new MonitorUpdate(portAlertCondition: MonitorPortAlertCondition::Open), '{"portAlertCondition":"OPEN"}'];
 
         yield 'nothing' => [new MonitorUpdate(), '{}'];
     }

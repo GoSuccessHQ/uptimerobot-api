@@ -9,7 +9,11 @@ Newest first, according to the specification. The status filter takes the upper-
 ## Signature
 
 ```php
-public function all(int $statusPageId, ?AnnouncementStatusFilter $status = null): Paginator
+public function all(
+    int $statusPageId,
+    ?int $limit = null,
+    ?AnnouncementStatusFilter $status = null,
+): Paginator
 ```
 
 ## Parameters
@@ -17,6 +21,7 @@ public function all(int $statusPageId, ?AnnouncementStatusFilter $status = null)
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `$statusPageId` | `int` | yes | ID of the Public Status Page |
+| `$limit` | `int\|null` | no | Maximum number of announcements to return per page. Default: 50, Min: 1, Max: 200. |
 | `$status` | `AnnouncementStatusFilter\|null` | no | Filter announcements by status |
 
 ## Returns

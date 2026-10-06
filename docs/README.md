@@ -64,7 +64,9 @@ Incidents: the downtimes and slow responses of the monitors, with their root cau
 - [`all()`](incidents/all.md) — Iterate lazily over every item of list(), across all pages
 - [`get()`](incidents/get.md) — Get an incident by ID
 - [`activityLog()`](incidents/activityLog.md) — Get incident activity log
+- [`allActivity()`](incidents/allActivity.md) — Iterate lazily over every item of activityLog(), across all pages
 - [`alerts()`](incidents/alerts.md) — Get incident sent alerts
+- [`allAlerts()`](incidents/allAlerts.md) — Iterate lazily over every item of alerts(), across all pages
 
 ## `incidentComments`
 
@@ -98,6 +100,7 @@ Announcements on status pages: information, maintenance and issue notices, which
 - [`update()`](announcements/update.md) — Update an announcement
 - [`pin()`](announcements/pin.md) — Pin an announcement
 - [`unpin()`](announcements/unpin.md) — Unpin an announcement
+- [`delete()`](announcements/delete.md) — Delete an announcement
 
 ## `alertContacts`
 

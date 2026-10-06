@@ -4,14 +4,14 @@
 
 Get incident sent alerts
 
-Returns all alerts that were sent for a specific incident, including recipient information and delivery status.
+Returns alerts that were sent for a specific incident, including recipient information and delivery status. Sorted by date descending, newest first. Values can be paginated with the cursor parameter.
 
-Oldest first, all in one response; empty if no alert was sent (verified live).
+Newest first in pages, according to the specification of October 5, 2026; before it, the API sent every alert in one response, oldest first, and an empty list if no alert was sent (verified live then). The order and the pages are not verified live since.
 
 ## Signature
 
 ```php
-public function alerts(string $id): array
+public function alerts(string $id, ?string $cursor = null, ?int $limit = null): Page
 ```
 
 ## Parameters
@@ -19,10 +19,12 @@ public function alerts(string $id): array
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
 | `$id` | `string` | yes | ID of the incident |
+| `$cursor` | `string\|null` | no | The cursor of the page to return, as the previous page reported it; null for the first page. |
+| `$limit` | `int\|null` | no | Number of sent alerts to return (1-200, default 50) |
 
 ## Returns
 
-`list<SentAlert>`
+`Page<SentAlert>`
 
 ## Example
 

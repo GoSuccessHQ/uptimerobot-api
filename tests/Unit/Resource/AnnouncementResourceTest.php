@@ -66,7 +66,7 @@ final class AnnouncementResourceTest extends TestCase
             new Response(200, '{"data":[],"nextLink":null}'),
         );
 
-        $announcements = iterator_to_array(self::client($http)->announcements->all(81234, AnnouncementStatusFilter::Pending), false);
+        $announcements = iterator_to_array(self::client($http)->announcements->all(81234, status: AnnouncementStatusFilter::Pending), false);
 
         self::assertCount(1, $announcements);
         self::assertSame('https://api.uptimerobot.com/v3/psps/81234/announcements?status=PENDING', $http->requests[0]->uri);
@@ -132,6 +132,17 @@ final class AnnouncementResourceTest extends TestCase
         // Without it the API answers 415 "Content-Type must be application/json" (verified live).
         self::assertSame('application/json', $request->headers['Content-Type'] ?? null);
         self::assertSame('{}', $request->body);
+    }
+
+    public function testDeletesAnAnnouncement(): void
+    {
+        $http = new MockHttpClient(new Response(200));
+
+        self::client($http)->announcements->delete(81234, 3301);
+
+        self::assertSame('DELETE', $http->requests[0]->method->value);
+        self::assertSame('https://api.uptimerobot.com/v3/psps/81234/announcements/3301', $http->requests[0]->uri);
+        self::assertNull($http->requests[0]->body);
     }
 
     public function testReportsTheMissingPlanFeature(): void
