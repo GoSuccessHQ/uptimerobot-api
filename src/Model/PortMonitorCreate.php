@@ -43,7 +43,9 @@ final readonly class PortMonitorCreate implements MonitorCreate
          * @var list<int>|Undefined
          */
         public array|Undefined $maintenanceWindowsIds = Undefined::Value,
-        /** Regional data for monitoring */
+        /**
+         * Regional data for monitoring. Omit it, or send it without REGION, and the region is assigned automatically (currently NA or EU, one region per organization) and never changed on edit.
+         */
         public RegionalData|Undefined $regionData = Undefined::Value,
         /**
          * Response time threshold in milliseconds. When provided, the value is applied to all active regions as regionData.THRESHOLD. Always returns 0 — use regionData.THRESHOLD for per-region control.

@@ -20,14 +20,16 @@ final readonly class RegionalData implements RequestModel, ResponseModel
     public array $region;
 
     /**
+     * Whether the customer chose REGION explicitly. On update, false means the region was not customer-chosen, so REGION is ignored and the monitor keeps the region it already runs from. Send true to change the region, or omit this field.
+     */
+    public bool $manualSelected;
+
+    /**
      * Response time thresholds in milliseconds by region code (na, eu, as, oc).
      *
      * @var array<array-key, int>
      */
     public array $threshold;
-
-    /** Whether the regions were chosen rather than assigned by default. */
-    public bool $manualSelected;
 
     /** The checking infrastructure, set by the API (verified live: New). */
     public ?RegionInfrastructure $infrastructure;
@@ -45,18 +47,18 @@ final readonly class RegionalData implements RequestModel, ResponseModel
      */
     public function __construct(
         array|Undefined $region = Undefined::Value,
-        array|Undefined $threshold = Undefined::Value,
         bool|Undefined $manualSelected = Undefined::Value,
+        array|Undefined $threshold = Undefined::Value,
         RegionInfrastructure|Undefined $infrastructure = Undefined::Value,
     ) {
         $this->region = $region instanceof Undefined ? [] : $region;
-        $this->threshold = $threshold instanceof Undefined ? [] : $threshold;
         $this->manualSelected = $manualSelected instanceof Undefined ? false : $manualSelected;
+        $this->threshold = $threshold instanceof Undefined ? [] : $threshold;
         $this->infrastructure = $infrastructure instanceof Undefined ? null : $infrastructure;
         $this->provided = array_filter([
             'REGION' => !$region instanceof Undefined,
-            'THRESHOLD' => !$threshold instanceof Undefined,
             'MANUAL_SELECTED' => !$manualSelected instanceof Undefined,
+            'THRESHOLD' => !$threshold instanceof Undefined,
         ]);
     }
 
@@ -64,8 +66,8 @@ final readonly class RegionalData implements RequestModel, ResponseModel
     {
         return new self(
             region: Cast::listOf($data['REGION'] ?? null, static fn(mixed $value): ?Region => Cast::stringEnum(Region::class, $value)) ?: Undefined::Value,
-            threshold: Cast::mapOf($data['THRESHOLD'] ?? null, Cast::int(...)) ?: Undefined::Value,
             manualSelected: Cast::bool($data['MANUAL_SELECTED'] ?? null) ?? Undefined::Value,
+            threshold: Cast::mapOf($data['THRESHOLD'] ?? null, Cast::int(...)) ?: Undefined::Value,
             infrastructure: Cast::stringEnum(RegionInfrastructure::class, $data['INFRASTRUCTURE'] ?? null) ?? Undefined::Value,
         );
     }
@@ -78,12 +80,12 @@ final readonly class RegionalData implements RequestModel, ResponseModel
             $data['REGION'] = array_map(static fn(Region $item): string => $item->value, $this->region);
         }
 
-        if (isset($this->provided['THRESHOLD'])) {
-            $data['THRESHOLD'] = Json::map($this->threshold);
-        }
-
         if (isset($this->provided['MANUAL_SELECTED'])) {
             $data['MANUAL_SELECTED'] = $this->manualSelected;
+        }
+
+        if (isset($this->provided['THRESHOLD'])) {
+            $data['THRESHOLD'] = Json::map($this->threshold);
         }
 
         return $data;

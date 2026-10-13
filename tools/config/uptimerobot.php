@@ -736,9 +736,10 @@ return [
             'items' => ['type' => 'string', 'enum' => ['na', 'eu', 'as', 'oc']],
             'description' => 'The regions the checks run from; at least one.',
         ],
-        // Absent until the regions are set with regionData, which makes it true
-        // (verified live).
-        'RegionalDataDto.MANUAL_SELECTED' => ['type' => 'boolean', 'description' => 'Whether the regions were chosen rather than assigned by default.'],
+        // MANUAL_SELECTED needs no entry since the specification of October 12,
+        // 2026: it types and describes the property itself. It is absent until
+        // the regions are set with regionData, which makes it true (verified
+        // live), so the model reads a missing value as false.
         // Fixed keys na, eu, as and oc in the request DTO, a map in the response;
         // whole milliseconds (verified live: {"eu": 2000}).
         'RegionalDataDto.THRESHOLD' => [

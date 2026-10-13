@@ -148,6 +148,11 @@ $monitor = $uptimeRobot->monitors->create(new HttpMonitorCreate(
 echo $monitor->id, ': ', $monitor->status->value ?? '?', PHP_EOL;
 ```
 
+Leave `regionData` out and the API picks the region itself, currently North
+America or Europe and one region per organization, and keeps it for the life of
+the monitor. Setting `manualSelected: false` makes the API ignore `region`, so
+pass the regions alone, as above, or `manualSelected: true` along with them.
+
 The other types work the same way:
 
 ```php
@@ -332,6 +337,9 @@ live):
 - `responseTimeThreshold` goes into the thresholds of the regions that have
   one (`$monitor->regionalData->threshold`); the property itself always reads
   `0`.
+- `regionData` moves the checks to the regions it names (verified live). The
+  specification adds that `manualSelected: false` makes the API ignore them and
+  keep the current region.
 
 Whether `assignedAlertContacts`, `tagNames` and `maintenanceWindowsIds` replace
 or extend the current ones was not verified.

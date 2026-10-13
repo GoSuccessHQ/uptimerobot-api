@@ -4791,6 +4791,10 @@
                             ]
                         }
                     },
+                    "MANUAL_SELECTED": {
+                        "type": "boolean",
+                        "description": "Whether the customer chose REGION explicitly. On update, false means the region was not customer-chosen, so REGION is ignored and the monitor keeps the region it already runs from. Send true to change the region, or omit this field."
+                    },
                     "THRESHOLD": {
                         "type": "object",
                         "additionalProperties": false,
@@ -4815,9 +4819,6 @@
                             "as": 7000,
                             "oc": 8000
                         }
-                    },
-                    "MANUAL_SELECTED": {
-                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -9073,7 +9074,7 @@
                         }
                     },
                     "regionData": {
-                        "description": "Regional data for monitoring",
+                        "description": "Regional data for monitoring. Omit it, or send it without REGION, and the region is assigned automatically (currently NA or EU, one region per organization) and never changed on edit.",
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/RegionalDataDto"
@@ -9292,7 +9293,7 @@
                         }
                     },
                     "regionData": {
-                        "description": "Regional data for monitoring",
+                        "description": "Regional data for monitoring. Omit it, or send it without REGION, and the region is assigned automatically (currently NA or EU, one region per organization) and never changed on edit.",
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/RegionalDataDto"
@@ -9552,7 +9553,7 @@
                         }
                     },
                     "regionData": {
-                        "description": "Regional data for monitoring",
+                        "description": "Regional data for monitoring. Omit it, or send it without REGION, and the region is assigned automatically (currently NA or EU, one region per organization) and never changed on edit.",
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/RegionalDataDto"
@@ -9676,7 +9677,7 @@
                         }
                     },
                     "regionData": {
-                        "description": "Regional data for monitoring",
+                        "description": "Regional data for monitoring. Omit it, or send it without REGION, and the region is assigned automatically (currently NA or EU, one region per organization) and never changed on edit.",
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/RegionalDataDto"
@@ -9808,7 +9809,7 @@
                         }
                     },
                     "regionData": {
-                        "description": "Regional data for monitoring",
+                        "description": "Regional data for monitoring. Omit it, or send it without REGION, and the region is assigned automatically (currently NA or EU, one region per organization) and never changed on edit.",
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/RegionalDataDto"
@@ -10032,7 +10033,7 @@
                         }
                     },
                     "regionData": {
-                        "description": "Regional data for monitoring",
+                        "description": "Regional data for monitoring. Omit it, or send it without REGION, and the region is assigned automatically (currently NA or EU, one region per organization) and never changed on edit.",
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/RegionalDataDto"
@@ -10293,7 +10294,7 @@
                         }
                     },
                     "regionData": {
-                        "description": "Regional data for monitoring",
+                        "description": "Regional data for monitoring. Omit it, or send it without REGION, and the region is assigned automatically (currently NA or EU, one region per organization) and never changed on edit.",
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/RegionalDataDto"
@@ -10550,7 +10551,7 @@
                         }
                     },
                     "regionData": {
-                        "description": "Regional data for monitoring",
+                        "description": "Regional data for monitoring. Omit it, or send it without REGION, and the region is assigned automatically (currently NA or EU, one region per organization) and never changed on edit.",
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/RegionalDataDto"
@@ -10765,7 +10766,7 @@
                         }
                     },
                     "regionData": {
-                        "description": "Regional data for monitoring",
+                        "description": "Regional data for monitoring. Omit it, or send it without REGION, and the region is assigned automatically (currently NA or EU, one region per organization) and never changed on edit.",
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/RegionalDataDto"
@@ -10920,7 +10921,7 @@
                         }
                     },
                     "regionData": {
-                        "description": "Regional data for monitoring",
+                        "description": "Regional data for monitoring. Omit it, or send it without REGION, and the region is assigned automatically (currently NA or EU, one region per organization) and never changed on edit.",
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/RegionalDataDto"
@@ -11324,7 +11325,7 @@
                         "deprecated": true
                     },
                     "regionData": {
-                        "description": "Regional data for monitoring",
+                        "description": "Regional data for monitoring. Omit it, or send it without REGION, and the region is assigned automatically (currently NA or EU, one region per organization) and never changed on edit.",
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/RegionalDataDto"

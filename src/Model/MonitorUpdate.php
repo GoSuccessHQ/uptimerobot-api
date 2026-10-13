@@ -102,7 +102,9 @@ final readonly class MonitorUpdate implements RequestModel
          * Response time threshold in milliseconds, stored in regionalData THRESHOLD; the property itself keeps reading 0 (verified live).
          */
         public int|Undefined $responseTimeThreshold = Undefined::Value,
-        /** Regional data for monitoring */
+        /**
+         * Regional data for monitoring. Omit it, or send it without REGION, and the region is assigned automatically (currently NA or EU, one region per organization) and never changed on edit.
+         */
         public RegionalData|Undefined $regionData = Undefined::Value,
         /** Monitor group ID to assign the monitor to. Use 0 for the default group. */
         public int|Undefined $groupId = Undefined::Value,
