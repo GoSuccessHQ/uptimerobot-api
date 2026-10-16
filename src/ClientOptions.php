@@ -26,7 +26,8 @@ final readonly class ClientOptions
      *                                    is still aborted.
      * @param float  $connectTimeout      Maximum duration of the connection phase in seconds.
      * @param int    $maxRetries          How often a failed request is retried. A `429` is
-     *                                    always retried; server errors and network failures only
+     *                                    retried unless `$retryOnRateLimit` is off; server errors
+     *                                    and network failures only
      *                                    for idempotent requests (GET, PUT, DELETE). A DELETE
      *                                    retried after such an error that then answers `404`
      *                                    counts as successful: the earlier attempt may have
@@ -39,6 +40,11 @@ final readonly class ClientOptions
      *                                    (`x-ratelimit-remaining: 0`), instead of running into a
      *                                    `429`. The wait is capped by `$maxRetryDelay`.
      * @param string $userAgent           Value of the `User-Agent` header.
+     * @param bool   $retryOnRateLimit    Wait and retry a `429`. Off, a `429` throws the
+     *                                    RateLimitException at once, while server errors and
+     *                                    network failures are still retried. For callers that
+     *                                    must answer within a deadline of their own; combine it
+     *                                    with `$awaitRateLimitReset: false` to never wait.
      */
     public function __construct(
         public float $timeout = 30.0,
@@ -48,6 +54,7 @@ final readonly class ClientOptions
         public float $maxRetryDelay = 60.0,
         public bool $awaitRateLimitReset = true,
         public string $userAgent = self::DEFAULT_USER_AGENT,
+        public bool $retryOnRateLimit = true,
     ) {
         foreach (['timeout' => $timeout, 'connectTimeout' => $connectTimeout, 'retryBaseDelay' => $retryBaseDelay, 'maxRetryDelay' => $maxRetryDelay] as $name => $value) {
             // NAN and INF would turn into warnings or endless waits once converted for cURL or sleep().

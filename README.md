@@ -1001,10 +1001,15 @@ $uptimeRobot = new UptimeRobot('your-api-key', new ClientOptions(
     maxRetryDelay: 60.0,        // also caps Retry-After and the wait for the next window
     awaitRateLimitReset: true,  // wait for the next window once no requests remain
     userAgent: 'my-app/1.0',
+    retryOnRateLimit: true,     // false: a 429 throws at once instead of waiting
 ));
 ```
 
-A `429` is always retried, up to `maxRetries` times. A server error or a lost
+A `429` is retried up to `maxRetries` times unless `retryOnRateLimit` is off;
+then it throws the `RateLimitException` right away, while server errors and
+lost connections are still retried. Together with `awaitRateLimitReset: false`
+the client never waits for the rate limit, which suits callers with a deadline
+of their own. A server error or a lost
 connection is only retried for `GET`, `PUT` and `DELETE`: UptimeRobot creates resources and triggers
 actions with `POST` and changes them with `PATCH`, and repeating such a request
 could apply it twice. The first attempt of a `DELETE` may still have deleted
