@@ -915,7 +915,11 @@ try {
 }
 ```
 
-UptimeRobot does not document its error codes. These were seen live:
+The specification publishes the vocabulary `$errorCode` comes from, 311 codes
+as of October 19, 2026, and it grows with almost every release. What a code
+means is not documented, so `$errorCode` stays a string here instead of an
+enum that would turn every new code into `null`. These meanings were seen
+live:
 
 | Code | Status | Meaning |
 | --- | --- | --- |
