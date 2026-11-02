@@ -1098,6 +1098,12 @@ return [
             'enum' => $pageDensity,
             'description' => 'The density of the page. The requests take the same lower-case values, not the title-case ones of the specification (verified live).',
         ],
+        // Only the request copy of the setting is described (specification of
+        // November 2, 2026); the response copies are bare booleans.
+        'PspDto.customSettings.page.showMonitorsUnderGroups' => [
+            'type' => 'boolean',
+            'description' => 'Whether the page groups the monitors under their monitor groups instead of listing them flat.',
+        ],
         'PageCustomSettingsDto.layout' => ['type' => 'string', 'enum' => $pageLayout],
         'PageCustomSettingsDto.theme' => ['type' => 'string', 'enum' => $pageTheme],
         'PageCustomSettingsDto.density' => ['type' => 'string', 'enum' => $pageDensity],

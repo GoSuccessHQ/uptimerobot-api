@@ -20,6 +20,10 @@ final readonly class StatusPageCustomSettingsPageInput implements RequestModel
         public StatusPageTheme|Undefined $theme = Undefined::Value,
         /** The density of the page */
         public StatusPageDensity|Undefined $density = Undefined::Value,
+        /**
+         * Group the monitors on the status page home screen under their monitor groups instead of listing them flat. Omit it to keep the current value.
+         */
+        public bool|Undefined $showMonitorsUnderGroups = Undefined::Value,
     ) {}
 
     public function toArray(): array
@@ -36,6 +40,10 @@ final readonly class StatusPageCustomSettingsPageInput implements RequestModel
 
         if (!$this->density instanceof Undefined) {
             $data['density'] = $this->density->value;
+        }
+
+        if (!$this->showMonitorsUnderGroups instanceof Undefined) {
+            $data['showMonitorsUnderGroups'] = $this->showMonitorsUnderGroups;
         }
 
         return $data;

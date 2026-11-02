@@ -13,7 +13,7 @@ final readonly class TaggedMonitor implements ResponseModel
 {
     public function __construct(
         public int $id = 0,
-        public ?string $friendlyName = null,
+        public string $friendlyName = '',
         public ?MonitorStatus $status = null,
         public string $url = '',
     ) {}
@@ -22,7 +22,7 @@ final readonly class TaggedMonitor implements ResponseModel
     {
         return new self(
             id: Cast::int($data['id'] ?? null) ?? 0,
-            friendlyName: Cast::string($data['friendlyName'] ?? null),
+            friendlyName: Cast::string($data['friendlyName'] ?? null) ?? '',
             status: Cast::stringEnum(MonitorStatus::class, $data['status'] ?? null),
             url: Cast::string($data['url'] ?? null) ?? '',
         );

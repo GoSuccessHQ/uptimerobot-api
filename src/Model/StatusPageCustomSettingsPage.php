@@ -26,6 +26,8 @@ final readonly class StatusPageCustomSettingsPage implements ResponseModel
          * The density of the page. The requests take the same lower-case values, not the title-case ones of the specification (verified live).
          */
         public ?StatusPageDensity $density = null,
+        /** Whether the page groups the monitors under their monitor groups instead of listing them flat. */
+        public bool $showMonitorsUnderGroups = false,
     ) {}
 
     public static function fromArray(array $data): static
@@ -34,6 +36,7 @@ final readonly class StatusPageCustomSettingsPage implements ResponseModel
             layout: Cast::stringEnum(StatusPageLayout::class, $data['layout'] ?? null),
             theme: Cast::stringEnum(StatusPageTheme::class, $data['theme'] ?? null),
             density: Cast::stringEnum(StatusPageDensity::class, $data['density'] ?? null),
+            showMonitorsUnderGroups: Cast::bool($data['showMonitorsUnderGroups'] ?? null) ?? false,
         );
     }
 }
