@@ -28,7 +28,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -76,7 +76,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -124,7 +124,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -147,17 +147,29 @@
         },
         "/incidents": {
             "get": {
-                "description": "List all incidents in a user's account with optional filtering. Values can be paginated with the cursor parameter.",
+                "description": "List all incidents in a user's account with optional filtering. Sorted by start date descending, newest first. Values can be paginated with the cursor parameter.",
                 "operationId": "IncidentsController_list",
                 "parameters": [
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Maximum number of items to return per page. Default: 50, Min: 1, Max: 200.",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 200,
+                            "example": 50,
+                            "type": "number"
+                        }
+                    },
                     {
                         "name": "cursor",
                         "required": false,
                         "in": "query",
-                        "description": "Cursor to paginate through incidents (incident ID)",
+                        "description": "Opaque cursor taken from the previous page’s `nextLink`. An incident ID from an earlier version of this endpoint is still accepted and resumes right after that incident.",
                         "schema": {
-                            "pattern": "/^\\d+$/",
-                            "example": "12345",
+                            "pattern": "/^[A-Za-z0-9_-]+$/",
+                            "example": "MTc4OTA0NTYwMDAwMHwxNDAwfDMxOTg0OTk3MTM4MTQ2NzcxMg",
                             "type": "string"
                         }
                     },
@@ -213,6 +225,40 @@
                             ],
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "type",
+                        "required": false,
+                        "in": "query",
+                        "description": "Filter incidents by type. With a filter a page may hold fewer items than `limit`, even none, while `nextLink` is set: keep paging until it is absent.",
+                        "schema": {
+                            "enum": [
+                                "Downtime",
+                                "SlowResponse",
+                                "VisualChange"
+                            ],
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cause",
+                        "required": false,
+                        "in": "query",
+                        "description": "Filter incidents by root cause group: Timeout, an HTTP status class (2xx–5xx), DNS, AssertionFailed, InvalidJSON or ConfigError. Combines with `type` and the other filters. With a filter a page may hold fewer items than `limit`, even none, while `nextLink` is set: keep paging until it is absent.",
+                        "schema": {
+                            "enum": [
+                                "Timeout",
+                                "2xx",
+                                "3xx",
+                                "4xx",
+                                "5xx",
+                                "DNS",
+                                "AssertionFailed",
+                                "InvalidJSON",
+                                "ConfigError"
+                            ],
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -226,8 +272,18 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "Invalid `cursor`: unknown, belonging to another account, or malformed. Omit `cursor` to start again from the first page.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -275,7 +331,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -367,7 +423,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -456,7 +512,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -528,7 +584,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -600,7 +656,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -667,7 +723,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -745,7 +801,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -833,7 +889,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -891,7 +947,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -939,7 +995,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -995,7 +1051,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1085,7 +1141,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1123,7 +1179,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1169,7 +1225,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1290,7 +1346,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1349,7 +1405,7 @@
                                         "$ref": "#/components/schemas/CreateVisualComparisonMonitorDto"
                                     },
                                     {
-                                        "$ref": "#/components/schemas/CreateDependencyMonitorDto"
+                                        "$ref": "#/components/schemas/CreateThirdPartyServiceMonitorDto"
                                     }
                                 ],
                                 "discriminator": {
@@ -1364,7 +1420,7 @@
                                         "API": "#/components/schemas/CreateApiMonitorDto",
                                         "UDP": "#/components/schemas/CreateUdpMonitorDto",
                                         "VISUAL_COMPARISON": "#/components/schemas/CreateVisualComparisonMonitorDto",
-                                        "DEPENDENCY": "#/components/schemas/CreateDependencyMonitorDto"
+                                        "THIRD_PARTY_SERVICE": "#/components/schemas/CreateThirdPartyServiceMonitorDto"
                                     }
                                 }
                             },
@@ -1536,16 +1592,12 @@
                                         }
                                     }
                                 },
-                                "Dependency Monitor": {
+                                "Third Party Service": {
                                     "value": {
-                                        "friendlyName": "My Stripe dependency",
-                                        "type": "DEPENDENCY",
-                                        "url": "https://status.stripe.com",
-                                        "interval": 60,
-                                        "timeout": 30,
+                                        "type": "THIRD_PARTY_SERVICE",
                                         "config": {
-                                            "dependency": {
-                                                "providerUrlname": "stripe"
+                                            "thirdPartyService": {
+                                                "providerId": 4317
                                             }
                                         }
                                     }
@@ -1566,7 +1618,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1656,7 +1708,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1724,7 +1776,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1802,7 +1854,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1897,7 +1949,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1918,10 +1970,10 @@
                 ]
             }
         },
-        "/monitors/{id}/dependency/status": {
+        "/monitors/{id}/third-party-service/status": {
             "get": {
-                "description": "Returns the fine-grained 4-state (operational, minor, major, maintenance) for a type-10 dependency monitor, read from monitorConfig.dependency.currentState. Distinct from the coarse monitor status field, which cannot tell a partial degradation from a full outage.",
-                "operationId": "MonitorsController_getDependencyStatus",
+                "description": "Returns the fine-grained 4-state (operational, minor, major, maintenance) for a third party service monitor. Distinct from the coarse monitor status field, which cannot tell a partial degradation from a full outage.",
+                "operationId": "MonitorsController_getThirdPartyServiceStatus",
                 "parameters": [
                     {
                         "name": "id",
@@ -1938,13 +1990,13 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/MonitorDependencyStatusDto"
+                                    "$ref": "#/components/schemas/MonitorThirdPartyServiceStatusDto"
                                 }
                             }
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1959,16 +2011,16 @@
                         "bearer": []
                     }
                 ],
-                "summary": "Get the current status of a dependency monitor",
+                "summary": "Get the current status of a third party service",
                 "tags": [
                     "Monitors"
                 ]
             }
         },
-        "/monitors/{id}/dependency/incidents": {
+        "/monitors/{id}/third-party-service/incidents": {
             "get": {
-                "description": "Returns every incident (resolved and unresolved) recorded for the provider a type-10 dependency monitor tracks, newest first, with verbatim provider updates. An empty history returns an empty array with a 200, never an error.",
-                "operationId": "MonitorsController_getDependencyIncidents",
+                "description": "Returns every incident (resolved and unresolved) recorded for the provider a third party service monitor tracks, newest first, with verbatim provider updates. An empty history returns an empty array with a 200, never an error.",
+                "operationId": "MonitorsController_getThirdPartyServiceIncidents",
                 "parameters": [
                     {
                         "name": "id",
@@ -1985,13 +2037,13 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/MonitorDependencyIncidentsDto"
+                                    "$ref": "#/components/schemas/MonitorThirdPartyServiceIncidentsDto"
                                 }
                             }
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2006,7 +2058,131 @@
                         "bearer": []
                     }
                 ],
-                "summary": "Get the incident history of a dependency monitor",
+                "summary": "Get the incident history of a third party service",
+                "tags": [
+                    "Monitors"
+                ]
+            }
+        },
+        "/monitors/{id}/third-party-service/incidents/{incidentId}": {
+            "get": {
+                "description": "Returns one incident from the incident history of a third party service monitor, resolved or not, with its verbatim provider updates. affectedComponents lists the affected components the monitor tracks, or every affected component when the monitor tracks the whole provider.",
+                "operationId": "MonitorsController_getThirdPartyServiceIncident",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "The monitor ID",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 2147483647,
+                            "example": 42,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "incidentId",
+                        "required": true,
+                        "in": "path",
+                        "description": "The incident ID from the incident history of the third party service. A string, since it can exceed the safe integer range.",
+                        "schema": {
+                            "pattern": "/^\\d{1,20}$/",
+                            "example": "355758443503112192",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MonitorThirdPartyServiceIncidentDetailDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Get one incident of a third party service",
+                "tags": [
+                    "Monitors"
+                ]
+            }
+        },
+        "/monitors/{id}/third-party-service/incidents/{incidentId}/activity-log": {
+            "get": {
+                "description": "Returns the notifications this account sent about one incident of a third party service, with the channel, the alert contact and whether delivery succeeded. channelIdentifier is shown only for email, SMS and voice channels; for every other channel, such as webhooks, Slack or mobile push, whose value can carry a credential, it is the literal string \"[REDACTED]\". An incident with no notifications returns an empty array with a 200.",
+                "operationId": "MonitorsController_getThirdPartyServiceIncidentActivityLog",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "The monitor ID",
+                        "schema": {
+                            "minimum": 1,
+                            "maximum": 2147483647,
+                            "example": 42,
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "incidentId",
+                        "required": true,
+                        "in": "path",
+                        "description": "The incident ID from the incident history of the third party service. A string, since it can exceed the safe integer range.",
+                        "schema": {
+                            "pattern": "/^\\d{1,20}$/",
+                            "example": "355758443503112192",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MonitorThirdPartyServiceIncidentActivityLogDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Get the activity log of a third party service incident",
                 "tags": [
                     "Monitors"
                 ]
@@ -2038,7 +2214,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2092,7 +2268,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2129,7 +2305,7 @@
                         "description": ""
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2180,7 +2356,7 @@
                         "description": ""
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2238,7 +2414,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2296,7 +2472,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2356,7 +2532,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2407,7 +2583,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2454,7 +2630,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2514,7 +2690,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2552,7 +2728,7 @@
                         "description": ""
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2676,7 +2852,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2772,7 +2948,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2859,7 +3035,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2964,7 +3140,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3042,7 +3218,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3122,7 +3298,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3202,7 +3378,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3261,7 +3437,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3307,7 +3483,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3355,7 +3531,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3411,7 +3587,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3449,7 +3625,7 @@
                         "description": ""
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3487,7 +3663,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3528,7 +3704,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3569,7 +3745,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3638,7 +3814,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3739,7 +3915,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3787,7 +3963,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3898,7 +4074,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3936,7 +4112,7 @@
                         "description": ""
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3996,7 +4172,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4042,7 +4218,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4090,7 +4266,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4146,7 +4322,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4185,7 +4361,7 @@
                         "description": ""
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4245,7 +4421,7 @@
                         }
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4286,7 +4462,7 @@
                         "description": "Tag deleted successfully"
                     },
                     "default": {
-                        "description": "An error response. `code` is a member of the published error code vocabulary.",
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4306,11 +4482,111 @@
                     "Tags"
                 ]
             }
+        },
+        "/third-party-providers": {
+            "get": {
+                "description": "Search the third-party provider catalog by provider or component name. Each provider is identified by its numeric id, and isTracked tells whether the account already monitors it as a third-party service. Results are cached for a minute, so isTracked can lag by up to a minute after a third-party service is created or deleted.",
+                "operationId": "ThirdPartyProvidersController_search",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "required": true,
+                        "in": "query",
+                        "description": "Free-text term matched against provider names and their components.",
+                        "schema": {
+                            "minLength": 1,
+                            "maxLength": 100,
+                            "example": "github",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ThirdPartyProviderSearchDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Search third-party providers",
+                "tags": [
+                    "Third-party providers"
+                ]
+            }
+        },
+        "/third-party-providers/{id}": {
+            "get": {
+                "description": "Returns one third-party provider by its numeric id, with its current state and its component tree. Components carry their own id, name and status, and list their children.",
+                "operationId": "ThirdPartyProvidersController_getById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "The numeric id of the third-party provider.",
+                        "schema": {
+                            "example": "7",
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ThirdPartyProviderDetailDto"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An error response. `code` is a stable error code; see \"Error codes\" in the API description. Fall back to the HTTP status for a code you do not know.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorResponseDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Get a third-party provider",
+                "tags": [
+                    "Third-party providers"
+                ]
+            }
         }
     },
     "info": {
         "title": "UptimeRobot API",
-        "description": "",
+        "description": "## Error codes\n\nEvery error response carries a `code`. Branch on `code`, not on the message text.\n\n**Error code stability policy.** A listed code never changes meaning and is never removed; it can only be deprecated. Expect that new codes may be added at any time: when you receive a code you do not know, fall back to the HTTP status.\n\n| Code | HTTP status | Meaning |\n| --- | --- | --- |\n| `000-003` | 403 | The feature this request uses is not included in the plan of the account. The message names the feature. |\n| `000-004` | 404 | The requested resource does not exist or is not visible to you. |\n| `000-005` | 401 | The API key is missing, invalid or expired. |\n| `000-006` | 403 | The API key is valid but is not allowed to access this resource or perform this action. |\n| `000-009` | 422 | The request is well-formed but cannot be processed in the current state. The message says why. |\n| `000-012` | 400 | The request is malformed or a field is invalid. The message names what to fix. |\n| `000-013` | 413, 415, 500 | An unexpected server error (500). Also returned with any other status that has no generic code of its own, such as 413 (request body too large) or 415 (unsupported content type); branch on the HTTP status for those. A 500 may succeed if retried later. |\n| `000-014` | 429 | Too many requests. Wait for the number of seconds in the Retry-After header before retrying. |\n| `000-015` | 503 | Incident history is temporarily unavailable. Retry later rather than reading the absence of data as no downtime. |\n| `000-016` | 409 | The request conflicts with the current state of the resource, for example a duplicate. |\n| `000-017` | 502 | An upstream service we depend on failed. Retrying later may succeed. |\n| `000-018` | 503 | The service is temporarily unavailable. Retry later. |\n| `000-019` | 504 | An upstream service we depend on timed out. Retrying later may succeed. |\n| `003-001` | 401 | A request that changes data was refused. If the API key is read-only, use the main API key; if the user has no write rights in the account, an account admin has to grant them. |\n| `003-005` | 401 | The API key is missing or not valid: it was not sent, is mistyped, was regenerated, or belongs to a deleted account. |\n| `003-008` | 403 | The request needs an active subscription and the account has none. |\n| `009-001` | 403 | The monitor URL is blocklisted and cannot be monitored. |\n| `009-002` | 403 | The monitoring interval is shorter than the plan allows. Use a longer interval. |\n| `009-003` | 403 | The plan has reached its maximum number of monitors. |\n| `009-005` | 403 | The request uses settings that need a paid plan. |\n| `009-010` | 400 | The URL is not valid for this monitor type. |\n| `009-011` | 409 | A monitor like this one already exists on the account. |\n| `009-012` | 400 | The custom fields are invalid. The message names what to fix. |\n| `009-013` | 403 | Custom fields are not available on the plan. |\n| `009-014` | 403 | Monitoring from multiple regions is not available on the plan. |\n| `009-015` | 400 | A monitor cannot change its type after it is created. |\n| `009-016` | 400 | A config field is not supported for this monitor type. The message names the field. |\n| `009-017` | 400 | One or more alert contacts in the request cannot be assigned from this account. |\n| `009-019` | 400 | The storm protection setting id in the request does not exist. The message names the id. |\n| `009-020` | 400 | A storm protection threshold is out of range. The message says which one and the allowed range. |\n| `009-022` | 403 | Visual comparison monitoring is not available on the plan. |\n| `009-030` | 403 | Choosing the region a monitor runs from is not available on the plan. |\n| `009-033` | 400 | A config field is reserved for internal use and cannot be set. |\n| `009-034` | 400 | The API assertions are invalid. The message names what to fix. |\n| `009-036` | 400 | portAlertCondition can only be set on PORT monitors. |\n| `009-039` | 400 | The filter selects more monitors than one bulk call acts on, and nothing was changed. Narrow the filter by group or tag and repeat the call. |\n| `013-002` | 403 | The plan of the account allows no more status pages. Delete one or upgrade the plan. |\n| `013-006` | 400 | Monitors of this type cannot be added to a status page. The message lists the monitors. |\n| `013-008` | 403 | Manual monitor sorting on status pages is temporarily turned off. Choose another sort order. |\n| `021-001` | 409 | An integration with the same settings already exists. |\n| `021-002` | 403 | The integration is missing data it needs, so it cannot be created. Check the required fields for its type. |\n| `021-003` | 403 | This integration type is not available on the plan of the account. |\n| `021-005` | 404 | No integration has this ID. The ID may belong to a personal alert contact, which is managed under alert contacts. |\n| `021-047` | 404 | No personal alert contact has this ID. The ID may belong to an integration, which is managed under integrations. |\n| `026-006` | 403 | Third party service monitoring is not available on the Free plan. |\n| `026-008` | 400 | config.thirdPartyService.providerId is required to create a third party service. |\n| `026-009` | 400 | The third party service config is invalid. |\n| `026-017` | 400 | Third party services cannot be created through this endpoint. |\n| `026-018` | 400 | Third party services cannot be paused or started in bulk. The message lists the offending monitors. |\n| `026-019` | 403 | The plan has used up its allowance of third party services. |",
         "version": "3.0",
         "contact": {}
     },
@@ -4360,104 +4636,28 @@
                 "properties": {
                     "code": {
                         "type": "string",
-                        "description": "A stable, machine-readable error code. Always a member of the published vocabulary.",
-                        "enum": [
-                            "000-001",
-                            "000-002",
-                            "000-003",
-                            "000-004",
+                        "description": "A stable, machine-readable error code. See \"Error codes\" in the API description for each code, its meaning and the stability policy.",
+                        "x-extensible-enum": [
+                            "000-012",
                             "000-005",
                             "000-006",
-                            "000-007",
-                            "000-008",
+                            "000-004",
+                            "000-016",
                             "000-009",
-                            "000-010",
-                            "000-011",
-                            "000-012",
-                            "000-013",
                             "000-014",
+                            "000-013",
+                            "000-017",
+                            "000-018",
                             "000-015",
+                            "000-019",
+                            "000-003",
                             "003-001",
-                            "003-002",
-                            "003-003",
-                            "003-004",
                             "003-005",
-                            "003-006",
-                            "003-007",
                             "003-008",
-                            "003-009",
-                            "003-010",
-                            "003-011",
-                            "003-012",
-                            "003-013",
-                            "003-014",
-                            "003-015",
-                            "003-016",
-                            "003-017",
-                            "003-018",
-                            "003-019",
-                            "003-020",
-                            "003-021",
-                            "004-001",
-                            "004-002",
-                            "004-033",
-                            "004-034",
-                            "004-035",
-                            "004-036",
-                            "004-037",
-                            "004-038",
-                            "004-039",
-                            "004-040",
-                            "004-041",
-                            "004-042",
-                            "004-003",
-                            "004-004",
-                            "004-005",
-                            "004-006",
-                            "004-007",
-                            "004-008",
-                            "004-009",
-                            "004-010",
-                            "004-011",
-                            "004-012",
-                            "004-013",
-                            "004-014",
-                            "004-015",
-                            "004-016",
-                            "004-017",
-                            "004-018",
-                            "004-019",
-                            "004-020",
-                            "004-021",
-                            "004-022",
-                            "004-023",
-                            "004-024",
-                            "004-025",
-                            "004-026",
-                            "004-027",
-                            "004-028",
-                            "004-029",
-                            "004-030",
-                            "004-031",
-                            "004-032",
-                            "004-043",
-                            "004-044",
-                            "004-045",
-                            "004-046",
-                            "004-047",
-                            "004-048",
-                            "005-001",
-                            "005-002",
-                            "006-001",
                             "009-001",
                             "009-002",
                             "009-003",
-                            "009-004",
                             "009-005",
-                            "009-006",
-                            "009-007",
-                            "009-008",
-                            "009-009",
                             "009-010",
                             "009-011",
                             "009-012",
@@ -4467,238 +4667,27 @@
                             "009-016",
                             "009-017",
                             "009-022",
-                            "009-023",
-                            "009-024",
-                            "009-025",
-                            "009-018",
-                            "009-019",
-                            "009-020",
-                            "009-026",
-                            "009-027",
-                            "009-028",
+                            "009-030",
                             "009-033",
                             "009-034",
-                            "009-021",
-                            "009-033",
-                            "009-030",
                             "009-036",
-                            "009-037",
-                            "011-001",
-                            "011-002",
-                            "011-003",
-                            "011-004",
-                            "011-005",
-                            "011-006",
-                            "011-007",
-                            "011-008",
-                            "011-009",
-                            "011-010",
-                            "011-011",
-                            "011-012",
-                            "011-013",
-                            "011-014",
-                            "011-015",
-                            "011-016",
-                            "011-017",
-                            "011-018",
-                            "011-019",
-                            "011-020",
-                            "011-021",
-                            "011-022",
-                            "011-023",
-                            "011-024",
-                            "011-025",
-                            "011-026",
-                            "011-027",
-                            "011-028",
-                            "011-029",
-                            "011-030",
-                            "011-031",
-                            "011-032",
-                            "011-033",
-                            "011-034",
-                            "013-001",
-                            "013-002",
-                            "013-003",
-                            "013-004",
-                            "013-005",
+                            "009-039",
                             "013-006",
-                            "013-007",
+                            "013-002",
                             "013-008",
-                            "017-001",
-                            "017-002",
-                            "018-001",
-                            "018-002",
-                            "018-003",
-                            "018-004",
-                            "018-005",
-                            "018-006",
-                            "018-007",
-                            "018-008",
-                            "018-009",
-                            "018-010",
-                            "018-011",
-                            "018-012",
-                            "018-013",
-                            "018-014",
-                            "018-015",
+                            "009-019",
+                            "009-020",
                             "021-001",
                             "021-002",
                             "021-003",
-                            "021-004",
                             "021-005",
-                            "021-006",
-                            "021-007",
-                            "021-008",
-                            "021-009",
-                            "021-010",
-                            "021-011",
-                            "021-012",
-                            "021-013",
-                            "021-014",
-                            "021-015",
-                            "021-016",
-                            "021-017",
-                            "021-018",
-                            "021-019",
-                            "021-020",
-                            "021-021",
-                            "021-022",
-                            "021-023",
-                            "021-024",
-                            "021-025",
-                            "021-026",
-                            "021-027",
-                            "021-028",
-                            "021-029",
-                            "021-030",
-                            "021-031",
-                            "021-032",
-                            "021-033",
-                            "021-034",
-                            "021-035",
-                            "021-036",
-                            "021-037",
-                            "021-038",
-                            "021-039",
-                            "021-040",
-                            "021-041",
-                            "021-042",
-                            "021-043",
-                            "021-044",
-                            "021-045",
-                            "021-046",
                             "021-047",
-                            "021-048",
-                            "021-049",
-                            "021-050",
-                            "021-051",
-                            "021-052",
-                            "022-001",
-                            "024-001",
-                            "024-002",
-                            "024-003",
-                            "024-004",
-                            "024-005",
-                            "024-006",
-                            "024-007",
-                            "024-008",
-                            "025-002",
-                            "025-003",
-                            "025-004",
-                            "025-005",
-                            "025-006",
-                            "025-007",
-                            "025-008",
-                            "025-009",
-                            "025-010",
-                            "025-011",
-                            "025-012",
-                            "025-013",
-                            "025-014",
-                            "025-015",
-                            "025-016",
-                            "025-017",
-                            "025-018",
-                            "025-019",
-                            "025-020",
-                            "025-021",
-                            "025-022",
-                            "021-053",
-                            "021-054",
-                            "021-055",
-                            "021-056",
-                            "021-057",
-                            "021-058",
-                            "021-059",
-                            "021-060",
-                            "021-061",
-                            "021-062",
-                            "021-065",
-                            "021-066",
-                            "021-067",
-                            "021-068",
-                            "021-069",
-                            "026-001",
-                            "026-002",
-                            "026-003",
-                            "026-004",
-                            "026-005",
                             "026-006",
-                            "026-007",
                             "026-008",
                             "026-009",
-                            "026-016",
                             "026-017",
                             "026-018",
-                            "026-019",
-                            "026-020",
-                            "027-001",
-                            "027-002",
-                            "027-003",
-                            "027-004",
-                            "027-005",
-                            "027-006",
-                            "027-007",
-                            "027-008",
-                            "027-009",
-                            "027-010",
-                            "027-011",
-                            "027-012",
-                            "027-013",
-                            "027-014",
-                            "027-015",
-                            "028-001",
-                            "028-002",
-                            "029-001",
-                            "029-002",
-                            "029-003",
-                            "029-004",
-                            "029-005",
-                            "029-006",
-                            "029-007",
-                            "029-008",
-                            "029-009",
-                            "029-010",
-                            "029-011",
-                            "029-012",
-                            "029-013",
-                            "029-014",
-                            "029-015",
-                            "030-001",
-                            "030-002",
-                            "030-003",
-                            "030-004",
-                            "030-005",
-                            "030-006",
-                            "030-007",
-                            "030-008",
-                            "030-009",
-                            "031-001",
-                            "031-002",
-                            "031-003",
-                            "031-004",
-                            "031-005"
+                            "026-019"
                         ]
                     },
                     "message": {
@@ -6444,13 +6433,9 @@
                                                 "viewport"
                                             ]
                                         },
-                                        "dependency": {
+                                        "thirdPartyService": {
                                             "type": "object",
                                             "properties": {
-                                                "providerUrlname": {
-                                                    "type": "string",
-                                                    "minLength": 1
-                                                },
                                                 "trackedComponentIds": {
                                                     "type": "array",
                                                     "items": {
@@ -6492,13 +6477,17 @@
                                                 },
                                                 "maintenanceNotificationsEnabled": {
                                                     "type": "boolean"
+                                                },
+                                                "providerId": {
+                                                    "type": "integer",
+                                                    "nullable": true
                                                 }
                                             },
                                             "required": [
-                                                "providerUrlname",
                                                 "currentState",
                                                 "needsReview",
-                                                "notify"
+                                                "notify",
+                                                "providerId"
                                             ]
                                         }
                                     },
@@ -7719,7 +7708,7 @@
                     "to"
                 ]
             },
-            "MonitorDependencyStatusDto": {
+            "MonitorThirdPartyServiceStatusDto": {
                 "type": "object",
                 "properties": {
                     "currentState": {
@@ -7736,7 +7725,7 @@
                     "currentState"
                 ]
             },
-            "MonitorDependencyIncidentsDto": {
+            "MonitorThirdPartyServiceIncidentsDto": {
                 "type": "object",
                 "properties": {
                     "data": {
@@ -7798,6 +7787,131 @@
                                 "startedAt",
                                 "resolvedAt",
                                 "updates"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "data"
+                ]
+            },
+            "MonitorThirdPartyServiceIncidentDetailDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "severity": {
+                        "type": "string",
+                        "enum": [
+                            "minor",
+                            "major"
+                        ]
+                    },
+                    "resolved": {
+                        "type": "boolean"
+                    },
+                    "startedAt": {
+                        "type": "string"
+                    },
+                    "resolvedAt": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "updates": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "status": {
+                                    "type": "string"
+                                },
+                                "description": {
+                                    "type": "string"
+                                },
+                                "createdAt": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "status",
+                                "description",
+                                "createdAt"
+                            ]
+                        }
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "affectedComponents": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "name": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "name"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "title",
+                    "severity",
+                    "resolved",
+                    "startedAt",
+                    "resolvedAt",
+                    "updates",
+                    "description",
+                    "affectedComponents"
+                ]
+            },
+            "MonitorThirdPartyServiceIncidentActivityLogDto": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "channel": {
+                                    "type": "string"
+                                },
+                                "channelIdentifier": {
+                                    "type": "string"
+                                },
+                                "alertContactName": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string",
+                                    "enum": [
+                                        "SUCCESS",
+                                        "NOT_DELIVERED"
+                                    ]
+                                },
+                                "timestamp": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "channel",
+                                "channelIdentifier",
+                                "alertContactName",
+                                "status",
+                                "timestamp"
                             ]
                         }
                     }
@@ -8289,13 +8403,9 @@
                                     "viewport"
                                 ]
                             },
-                            "dependency": {
+                            "thirdPartyService": {
                                 "type": "object",
                                 "properties": {
-                                    "providerUrlname": {
-                                        "type": "string",
-                                        "minLength": 1
-                                    },
                                     "trackedComponentIds": {
                                         "type": "array",
                                         "items": {
@@ -8337,13 +8447,17 @@
                                     },
                                     "maintenanceNotificationsEnabled": {
                                         "type": "boolean"
+                                    },
+                                    "providerId": {
+                                        "type": "integer",
+                                        "nullable": true
                                     }
                                 },
                                 "required": [
-                                    "providerUrlname",
                                     "currentState",
                                     "needsReview",
-                                    "notify"
+                                    "notify",
+                                    "providerId"
                                 ]
                             }
                         },
@@ -10877,13 +10991,39 @@
                     "config"
                 ]
             },
-            "DependencyConfigFieldsDto": {
+            "ThirdPartyServiceNotifyDto": {
                 "type": "object",
                 "properties": {
-                    "providerUrlname": {
+                    "severity": {
                         "type": "string",
-                        "example": "stripe",
-                        "description": "isdown provider catalog slug. Required to create a dependency monitor — resolved authoritatively against the isdown catalog, so the friendly name and status page URL always reflect the real provider rather than caller-supplied values. Not sent on a scope-only update."
+                        "enum": [
+                            "all",
+                            "major",
+                            "none"
+                        ],
+                        "example": "major",
+                        "description": "Which provider incidents notify: every severity (all), only major outages (major), or none."
+                    },
+                    "incrementalUpdates": {
+                        "type": "boolean",
+                        "example": true,
+                        "description": "Also notify on incremental updates of an incident already notified."
+                    }
+                },
+                "required": [
+                    "severity",
+                    "incrementalUpdates"
+                ]
+            },
+            "CreateThirdPartyServiceConfigDto": {
+                "type": "object",
+                "properties": {
+                    "providerId": {
+                        "type": "number",
+                        "minimum": 1,
+                        "maximum": 9007199254740991,
+                        "example": 4317,
+                        "description": "The provider to track: isdown's numeric provider id, as returned by the third-party provider catalog."
                     },
                     "trackedComponentIds": {
                         "nullable": true,
@@ -10891,152 +11031,69 @@
                             555,
                             556
                         ],
-                        "description": "Component ids to scope tracking to (isdown components.id, not external_id). Omit or set to null to track every component.",
+                        "description": "Component ids to scope tracking to (isdown components.id, not external_id). Omit to track every component.",
                         "type": "array",
                         "items": {
                             "type": "number"
                         }
-                    }
-                }
-            },
-            "DependencyMonitorConfigDto": {
-                "type": "object",
-                "properties": {
-                    "dependency": {
-                        "description": "Dependency monitor configuration — the isdown provider to track and, optionally, which of its components to scope tracking to.",
+                    },
+                    "notify": {
+                        "description": "Notification tuning. Omit to use the defaults.",
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/DependencyConfigFieldsDto"
+                                "$ref": "#/components/schemas/ThirdPartyServiceNotifyDto"
                             }
                         ]
                     }
                 },
                 "required": [
-                    "dependency"
+                    "providerId"
                 ]
             },
-            "CreateDependencyMonitorDto": {
+            "ThirdPartyServiceMonitorConfigDto": {
                 "type": "object",
                 "properties": {
-                    "friendlyName": {
+                    "thirdPartyService": {
+                        "description": "Third party service configuration: the isdown provider to track and, optionally, which of its components to scope tracking to.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CreateThirdPartyServiceConfigDto"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "thirdPartyService"
+                ]
+            },
+            "CreateThirdPartyServiceMonitorDto": {
+                "type": "object",
+                "properties": {
+                    "type": {
                         "type": "string",
-                        "example": "My monitor",
-                        "description": "Friendly name of the monitor",
-                        "maxLength": 250
+                        "enum": [
+                            "THIRD_PARTY_SERVICE"
+                        ],
+                        "example": "THIRD_PARTY_SERVICE"
                     },
-                    "interval": {
-                        "type": "number",
-                        "example": 60,
-                        "minimum": 30,
-                        "description": "Interval of check in seconds"
+                    "config": {
+                        "description": "Third party service configuration. `config.thirdPartyService.providerId` (required) names the isdown provider to track; `trackedComponentIds` optionally scopes tracking to specific components; `notify` tunes notifications.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ThirdPartyServiceMonitorConfigDto"
+                            }
+                        ]
                     },
                     "assignedAlertContacts": {
-                        "description": "Alert contacts to be assigned to the monitor. Threshold and recurrence are only available in the paid plans, they are always 0 in the Free Plan",
+                        "description": "Alert contacts to be assigned to the monitor. Omit to inherit the account default contact.",
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/AlertContactSettings"
                         }
-                    },
-                    "tagNames": {
-                        "example": [
-                            "tag1",
-                            "tag2"
-                        ],
-                        "description": "Tags to be assigned to the monitor",
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
-                    "maintenanceWindowsIds": {
-                        "example": [
-                            123,
-                            234
-                        ],
-                        "description": "Maintenance windows to be assigned to the monitor",
-                        "type": "array",
-                        "items": {
-                            "type": "number"
-                        }
-                    },
-                    "regionData": {
-                        "description": "Regional data for monitoring. Omit it, or send it without REGION, and the region is assigned automatically (currently NA or EU, one region per organization) and never changed on edit.",
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/RegionalDataDto"
-                            }
-                        ]
-                    },
-                    "regionalData": {
-                        "enum": [
-                            "na",
-                            "eu",
-                            "as",
-                            "oc"
-                        ],
-                        "type": "string",
-                        "example": "na",
-                        "deprecated": true,
-                        "description": "Region for monitoring: na (North America), eu (Europe), as (Asia), oc (Oceania). Note: If both regionalData and regionData are provided, regionData takes priority."
-                    },
-                    "responseTimeThreshold": {
-                        "type": "number",
-                        "minimum": 0,
-                        "maximum": 60000,
-                        "description": "Response time threshold in milliseconds. When provided, the value is applied to all active regions as regionData.THRESHOLD. Always returns 0 — use regionData.THRESHOLD for per-region control."
-                    },
-                    "groupId": {
-                        "type": "number",
-                        "example": 0,
-                        "minimum": 0,
-                        "description": "Monitor group ID to assign the monitor to. Default is 0 (no group)."
-                    },
-                    "customFields": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "string"
-                        },
-                        "example": {
-                            "environment": "production",
-                            "team": "platform"
-                        },
-                        "description": "Custom key-value metadata for the monitor. Max 20 keys. Keys: alphanumeric + underscore + hyphen, max 64 chars. Values: max 255 chars. Paid plans only."
-                    },
-                    "type": {
-                        "type": "string",
-                        "enum": [
-                            "DEPENDENCY"
-                        ],
-                        "example": "DEPENDENCY"
-                    },
-                    "url": {
-                        "type": "string",
-                        "example": "https://status.stripe.com",
-                        "maxLength": 10000,
-                        "description": "Required at the wire level like every other type, but discarded: a dependency is provider-driven and never polled, so the created monitor's real url is resolved server-side from isdown instead."
-                    },
-                    "timeout": {
-                        "type": "number",
-                        "example": 30,
-                        "minimum": 0,
-                        "maximum": 60,
-                        "description": "Required at the wire level like every other type, but discarded: a dependency is provider-driven and never polled, so there is no active check for this value to configure."
-                    },
-                    "config": {
-                        "description": "Dependency monitor configuration. `config.dependency.providerUrlname` (required) names the isdown provider to track; `config.dependency.trackedComponentIds` optionally scopes tracking to specific components.",
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/DependencyMonitorConfigDto"
-                            }
-                        ]
                     }
                 },
                 "required": [
-                    "friendlyName",
-                    "interval",
                     "type",
-                    "url",
-                    "timeout",
                     "config"
                 ]
             },
@@ -11057,6 +11114,36 @@
                     },
                     "areaCoordinates": {
                         "$ref": "#/components/schemas/VisualComparisonAreaCoordinatesDto"
+                    }
+                }
+            },
+            "ThirdPartyServiceConfigDto": {
+                "type": "object",
+                "properties": {
+                    "trackedComponentIds": {
+                        "nullable": true,
+                        "example": [
+                            555,
+                            556
+                        ],
+                        "description": "Component ids to scope tracking to (isdown components.id, not external_id). Every id must belong to the monitor provider. Omit to leave the scope unchanged, set to null or [] to track every component.",
+                        "type": "array",
+                        "items": {
+                            "type": "number"
+                        }
+                    },
+                    "notify": {
+                        "description": "Notification tuning. Replaces the stored value as a whole. Omit to leave unchanged.",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ThirdPartyServiceNotifyDto"
+                            }
+                        ]
+                    },
+                    "maintenanceNotificationsEnabled": {
+                        "type": "boolean",
+                        "example": true,
+                        "description": "Notify when the provider schedules or updates a maintenance. Omit to leave unchanged."
                     }
                 }
             },
@@ -11112,7 +11199,7 @@
                             "ipv4Only",
                             "ipv6Only"
                         ],
-                        "description": "IP version preference. Omit for default behavior (IPv4 priority, falls back to IPv6). Not supported by DNS, Heartbeat, Visual Comparison or Dependency monitors. Send null to remove.",
+                        "description": "IP version preference. Omit for default behavior (IPv4 priority, falls back to IPv6). Not supported by DNS, Heartbeat, Visual Comparison or third-party service monitors. Send null to remove.",
                         "nullable": true,
                         "example": "ipv4Only"
                     },
@@ -11133,12 +11220,12 @@
                             }
                         ]
                     },
-                    "dependency": {
-                        "description": "Dependency monitor configuration - the isdown provider to track and, optionally, which of its components to scope tracking to. Dependency monitors only. Send null to remove.",
+                    "thirdPartyService": {
+                        "description": "Third party service configuration - the isdown provider to track and, optionally, which of its components to scope tracking to. Third party services only. Send null to remove.",
                         "nullable": true,
                         "allOf": [
                             {
-                                "$ref": "#/components/schemas/DependencyConfigFieldsDto"
+                                "$ref": "#/components/schemas/ThirdPartyServiceConfigDto"
                             }
                         ]
                     }
@@ -11170,7 +11257,7 @@
                             "API",
                             "UDP",
                             "VISUAL_COMPARISON",
-                            "DEPENDENCY"
+                            "THIRD_PARTY_SERVICE"
                         ],
                         "type": "string",
                         "example": "HTTP"
@@ -11387,7 +11474,7 @@
                     },
                     "config": {
                         "nullable": true,
-                        "description": "Monitor configuration patch. Accepted keys depend on the monitor type - HTTP/Keyword: sslExpirationPeriodDays, ipVersion, applicationErrorRetries. API: apiAssertions, sslExpirationPeriodDays, ipVersion, applicationErrorRetries. DNS: dnsRecords. UDP: udp, ipVersion. PING/PORT: ipVersion. Visual Comparison: visualComparison. Dependency: dependency. Heartbeat: none. Top-level shallow merge with existing config: omit keys to leave unchanged, set a key to null to remove it, or send `config: null` to clear all config.",
+                        "description": "Monitor configuration patch. Accepted keys depend on the monitor type - HTTP/Keyword: sslExpirationPeriodDays, ipVersion, applicationErrorRetries. API: apiAssertions, sslExpirationPeriodDays, ipVersion, applicationErrorRetries. DNS: dnsRecords. UDP: udp, ipVersion. PING/PORT: ipVersion. Visual Comparison: visualComparison. Third party service: thirdPartyService. Heartbeat: none. Top-level shallow merge with existing config: omit keys to leave unchanged, set a key to null to remove it, or send `config: null` to clear all config.",
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/PermissiveMonitorConfigDto"
@@ -14855,6 +14942,166 @@
                 "required": [
                     "data",
                     "nextCursorId"
+                ]
+            },
+            "ThirdPartyProviderSearchDto": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "logoUrl": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "statusPageUrl": {
+                                    "type": "string"
+                                },
+                                "state": {
+                                    "type": "string",
+                                    "enum": [
+                                        "operational",
+                                        "minor",
+                                        "major",
+                                        "maintenance"
+                                    ]
+                                },
+                                "matchedComponent": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "name"
+                                    ],
+                                    "nullable": true
+                                },
+                                "isTracked": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "name",
+                                "logoUrl",
+                                "statusPageUrl",
+                                "state",
+                                "matchedComponent",
+                                "isTracked"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "data"
+                ]
+            },
+            "ThirdPartyProviderDetailDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "logoUrl": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "statusPageUrl": {
+                        "type": "string"
+                    },
+                    "state": {
+                        "type": "string",
+                        "enum": [
+                            "operational",
+                            "minor",
+                            "major",
+                            "maintenance"
+                        ]
+                    },
+                    "components": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string",
+                                    "enum": [
+                                        "operational",
+                                        "minor",
+                                        "major",
+                                        "maintenance",
+                                        "unknown"
+                                    ]
+                                },
+                                "children": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "name": {
+                                                "type": "string"
+                                            },
+                                            "status": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "operational",
+                                                    "minor",
+                                                    "major",
+                                                    "maintenance",
+                                                    "unknown"
+                                                ]
+                                            }
+                                        },
+                                        "required": [
+                                            "id",
+                                            "name",
+                                            "status"
+                                        ]
+                                    }
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "name",
+                                "status",
+                                "children"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "logoUrl",
+                    "statusPageUrl",
+                    "state",
+                    "components"
                 ]
             }
         }

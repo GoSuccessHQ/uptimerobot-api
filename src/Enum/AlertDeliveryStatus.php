@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace GoSuccess\UptimeRobot\Enum;
 
 /**
- * Schema: ActivityLogResponseDto.data[]<NOTIFICATION>.notificationStatus, PublicSentAlertsResponseDto.data[].status
+ * Schema: MonitorThirdPartyServiceIncidentActivityLogDto.data[].status, ActivityLogResponseDto.data[]<NOTIFICATION>.notificationStatus, PublicSentAlertsResponseDto.data[].status
  */
 enum AlertDeliveryStatus: string
 {

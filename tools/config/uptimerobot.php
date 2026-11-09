@@ -13,7 +13,8 @@ declare(strict_types=1);
  *
  * - Client properties (resources): monitors, bulkMonitors, stormProtection,
  *   monitorGroups, incidents, incidentComments, statusPages (/psps),
- *   announcements, maintenanceWindows, alertContacts, integrations, tags, user.
+ *   announcements, maintenanceWindows, alertContacts, integrations, tags, user,
+ *   thirdPartyProviders.
  *   Resource classes are the singular noun plus "Resource", e.g.
  *   MonitorResource, StatusPageResource.
  * - Methods: list (one page) and all (lazy paginator), get, create, update,
@@ -70,7 +71,7 @@ declare(strict_types=1);
 
 // Value sets that several locations share; an enum shared by locations needs
 // the same values in the same order.
-$monitorTypes = ['HTTP', 'KEYWORD', 'PING', 'PORT', 'HEARTBEAT', 'DNS', 'API', 'UDP', 'VISUAL_COMPARISON', 'DEPENDENCY'];
+$monitorTypes = ['HTTP', 'KEYWORD', 'PING', 'PORT', 'HEARTBEAT', 'DNS', 'API', 'UDP', 'VISUAL_COMPARISON', 'THIRD_PARTY_SERVICE'];
 // The values the validator of the list filter names, in its order.
 $monitorStatuses = ['PAUSED', 'STARTED', 'UP', 'LOOKS_DOWN', 'DOWN'];
 $monitorStatus = 'The status of the monitor: UP, DOWN, LOOKS_DOWN, PAUSED, or STARTED, which a new or restarted monitor reports until its first check (verified live).';
@@ -169,13 +170,24 @@ return [
         // Monitors: response models
         'MonitorDto.config' => 'MonitorConfig',
         'MonitorDto.config.visualComparison' => 'MonitorVisualComparison',
-        'MonitorDto.config.dependency' => 'MonitorDependency',
-        'MonitorDto.config.dependency.notify' => 'DependencyNotifications',
-        // Dependency monitors: the fine-grained state and the incidents of the
-        // provider a monitor tracks.
-        'MonitorDependencyStatusDto' => 'DependencyStatus',
-        'MonitorDependencyIncidentsDto.data[]' => 'DependencyIncident',
-        'MonitorDependencyIncidentsDto.data[].updates[]' => 'DependencyIncidentUpdate',
+        'MonitorDto.config.thirdPartyService' => 'MonitorThirdPartyService',
+        'MonitorDto.config.thirdPartyService.notify' => 'ThirdPartyServiceNotifications',
+        // Third party service monitors (DEPENDENCY until the specification of
+        // November 9, 2026): the fine-grained state and the incidents of the
+        // provider a monitor tracks, and the alerts sent about one.
+        'MonitorThirdPartyServiceStatusDto' => 'ThirdPartyServiceStatus',
+        'MonitorThirdPartyServiceIncidentsDto.data[]' => 'ThirdPartyServiceIncident',
+        'MonitorThirdPartyServiceIncidentsDto.data[].updates[]' => 'ThirdPartyServiceIncidentUpdate',
+        'MonitorThirdPartyServiceIncidentDetailDto' => 'ThirdPartyServiceIncidentDetail',
+        'MonitorThirdPartyServiceIncidentDetailDto.updates[]' => 'ThirdPartyServiceIncidentUpdate',
+        'MonitorThirdPartyServiceIncidentDetailDto.affectedComponents[]' => 'ThirdPartyServiceComponent',
+        'MonitorThirdPartyServiceIncidentActivityLogDto.data[]' => 'ThirdPartyServiceAlert',
+        // The catalog of the providers a third party service monitor can track.
+        'ThirdPartyProviderSearchDto.data[]' => 'ThirdPartyProviderMatch',
+        'ThirdPartyProviderSearchDto.data[].matchedComponent' => 'ThirdPartyProviderMatchedComponent',
+        'ThirdPartyProviderDetailDto' => 'ThirdPartyProvider',
+        'ThirdPartyProviderDetailDto.components[]' => 'ThirdPartyProviderComponent',
+        'ThirdPartyProviderDetailDto.components[].children[]' => 'ThirdPartyProviderComponentChild',
         'MonitorDto.tags[]' => 'MonitorTag',
         'MonitorDto.tags[].monitors[]' => 'TaggedMonitor',
         'MonitorDto.lastIncident' => 'LastIncident',
@@ -206,7 +218,9 @@ return [
         // then it was a bare object, and this configuration added its keys.
         'PermissiveMonitorConfigDto' => 'MonitorConfigUpdate',
         'PermissiveVisualComparisonFieldsDto' => 'VisualComparisonSettingsUpdate',
-        'DependencyConfigFieldsDto' => 'DependencySettings',
+        'ThirdPartyServiceConfigDto' => 'ThirdPartyServiceSettingsUpdate',
+        'CreateThirdPartyServiceConfigDto' => 'ThirdPartyServiceSettings',
+        'ThirdPartyServiceNotifyDto' => 'ThirdPartyServiceNotificationSettings',
         // Used by HTTP and keyword monitors.
         'HttpKeywordMonitorConfigDto' => 'HttpMonitorConfig',
         'VisualComparisonFieldsDto' => 'VisualComparisonSettings',
@@ -343,12 +357,20 @@ return [
         'RegionalDataDto.INFRASTRUCTURE' => 'RegionInfrastructure',
         'PublicApiAssertionsDto.logic' => 'AssertionLogic',
         'PermissiveVisualComparisonFieldsDto.viewport' => 'VisualComparisonViewport',
-        // Dependency monitors: the four states of the tracked provider, the
-        // severity its alerts start at, and that of an incident.
-        'MonitorDto.config.dependency.currentState' => 'DependencyState',
-        'MonitorDependencyStatusDto.currentState' => 'DependencyState',
-        'MonitorDto.config.dependency.notify.severity' => 'DependencyNotificationSeverity',
-        'MonitorDependencyIncidentsDto.data[].severity' => 'DependencyIncidentSeverity',
+        // Third party service monitors: the four states of the tracked
+        // provider, the severity its alerts start at, and that of an incident.
+        'MonitorDto.config.thirdPartyService.currentState' => 'ThirdPartyServiceState',
+        'MonitorThirdPartyServiceStatusDto.currentState' => 'ThirdPartyServiceState',
+        'ThirdPartyProviderSearchDto.data[].state' => 'ThirdPartyServiceState',
+        'ThirdPartyProviderDetailDto.state' => 'ThirdPartyServiceState',
+        'MonitorDto.config.thirdPartyService.notify.severity' => 'ThirdPartyServiceNotificationSeverity',
+        'ThirdPartyServiceNotifyDto.severity' => 'ThirdPartyServiceNotificationSeverity',
+        'MonitorThirdPartyServiceIncidentsDto.data[].severity' => 'ThirdPartyServiceIncidentSeverity',
+        'MonitorThirdPartyServiceIncidentDetailDto.severity' => 'ThirdPartyServiceIncidentSeverity',
+        // The states of a component add unknown to those of the provider.
+        'ThirdPartyProviderDetailDto.components[].status' => 'ThirdPartyProviderComponentStatus',
+        'ThirdPartyProviderDetailDto.components[].children[].status' => 'ThirdPartyProviderComponentStatus',
+        'MonitorThirdPartyServiceIncidentActivityLogDto.data[].status' => 'AlertDeliveryStatus',
         'PublicApiAssertionCheckDto.comparison' => 'AssertionComparison',
         'VisualComparisonFieldsDto.viewport' => 'VisualComparisonViewport',
         'MonitorDto.config.visualComparison.viewport' => 'VisualComparisonViewport',
@@ -384,6 +406,10 @@ return [
         'PspAnnouncementsController_list.status' => 'AnnouncementStatusFilter',
         // The only value is "open", the incidents still ongoing.
         'IncidentsController_list.status' => 'IncidentStatusFilter',
+        // Since the specification of November 9, 2026: the kind of incident
+        // and the group of its root cause (not verified live).
+        'IncidentsController_list.type' => 'IncidentTypeFilter',
+        'IncidentsController_list.cause' => 'IncidentCauseFilter',
         // The assertion diagnostics of an incident share the logic and the
         // operators of the assertions an API monitor is created with; the
         // response names its cases in upper case (x-enumNames), which become the
@@ -407,6 +433,11 @@ return [
         'KeywordCaseType' => [0 => 'CaseSensitive', 1 => 'CaseInsensitive'],
         // The x-enumNames of the response copy (MonitorDto.regionalData.REGION).
         'Region' => ['na' => 'NorthAmerica', 'eu' => 'Europe', 'as' => 'Asia', 'oc' => 'Oceania'],
+        // The HTTP status classes, and JSON spelled like Dns.
+        'IncidentCauseFilter' => [
+            'Timeout' => 'Timeout', '2xx' => 'Http2xx', '3xx' => 'Http3xx', '4xx' => 'Http4xx', '5xx' => 'Http5xx',
+            'DNS' => 'Dns', 'AssertionFailed' => 'AssertionFailed', 'InvalidJSON' => 'InvalidJson', 'ConfigError' => 'ConfigError',
+        ],
         'ResponseTimeRegion' => ['na' => 'NorthAmerica', 'eu' => 'Europe', 'as' => 'Asia', 'oc' => 'Oceania', 'all' => 'All'],
         // The acronym in the casing of the other names, as MsTeams elsewhere.
         'AlertContactType' => [
@@ -679,7 +710,7 @@ return [
         ],
         'MonitorDto.url' => [
             'type' => 'string',
-            'description' => 'The URL, host name or IP address that is checked; for heartbeat monitors, the token of the URL the heartbeats are sent to; for dependency monitors, the status page of the provider, which UptimeRobot resolves itself (all verified live). The specification allows null.',
+            'description' => 'The URL, host name or IP address that is checked; for heartbeat monitors, the token of the URL the heartbeats are sent to; for third party service monitors, the status page of the provider (verified live on a DEPENDENCY monitor, which the type was called until November 2026). The specification allows null.',
         ],
         'MonitorDto.heartbeatUrl' => [
             'type' => 'string',
@@ -688,16 +719,22 @@ return [
         // Read as a list like every other (never null), so the empty list
         // stands for null here (verified live: null on a monitor that tracks
         // bunny.net as a whole).
-        'MonitorDto.config.dependency.trackedComponentIds' => [
+        'MonitorDto.config.thirdPartyService.trackedComponentIds' => [
             'type' => 'array',
             'items' => ['type' => 'integer'],
             'description' => 'The components of the provider the monitor is scoped to (isdown component IDs); empty if it tracks every component, which the API sends as null (verified live).',
         ],
         // ISO 8601 in UTC, as a string in the specification (verified live:
         // "2026-09-25T14:49:50.000Z" on the incidents of bunny.net).
-        'MonitorDependencyIncidentsDto.data[].startedAt' => $date,
-        'MonitorDependencyIncidentsDto.data[].resolvedAt' => $date,
-        'MonitorDependencyIncidentsDto.data[].updates[].createdAt' => $date,
+        'MonitorThirdPartyServiceIncidentsDto.data[].startedAt' => $date,
+        'MonitorThirdPartyServiceIncidentsDto.data[].resolvedAt' => $date,
+        'MonitorThirdPartyServiceIncidentsDto.data[].updates[].createdAt' => $date,
+        'MonitorThirdPartyServiceIncidentDetailDto.startedAt' => $date,
+        'MonitorThirdPartyServiceIncidentDetailDto.resolvedAt' => $date,
+        'MonitorThirdPartyServiceIncidentActivityLogDto.data[].timestamp' => $date,
+        // A string in the specification, but the id of the providers it
+        // reports is an integer, as is the providerId of a monitor.
+        'ThirdPartyProvidersController_getById.id' => ['type' => 'number'],
         'MonitorDto.interval' => ['type' => 'number', 'description' => 'Seconds between two checks.'],
         'MonitorDto.responseTimeThreshold' => ['type' => 'number', 'description' => 'Always 0; the thresholds are in regionalData (verified live).'],
         'MonitorDto.currentStateDuration' => ['type' => 'number', 'description' => 'Seconds since the status last changed; 0 for a new monitor.'],
@@ -1311,6 +1348,8 @@ return [
         // A monitor ID, at least 1 (verified live: 0 is rejected with
         // "monitor_id must be a positive number").
         'IncidentsController_list.monitor_id',
+        // The number of incidents per page, 1 to 200.
+        'IncidentsController_list.limit',
         // The number of comments per page, 1 to 100.
         'IncidentsController_listComments.limit',
         // The ID of the last status page of the previous page, as the official
@@ -1492,7 +1531,7 @@ return [
                 'API' => 'ApiMonitorCreate',
                 'UDP' => 'UdpMonitorCreate',
                 'VISUAL_COMPARISON' => 'VisualComparisonMonitorCreate',
-                'DEPENDENCY' => 'DependencyMonitorCreate',
+                'THIRD_PARTY_SERVICE' => 'ThirdPartyServiceMonitorCreate',
             ],
             'description' => 'A monitor to create: one model per monitor type, each with the fields that type requires.',
         ],
@@ -1629,6 +1668,18 @@ return [
             'next' => 'nextLink',
             'factory' => 'Pagination\\Cursor::fromNextLink',
         ],
+        // GET /incidents: like nextLink, but all() requests pages of 200
+        // incidents, the maximum of the specification of November 9, 2026
+        // ("Default: 50, Min: 1, Max: 200"), which saves requests against the
+        // rate limit. Not verified live: the test account is gone.
+        'incidentPages' => [
+            'cursor' => 'cursor',
+            'size' => 'limit',
+            'allSize' => 200,
+            'items' => 'data',
+            'next' => 'nextLink',
+            'factory' => 'Pagination\\Cursor::fromNextLink',
+        ],
         // GET /incidents/{id}/comments: like nextLink, but all() requests pages
         // of 100 comments, the maximum of the specification ("1-100, default
         // 50"), which saves requests against the rate limit. Not verified live
@@ -1691,14 +1742,26 @@ return [
                     'operation' => 'MonitorsController_getMonitorResponseTimeStats',
                     'note' => 'Times are in milliseconds. Pass from and to together or neither: from alone is rejected with "to must be a Date instance", to alone with "Maximum range is 90 days". timeSeries is empty unless includeTimeSeries is true; the spacing of its points is not documented and varied: 1, 5 and 30 minutes were seen (all verified live).',
                 ],
-                'dependencyStatus' => [
-                    'operation' => 'MonitorsController_getDependencyStatus',
-                    'note' => 'Only for DEPENDENCY monitors: the state of the tracked provider, which tells a partial degradation (minor) from a full outage (major), unlike the status of the monitor. For a monitor of another type, the API raises a NotFoundException (000-004) (verified live).',
+                // DEPENDENCY monitors until the specification of November 9,
+                // 2026, with the paths /monitors/{id}/dependency/status and
+                // /incidents; what was verified live then was verified on them.
+                'thirdPartyServiceStatus' => [
+                    'operation' => 'MonitorsController_getThirdPartyServiceStatus',
+                    'note' => 'Only for THIRD_PARTY_SERVICE monitors: the state of the tracked provider, which tells a partial degradation (minor) from a full outage (major), unlike the status of the monitor. For a monitor of another type, the API raised a NotFoundException (000-004) when the type was still called DEPENDENCY (verified live then).',
                 ],
-                'dependencyIncidents' => [
-                    'operation' => 'MonitorsController_getDependencyIncidents',
+                'thirdPartyServiceIncidents' => [
+                    'operation' => 'MonitorsController_getThirdPartyServiceIncidents',
                     'unwrap' => 'data',
-                    'note' => 'Only for DEPENDENCY monitors: every incident of the tracked provider, resolved or not, newest first, with the updates the provider published; empty if there were none. Verified live on a monitor tracking bunny.net: three resolved incidents with severity minor.',
+                    'note' => 'Only for THIRD_PARTY_SERVICE monitors: every incident of the tracked provider, resolved or not, newest first, with the updates the provider published; empty if there were none. Verified live on a DEPENDENCY monitor tracking bunny.net, as the type was called until November 2026: three resolved incidents with severity minor.',
+                ],
+                'thirdPartyServiceIncident' => [
+                    'operation' => 'MonitorsController_getThirdPartyServiceIncident',
+                    'note' => 'One incident of thirdPartyServiceIncidents(), with the affected components the monitor tracks, or every affected component if it tracks the whole provider (not verified live).',
+                ],
+                'thirdPartyServiceAlerts' => [
+                    'operation' => 'MonitorsController_getThirdPartyServiceIncidentActivityLog',
+                    'unwrap' => 'data',
+                    'note' => 'The alerts the account sent about one incident of the tracked provider. channelIdentifier is only shown for email, SMS and voice; for every other channel it is "[REDACTED]", according to the specification (not verified live).',
                 ],
                 'responseTimeStatsByRegion' => [
                     'operation' => 'MonitorsController_getMonitorResponseTimeStatsByRegion',
@@ -1803,14 +1866,16 @@ return [
             'methods' => [
                 'list' => [
                     'operation' => 'IncidentsController_list',
-                    'pagination' => 'nextLink',
+                    'pagination' => 'incidentPages',
                     'all' => 'all',
-                    // Verified live: cursor=352577094135060139 returned the
-                    // incidents that started before that one; monitor_name=ns
-                    // matched "fast.ns" and "quick.ns", "MY." "my.gosuccess.io";
-                    // started_after and started_before bound startedAt; all 14
-                    // incidents came on one page without nextLink.
-                    'note' => 'Newest first. The cursor is the ID of the last incident of the previous page; the incidents that started before it follow. monitorName matches part of the name, ignoring case; startedAfter and startedBefore bound startedAt. The page size is not documented: all 14 incidents of the test account came on one page (all verified live).',
+                    // Verified live before November 9, 2026, when the cursor was
+                    // an incident ID and the page size undocumented:
+                    // cursor=352577094135060139 returned the incidents that
+                    // started before that one; monitor_name=ns matched "fast.ns"
+                    // and "quick.ns", "MY." "my.gosuccess.io"; started_after and
+                    // started_before bound startedAt; all 14 incidents came on
+                    // one page without nextLink.
+                    'note' => 'Newest first. The cursor is opaque, taken from nextLink of the previous page; according to the specification of November 9, 2026, an incident ID still works, and an unknown or foreign cursor raises a BadRequestException. With type or cause, a page can hold fewer incidents than limit, even none, while nextLink is set; all() keeps paging. monitorName matches part of the name, ignoring case; startedAfter and startedBefore bound startedAt (verified live). all() requests pages of 200 incidents, the most the specification allows.',
                 ],
                 'get' => [
                     'operation' => 'IncidentsController_get',
@@ -2031,6 +2096,22 @@ return [
                 // A bare array, not a page (verified live).
                 'alertContacts' => ['operation' => 'UserController_getAlertContacts'],
                 'allAlertContacts' => ['operation' => 'UserController_getAllAlertContacts'],
+            ],
+        ],
+        // Since the specification of November 9, 2026 (not verified live).
+        'thirdPartyProviders' => [
+            'class' => 'ThirdPartyProviderResource',
+            'description' => 'The catalog of the providers a THIRD_PARTY_SERVICE monitor can track, with their state and components.',
+            'methods' => [
+                'search' => [
+                    'operation' => 'ThirdPartyProvidersController_search',
+                    'unwrap' => 'data',
+                    'note' => 'Matches the names of the providers and of their components; matchedComponent names the component that matched. isTracked tells whether the account monitors the provider already; the results are cached for a minute, so it can lag that long behind creating or deleting a monitor (according to the specification).',
+                ],
+                'get' => [
+                    'operation' => 'ThirdPartyProvidersController_getById',
+                    'note' => 'The provider with its state and its tree of components; their IDs scope a monitor through trackedComponentIds.',
+                ],
             ],
         ],
         'tags' => [

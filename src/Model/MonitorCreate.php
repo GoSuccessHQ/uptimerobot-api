@@ -12,7 +12,7 @@ namespace GoSuccess\UptimeRobot\Model;
  * Implemented by one model per "type": {@see HttpMonitorCreate}, {@see KeywordMonitorCreate}, {@see
  * PingMonitorCreate}, {@see PortMonitorCreate}, {@see HeartbeatMonitorCreate}, {@see
  * DnsMonitorCreate}, {@see ApiMonitorCreate}, {@see UdpMonitorCreate}, {@see
- * VisualComparisonMonitorCreate}, {@see DependencyMonitorCreate}.
+ * VisualComparisonMonitorCreate}, {@see ThirdPartyServiceMonitorCreate}.
  *
  * Schema: MonitorsController_create.body
  */

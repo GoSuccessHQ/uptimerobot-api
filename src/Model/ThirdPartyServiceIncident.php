@@ -7,19 +7,19 @@ declare(strict_types=1);
 namespace GoSuccess\UptimeRobot\Model;
 
 use DateTimeImmutable;
-use GoSuccess\UptimeRobot\Enum\DependencyIncidentSeverity;
+use GoSuccess\UptimeRobot\Enum\ThirdPartyServiceIncidentSeverity;
 
-/** Schema: MonitorDependencyIncidentsDto.data[] */
-final readonly class DependencyIncident implements ResponseModel
+/** Schema: MonitorThirdPartyServiceIncidentsDto.data[] */
+final readonly class ThirdPartyServiceIncident implements ResponseModel
 {
     public function __construct(
         public string $id = '',
         public string $title = '',
-        public ?DependencyIncidentSeverity $severity = null,
+        public ?ThirdPartyServiceIncidentSeverity $severity = null,
         public bool $resolved = false,
         public ?DateTimeImmutable $startedAt = null,
         public ?DateTimeImmutable $resolvedAt = null,
-        /** @var list<DependencyIncidentUpdate> */
+        /** @var list<ThirdPartyServiceIncidentUpdate> */
         public array $updates = [],
     ) {}
 
@@ -28,11 +28,11 @@ final readonly class DependencyIncident implements ResponseModel
         return new self(
             id: Cast::string($data['id'] ?? null) ?? '',
             title: Cast::string($data['title'] ?? null) ?? '',
-            severity: Cast::stringEnum(DependencyIncidentSeverity::class, $data['severity'] ?? null),
+            severity: Cast::stringEnum(ThirdPartyServiceIncidentSeverity::class, $data['severity'] ?? null),
             resolved: Cast::bool($data['resolved'] ?? null) ?? false,
             startedAt: Cast::dateTime($data['startedAt'] ?? null),
             resolvedAt: Cast::dateTime($data['resolvedAt'] ?? null),
-            updates: Cast::modelList(DependencyIncidentUpdate::class, $data['updates'] ?? null),
+            updates: Cast::modelList(ThirdPartyServiceIncidentUpdate::class, $data['updates'] ?? null),
         );
     }
 }

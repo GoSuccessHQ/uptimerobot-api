@@ -6,19 +6,19 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Model;
 
-use GoSuccess\UptimeRobot\Enum\DependencyState;
-
-/** Schema: MonitorDependencyStatusDto */
-final readonly class DependencyStatus implements ResponseModel
+/** Schema: MonitorThirdPartyServiceIncidentDetailDto.affectedComponents[] */
+final readonly class ThirdPartyServiceComponent implements ResponseModel
 {
     public function __construct(
-        public ?DependencyState $currentState = null,
+        public int $id = 0,
+        public string $name = '',
     ) {}
 
     public static function fromArray(array $data): static
     {
         return new self(
-            currentState: Cast::stringEnum(DependencyState::class, $data['currentState'] ?? null),
+            id: Cast::int($data['id'] ?? null) ?? 0,
+            name: Cast::string($data['name'] ?? null) ?? '',
         );
     }
 }

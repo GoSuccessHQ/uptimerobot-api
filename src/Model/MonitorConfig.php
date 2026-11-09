@@ -20,7 +20,7 @@ final readonly class MonitorConfig implements ResponseModel
         public ?IpVersion $ipVersion = null,
         public ?int $applicationErrorRetries = null,
         public ?MonitorVisualComparison $visualComparison = null,
-        public MonitorDependency $dependency = new MonitorDependency(),
+        public MonitorThirdPartyService $thirdPartyService = new MonitorThirdPartyService(),
     ) {}
 
     public static function fromArray(array $data): static
@@ -33,7 +33,7 @@ final readonly class MonitorConfig implements ResponseModel
             ipVersion: Cast::stringEnum(IpVersion::class, $data['ipVersion'] ?? null),
             applicationErrorRetries: Cast::int($data['applicationErrorRetries'] ?? null),
             visualComparison: Cast::model(MonitorVisualComparison::class, $data['visualComparison'] ?? null),
-            dependency: Cast::model(MonitorDependency::class, $data['dependency'] ?? null) ?? new MonitorDependency(),
+            thirdPartyService: Cast::model(MonitorThirdPartyService::class, $data['thirdPartyService'] ?? null) ?? new MonitorThirdPartyService(),
         );
     }
 }

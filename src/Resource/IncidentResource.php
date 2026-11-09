@@ -7,7 +7,9 @@ declare(strict_types=1);
 namespace GoSuccess\UptimeRobot\Resource;
 
 use DateTimeInterface;
+use GoSuccess\UptimeRobot\Enum\IncidentCauseFilter;
 use GoSuccess\UptimeRobot\Enum\IncidentStatusFilter;
+use GoSuccess\UptimeRobot\Enum\IncidentTypeFilter;
 use GoSuccess\UptimeRobot\Http\Method;
 use GoSuccess\UptimeRobot\Model\ActivityLogEntry;
 use GoSuccess\UptimeRobot\Model\Cast;
@@ -30,36 +32,45 @@ final class IncidentResource extends AbstractResource
     /**
      * List incidents
      *
-     * List all incidents in a user's account with optional filtering. Values can be paginated with the cursor parameter.
+     * List all incidents in a user's account with optional filtering. Sorted by start date descending, newest first. Values can be paginated with the cursor parameter.
      *
-     * Newest first. The cursor is the ID of the last incident of the previous page; the incidents that started before it follow. monitorName matches part of the name, ignoring case; startedAfter and startedBefore bound startedAt. The page size is not documented: all 14 incidents of the test account came on one page (all verified live).
+     * Newest first. The cursor is opaque, taken from nextLink of the previous page; according to the specification of November 9, 2026, an incident ID still works, and an unknown or foreign cursor raises a BadRequestException. With type or cause, a page can hold fewer incidents than limit, even none, while nextLink is set; all() keeps paging. monitorName matches part of the name, ignoring case; startedAfter and startedBefore bound startedAt (verified live). all() requests pages of 200 incidents, the most the specification allows.
      *
      * `GET /incidents`
      *
      * @param string|null               $cursor        The cursor of the page to return, as the previous page reported it; null for the first page.
+     * @param int|null                  $limit         Maximum number of items to return per page. Default: 50, Min: 1, Max: 200.
      * @param int|null                  $monitorId     Filter incidents by monitor ID
      * @param string|null               $monitorName   Filter incidents by monitor name (partial match)
      * @param DateTimeInterface|null    $startedAfter  Only incidents that started at or after this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC. To continue after an incident, pass its startedAt plus one millisecond.
      * @param DateTimeInterface|null    $startedBefore Only incidents that started at or before this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC.
      * @param IncidentStatusFilter|null $status        Filter incidents by status. "open" returns only currently ongoing incidents, regardless of started_after/started_before.
+     * @param IncidentTypeFilter|null   $type          Filter incidents by type. With a filter a page may hold fewer items than `limit`, even none, while `nextLink` is set: keep paging until it is absent.
+     * @param IncidentCauseFilter|null  $cause         Filter incidents by root cause group: Timeout, an HTTP status class (2xx–5xx), DNS, AssertionFailed, InvalidJSON or ConfigError. Combines with `type` and the other filters. With a filter a page may hold fewer items than `limit`, even none, while `nextLink` is set: keep paging until it is absent.
      *
      * @return Page<IncidentSummary>
      */
     public function list(
         ?string $cursor = null,
+        ?int $limit = null,
         ?int $monitorId = null,
         ?string $monitorName = null,
         ?DateTimeInterface $startedAfter = null,
         ?DateTimeInterface $startedBefore = null,
         ?IncidentStatusFilter $status = null,
+        ?IncidentTypeFilter $type = null,
+        ?IncidentCauseFilter $cause = null,
     ): Page {
         $data = self::expectObject($this->connection->json(Method::Get, 'incidents', [
             'cursor' => $cursor,
+            'limit' => $limit,
             'monitor_id' => $monitorId,
             'monitor_name' => $monitorName,
             'started_after' => $startedAfter,
             'started_before' => $startedBefore,
             'status' => $status,
+            'type' => $type,
+            'cause' => $cause,
         ]));
 
         return Cursor::fromNextLink($data, Cast::modelList(IncidentSummary::class, $data['data'] ?? null), integerCursor: false);
@@ -68,32 +79,41 @@ final class IncidentResource extends AbstractResource
     /**
      * Iterate lazily over every item of list(), across all pages.
      *
-     * Newest first. The cursor is the ID of the last incident of the previous page; the incidents that started before it follow. monitorName matches part of the name, ignoring case; startedAfter and startedBefore bound startedAt. The page size is not documented: all 14 incidents of the test account came on one page (all verified live).
+     * Newest first. The cursor is opaque, taken from nextLink of the previous page; according to the specification of November 9, 2026, an incident ID still works, and an unknown or foreign cursor raises a BadRequestException. With type or cause, a page can hold fewer incidents than limit, even none, while nextLink is set; all() keeps paging. monitorName matches part of the name, ignoring case; startedAfter and startedBefore bound startedAt (verified live). all() requests pages of 200 incidents, the most the specification allows.
      *
      * `GET /incidents`
      *
+     * @param int                       $limit         Maximum number of items to return per page. Default: 50, Min: 1, Max: 200.
      * @param int|null                  $monitorId     Filter incidents by monitor ID
      * @param string|null               $monitorName   Filter incidents by monitor name (partial match)
      * @param DateTimeInterface|null    $startedAfter  Only incidents that started at or after this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC. To continue after an incident, pass its startedAt plus one millisecond.
      * @param DateTimeInterface|null    $startedBefore Only incidents that started at or before this time, compared to the millisecond (verified live); sent as ISO 8601 in UTC.
      * @param IncidentStatusFilter|null $status        Filter incidents by status. "open" returns only currently ongoing incidents, regardless of started_after/started_before.
+     * @param IncidentTypeFilter|null   $type          Filter incidents by type. With a filter a page may hold fewer items than `limit`, even none, while `nextLink` is set: keep paging until it is absent.
+     * @param IncidentCauseFilter|null  $cause         Filter incidents by root cause group: Timeout, an HTTP status class (2xx–5xx), DNS, AssertionFailed, InvalidJSON or ConfigError. Combines with `type` and the other filters. With a filter a page may hold fewer items than `limit`, even none, while `nextLink` is set: keep paging until it is absent.
      *
      * @return Paginator<IncidentSummary>
      */
     public function all(
+        int $limit = 200,
         ?int $monitorId = null,
         ?string $monitorName = null,
         ?DateTimeInterface $startedAfter = null,
         ?DateTimeInterface $startedBefore = null,
         ?IncidentStatusFilter $status = null,
+        ?IncidentTypeFilter $type = null,
+        ?IncidentCauseFilter $cause = null,
     ): Paginator {
         return new Paginator(fn(int|string|null $cursor): Page => $this->list(
             cursor: \is_string($cursor) ? $cursor : null,
+            limit: $limit,
             monitorId: $monitorId,
             monitorName: $monitorName,
             startedAfter: $startedAfter,
             startedBefore: $startedBefore,
             status: $status,
+            type: $type,
+            cause: $cause,
         ));
     }
 

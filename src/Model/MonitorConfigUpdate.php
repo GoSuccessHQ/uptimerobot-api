@@ -27,7 +27,7 @@ final readonly class MonitorConfigUpdate implements RequestModel
         /** UDP monitor configuration. UDP monitors only. Send null to remove. */
         public UdpSettings|Undefined|null $udp = Undefined::Value,
         /**
-         * IP version preference. Omit for default behavior (IPv4 priority, falls back to IPv6). Not supported by DNS, Heartbeat, Visual Comparison or Dependency monitors. Send null to remove.
+         * IP version preference. Omit for default behavior (IPv4 priority, falls back to IPv6). Not supported by DNS, Heartbeat, Visual Comparison or third-party service monitors. Send null to remove.
          */
         public IpVersion|Undefined|null $ipVersion = Undefined::Value,
         /**
@@ -37,9 +37,9 @@ final readonly class MonitorConfigUpdate implements RequestModel
         /** Visual comparison configuration. Visual Comparison monitors only. Send null to remove. */
         public VisualComparisonSettingsUpdate|Undefined|null $visualComparison = Undefined::Value,
         /**
-         * Dependency monitor configuration - the isdown provider to track and, optionally, which of its components to scope tracking to. Dependency monitors only. Send null to remove.
+         * Third party service configuration - the isdown provider to track and, optionally, which of its components to scope tracking to. Third party services only. Send null to remove.
          */
-        public DependencySettings|Undefined|null $dependency = Undefined::Value,
+        public ThirdPartyServiceSettingsUpdate|Undefined|null $thirdPartyService = Undefined::Value,
     ) {}
 
     public function toArray(): array
@@ -74,8 +74,8 @@ final readonly class MonitorConfigUpdate implements RequestModel
             $data['visualComparison'] = $this->visualComparison === null ? null : Json::map($this->visualComparison->toArray());
         }
 
-        if (!$this->dependency instanceof Undefined) {
-            $data['dependency'] = $this->dependency === null ? null : Json::map($this->dependency->toArray());
+        if (!$this->thirdPartyService instanceof Undefined) {
+            $data['thirdPartyService'] = $this->thirdPartyService === null ? null : Json::map($this->thirdPartyService->toArray());
         }
 
         return $data;

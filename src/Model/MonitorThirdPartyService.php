@@ -6,34 +6,34 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Model;
 
-use GoSuccess\UptimeRobot\Enum\DependencyState;
+use GoSuccess\UptimeRobot\Enum\ThirdPartyServiceState;
 
-/** Schema: MonitorDto.config.dependency */
-final readonly class MonitorDependency implements ResponseModel
+/** Schema: MonitorDto.config.thirdPartyService */
+final readonly class MonitorThirdPartyService implements ResponseModel
 {
     public function __construct(
-        public string $providerUrlname = '',
         /**
          * The components of the provider the monitor is scoped to (isdown component IDs); empty if it tracks every component, which the API sends as null (verified live).
          *
          * @var list<int>
          */
         public array $trackedComponentIds = [],
-        public ?DependencyState $currentState = null,
+        public ?ThirdPartyServiceState $currentState = null,
         public bool $needsReview = false,
-        public DependencyNotifications $notify = new DependencyNotifications(),
+        public ThirdPartyServiceNotifications $notify = new ThirdPartyServiceNotifications(),
         public bool $maintenanceNotificationsEnabled = false,
+        public ?int $providerId = null,
     ) {}
 
     public static function fromArray(array $data): static
     {
         return new self(
-            providerUrlname: Cast::string($data['providerUrlname'] ?? null) ?? '',
             trackedComponentIds: Cast::listOf($data['trackedComponentIds'] ?? null, Cast::int(...)),
-            currentState: Cast::stringEnum(DependencyState::class, $data['currentState'] ?? null),
+            currentState: Cast::stringEnum(ThirdPartyServiceState::class, $data['currentState'] ?? null),
             needsReview: Cast::bool($data['needsReview'] ?? null) ?? false,
-            notify: Cast::model(DependencyNotifications::class, $data['notify'] ?? null) ?? new DependencyNotifications(),
+            notify: Cast::model(ThirdPartyServiceNotifications::class, $data['notify'] ?? null) ?? new ThirdPartyServiceNotifications(),
             maintenanceNotificationsEnabled: Cast::bool($data['maintenanceNotificationsEnabled'] ?? null) ?? false,
+            providerId: Cast::int($data['providerId'] ?? null),
         );
     }
 }

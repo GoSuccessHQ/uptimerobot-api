@@ -6,11 +6,14 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Enum;
 
-/** Schema: MonitorDto.config.dependency.currentState, MonitorDependencyStatusDto.currentState */
-enum DependencyState: string
+/**
+ * Schema: ThirdPartyProviderDetailDto.components[].status, ThirdPartyProviderDetailDto.components[].children[].status
+ */
+enum ThirdPartyProviderComponentStatus: string
 {
     case Operational = 'operational';
     case Minor = 'minor';
     case Major = 'major';
     case Maintenance = 'maintenance';
+    case Unknown = 'unknown';
 }

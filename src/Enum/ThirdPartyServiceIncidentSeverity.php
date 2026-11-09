@@ -6,10 +6,11 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Enum;
 
-/** Schema: MonitorDto.config.dependency.notify.severity */
-enum DependencyNotificationSeverity: string
+/**
+ * Schema: MonitorThirdPartyServiceIncidentsDto.data[].severity, MonitorThirdPartyServiceIncidentDetailDto.severity
+ */
+enum ThirdPartyServiceIncidentSeverity: string
 {
-    case All = 'all';
+    case Minor = 'minor';
     case Major = 'major';
-    case None = 'none';
 }

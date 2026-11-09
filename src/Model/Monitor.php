@@ -96,7 +96,7 @@ final readonly class Monitor implements ResponseModel
          */
         public ?MonitorStatus $status = null,
         /**
-         * The URL, host name or IP address that is checked; for heartbeat monitors, the token of the URL the heartbeats are sent to; for dependency monitors, the status page of the provider, which UptimeRobot resolves itself (all verified live). The specification allows null.
+         * The URL, host name or IP address that is checked; for heartbeat monitors, the token of the URL the heartbeats are sent to; for third party service monitors, the status page of the provider (verified live on a DEPENDENCY monitor, which the type was called until November 2026). The specification allows null.
          */
         public ?string $url = null,
         /** Seconds since the status last changed; 0 for a new monitor. */

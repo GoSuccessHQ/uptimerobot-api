@@ -24,6 +24,7 @@ use GoSuccess\UptimeRobot\Resource\MonitorResource;
 use GoSuccess\UptimeRobot\Resource\StatusPageResource;
 use GoSuccess\UptimeRobot\Resource\StormProtectionResource;
 use GoSuccess\UptimeRobot\Resource\TagResource;
+use GoSuccess\UptimeRobot\Resource\ThirdPartyProviderResource;
 use GoSuccess\UptimeRobot\Resource\UserResource;
 use SensitiveParameter;
 
@@ -105,6 +106,13 @@ final class UptimeRobot
     /** The account the API key belongs to: its plan and its alert contacts. */
     public private(set) UserResource $user {
         get => $this->user ??= new UserResource($this->connection);
+    }
+
+    /**
+     * The catalog of the providers a THIRD_PARTY_SERVICE monitor can track, with their state and components.
+     */
+    public private(set) ThirdPartyProviderResource $thirdPartyProviders {
+        get => $this->thirdPartyProviders ??= new ThirdPartyProviderResource($this->connection);
     }
 
     /** Tags of monitors. They are created by naming them on a monitor. */

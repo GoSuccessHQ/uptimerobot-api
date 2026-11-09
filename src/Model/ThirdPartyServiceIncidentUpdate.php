@@ -8,8 +8,8 @@ namespace GoSuccess\UptimeRobot\Model;
 
 use DateTimeImmutable;
 
-/** Schema: MonitorDependencyIncidentsDto.data[].updates[] */
-final readonly class DependencyIncidentUpdate implements ResponseModel
+/** Schema: MonitorThirdPartyServiceIncidentsDto.data[].updates[] */
+final readonly class ThirdPartyServiceIncidentUpdate implements ResponseModel
 {
     public function __construct(
         public string $status = '',

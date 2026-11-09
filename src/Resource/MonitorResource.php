@@ -11,14 +11,16 @@ use GoSuccess\UptimeRobot\Enum\MonitorStatus;
 use GoSuccess\UptimeRobot\Enum\ResponseTimeRegion;
 use GoSuccess\UptimeRobot\Http\Method;
 use GoSuccess\UptimeRobot\Model\Cast;
-use GoSuccess\UptimeRobot\Model\DependencyIncident;
-use GoSuccess\UptimeRobot\Model\DependencyStatus;
 use GoSuccess\UptimeRobot\Model\Monitor;
 use GoSuccess\UptimeRobot\Model\MonitorCreate;
 use GoSuccess\UptimeRobot\Model\MonitorUpdate;
 use GoSuccess\UptimeRobot\Model\MonitorUptimeStats;
 use GoSuccess\UptimeRobot\Model\RegionalResponseTimeStats;
 use GoSuccess\UptimeRobot\Model\ResponseTimeStats;
+use GoSuccess\UptimeRobot\Model\ThirdPartyServiceAlert;
+use GoSuccess\UptimeRobot\Model\ThirdPartyServiceIncident;
+use GoSuccess\UptimeRobot\Model\ThirdPartyServiceIncidentDetail;
+use GoSuccess\UptimeRobot\Model\ThirdPartyServiceStatus;
 use GoSuccess\UptimeRobot\Pagination\Cursor;
 use GoSuccess\UptimeRobot\Pagination\Page;
 use GoSuccess\UptimeRobot\Pagination\Paginator;
@@ -284,41 +286,81 @@ final class MonitorResource extends AbstractResource
     }
 
     /**
-     * Get the current status of a dependency monitor
+     * Get the current status of a third party service
      *
-     * Returns the fine-grained 4-state (operational, minor, major, maintenance) for a type-10 dependency monitor, read from monitorConfig.dependency.currentState. Distinct from the coarse monitor status field, which cannot tell a partial degradation from a full outage.
+     * Returns the fine-grained 4-state (operational, minor, major, maintenance) for a third party service monitor. Distinct from the coarse monitor status field, which cannot tell a partial degradation from a full outage.
      *
-     * Only for DEPENDENCY monitors: the state of the tracked provider, which tells a partial degradation (minor) from a full outage (major), unlike the status of the monitor. For a monitor of another type, the API raises a NotFoundException (000-004) (verified live).
+     * Only for THIRD_PARTY_SERVICE monitors: the state of the tracked provider, which tells a partial degradation (minor) from a full outage (major), unlike the status of the monitor. For a monitor of another type, the API raised a NotFoundException (000-004) when the type was still called DEPENDENCY (verified live then).
      *
-     * `GET /monitors/{id}/dependency/status`
+     * `GET /monitors/{id}/third-party-service/status`
      *
      * @param int $id
      */
-    public function dependencyStatus(int $id): DependencyStatus
+    public function thirdPartyServiceStatus(int $id): ThirdPartyServiceStatus
     {
-        $data = $this->connection->json(Method::Get, "monitors/{$id}/dependency/status");
+        $data = $this->connection->json(Method::Get, "monitors/{$id}/third-party-service/status");
 
-        return self::toModel(DependencyStatus::class, $data);
+        return self::toModel(ThirdPartyServiceStatus::class, $data);
     }
 
     /**
-     * Get the incident history of a dependency monitor
+     * Get the incident history of a third party service
      *
-     * Returns every incident (resolved and unresolved) recorded for the provider a type-10 dependency monitor tracks, newest first, with verbatim provider updates. An empty history returns an empty array with a 200, never an error.
+     * Returns every incident (resolved and unresolved) recorded for the provider a third party service monitor tracks, newest first, with verbatim provider updates. An empty history returns an empty array with a 200, never an error.
      *
-     * Only for DEPENDENCY monitors: every incident of the tracked provider, resolved or not, newest first, with the updates the provider published; empty if there were none. Verified live on a monitor tracking bunny.net: three resolved incidents with severity minor.
+     * Only for THIRD_PARTY_SERVICE monitors: every incident of the tracked provider, resolved or not, newest first, with the updates the provider published; empty if there were none. Verified live on a DEPENDENCY monitor tracking bunny.net, as the type was called until November 2026: three resolved incidents with severity minor.
      *
-     * `GET /monitors/{id}/dependency/incidents`
+     * `GET /monitors/{id}/third-party-service/incidents`
      *
      * @param int $id
      *
-     * @return list<DependencyIncident>
+     * @return list<ThirdPartyServiceIncident>
      */
-    public function dependencyIncidents(int $id): array
+    public function thirdPartyServiceIncidents(int $id): array
     {
-        $data = $this->connection->json(Method::Get, "monitors/{$id}/dependency/incidents");
+        $data = $this->connection->json(Method::Get, "monitors/{$id}/third-party-service/incidents");
 
-        return Cast::modelList(DependencyIncident::class, self::expectObject($data)['data'] ?? null);
+        return Cast::modelList(ThirdPartyServiceIncident::class, self::expectObject($data)['data'] ?? null);
+    }
+
+    /**
+     * Get one incident of a third party service
+     *
+     * Returns one incident from the incident history of a third party service monitor, resolved or not, with its verbatim provider updates. affectedComponents lists the affected components the monitor tracks, or every affected component when the monitor tracks the whole provider.
+     *
+     * One incident of thirdPartyServiceIncidents(), with the affected components the monitor tracks, or every affected component if it tracks the whole provider (not verified live).
+     *
+     * `GET /monitors/{id}/third-party-service/incidents/{incidentId}`
+     *
+     * @param int    $id         The monitor ID
+     * @param string $incidentId The incident ID from the incident history of the third party service. A string, since it can exceed the safe integer range.
+     */
+    public function thirdPartyServiceIncident(int $id, string $incidentId): ThirdPartyServiceIncidentDetail
+    {
+        $data = $this->connection->json(Method::Get, "monitors/{$id}/third-party-service/incidents/{$this->segment($incidentId)}");
+
+        return self::toModel(ThirdPartyServiceIncidentDetail::class, $data);
+    }
+
+    /**
+     * Get the activity log of a third party service incident
+     *
+     * Returns the notifications this account sent about one incident of a third party service, with the channel, the alert contact and whether delivery succeeded. channelIdentifier is shown only for email, SMS and voice channels; for every other channel, such as webhooks, Slack or mobile push, whose value can carry a credential, it is the literal string "[REDACTED]". An incident with no notifications returns an empty array with a 200.
+     *
+     * The alerts the account sent about one incident of the tracked provider. channelIdentifier is only shown for email, SMS and voice; for every other channel it is "[REDACTED]", according to the specification (not verified live).
+     *
+     * `GET /monitors/{id}/third-party-service/incidents/{incidentId}/activity-log`
+     *
+     * @param int    $id         The monitor ID
+     * @param string $incidentId The incident ID from the incident history of the third party service. A string, since it can exceed the safe integer range.
+     *
+     * @return list<ThirdPartyServiceAlert>
+     */
+    public function thirdPartyServiceAlerts(int $id, string $incidentId): array
+    {
+        $data = $this->connection->json(Method::Get, "monitors/{$id}/third-party-service/incidents/{$this->segment($incidentId)}/activity-log");
+
+        return Cast::modelList(ThirdPartyServiceAlert::class, self::expectObject($data)['data'] ?? null);
     }
 
     /**

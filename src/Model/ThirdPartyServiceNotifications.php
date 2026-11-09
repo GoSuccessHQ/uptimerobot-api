@@ -6,20 +6,20 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Model;
 
-use GoSuccess\UptimeRobot\Enum\DependencyNotificationSeverity;
+use GoSuccess\UptimeRobot\Enum\ThirdPartyServiceNotificationSeverity;
 
-/** Schema: MonitorDto.config.dependency.notify */
-final readonly class DependencyNotifications implements ResponseModel
+/** Schema: MonitorDto.config.thirdPartyService.notify */
+final readonly class ThirdPartyServiceNotifications implements ResponseModel
 {
     public function __construct(
-        public ?DependencyNotificationSeverity $severity = null,
+        public ?ThirdPartyServiceNotificationSeverity $severity = null,
         public bool $incrementalUpdates = false,
     ) {}
 
     public static function fromArray(array $data): static
     {
         return new self(
-            severity: Cast::stringEnum(DependencyNotificationSeverity::class, $data['severity'] ?? null),
+            severity: Cast::stringEnum(ThirdPartyServiceNotificationSeverity::class, $data['severity'] ?? null),
             incrementalUpdates: Cast::bool($data['incrementalUpdates'] ?? null) ?? false,
         );
     }

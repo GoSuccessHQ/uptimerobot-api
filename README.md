@@ -46,6 +46,7 @@ A modern, strongly-typed, **dependency-free** PHP client for the
 | [Integrations](#integrations) | `$uptimeRobot->integrations` | Listing and errors; the account had none |
 | [Tags](#tags) | `$uptimeRobot->tags` | Listing; the account had none |
 | [Account](#account) | `$uptimeRobot->user` | Reading |
+| [Third-party providers](#third-party-service-monitors) | `$uptimeRobot->thirdPartyProviders` | No, tested with a mocked transport only |
 | [Storm protection](#storm-protection) | `$uptimeRobot->stormProtection` | Reading |
 
 The checks ran against a production account on the Solo plan; the only
@@ -119,7 +120,7 @@ requires what the type requires:
 | API | `ApiMonitorCreate` | `url`, `timeout`, `config` with the assertions |
 | UDP | `UdpMonitorCreate` | `url`, `port`, `timeout`, `config` with the packet loss threshold |
 | Visual comparison | `VisualComparisonMonitorCreate` | `url`, `config` with sensitivity and viewport |
-| Dependency | `DependencyMonitorCreate` | `url`, `timeout`, `config` with the provider of the isdown catalog |
+| Third-party service | `ThirdPartyServiceMonitorCreate` | only `config` with the provider of the catalog, no `friendlyName` or `interval` |
 
 ```php
 use GoSuccess\UptimeRobot\Enum\HttpMethod;
@@ -165,9 +166,6 @@ use GoSuccess\UptimeRobot\Model\ApiAssertionCheck;
 use GoSuccess\UptimeRobot\Model\ApiAssertions;
 use GoSuccess\UptimeRobot\Model\ApiMonitorConfig;
 use GoSuccess\UptimeRobot\Model\ApiMonitorCreate;
-use GoSuccess\UptimeRobot\Model\DependencyMonitorConfig;
-use GoSuccess\UptimeRobot\Model\DependencyMonitorCreate;
-use GoSuccess\UptimeRobot\Model\DependencySettings;
 use GoSuccess\UptimeRobot\Model\DnsMonitorConfig;
 use GoSuccess\UptimeRobot\Model\DnsMonitorCreate;
 use GoSuccess\UptimeRobot\Model\DnsRecords;
@@ -175,6 +173,9 @@ use GoSuccess\UptimeRobot\Model\HeartbeatMonitorCreate;
 use GoSuccess\UptimeRobot\Model\KeywordMonitorCreate;
 use GoSuccess\UptimeRobot\Model\PingMonitorCreate;
 use GoSuccess\UptimeRobot\Model\PortMonitorCreate;
+use GoSuccess\UptimeRobot\Model\ThirdPartyServiceMonitorConfig;
+use GoSuccess\UptimeRobot\Model\ThirdPartyServiceMonitorCreate;
+use GoSuccess\UptimeRobot\Model\ThirdPartyServiceSettings;
 use GoSuccess\UptimeRobot\Model\UdpMonitorConfig;
 use GoSuccess\UptimeRobot\Model\UdpMonitorCreate;
 use GoSuccess\UptimeRobot\Model\UdpSettings;
@@ -240,15 +241,11 @@ $uptimeRobot->monitors->create(new VisualComparisonMonitorCreate(
     )),
 ));
 
-// Tracks the status page of a third-party service instead of checking a URL.
-// url and timeout are required on the wire, but UptimeRobot discards them and
-// sets the status page of the provider; null tracks every component.
-$uptimeRobot->monitors->create(new DependencyMonitorCreate(
-    friendlyName: 'Stripe',
-    interval: 300,
-    url: 'https://status.stripe.com',
-    timeout: 30,
-    config: new DependencyMonitorConfig(dependency: new DependencySettings(providerUrlname: 'stripe', trackedComponentIds: null)),
+// Tracks the status page of a third-party service instead of checking a URL:
+// the provider by its ID in the catalog (see thirdPartyProviders below);
+// without trackedComponentIds, every component.
+$uptimeRobot->monitors->create(new ThirdPartyServiceMonitorCreate(
+    new ThirdPartyServiceMonitorConfig(new ThirdPartyServiceSettings(providerId: 4317)),
 ));
 ```
 
@@ -259,31 +256,46 @@ token of its heartbeat URL as `url`. Monitors of the types HTTP, keyword, ping,
 port, heartbeat, DNS and API were created on the live API during development,
 the keyword monitor through this client and the others with requests of the
 same shape; UDP and visual comparison monitors follow the specification.
-A dependency monitor was read live but not created: it counts against an
-allowance of its own (`dependencyMonitorLimit`), which the test account had
-spent.
+A third-party service monitor (called a dependency monitor until UptimeRobot
+renamed the type on November 9, 2026) was read live but not created: it counts
+against an allowance of its own (`dependencyMonitorLimit`), which the test
+account had spent.
 
 A heartbeat monitor also reports the complete URL for its pings as
-`heartbeatUrl`, `null` for every other type. A dependency monitor reports the
-status page of its provider as `url` (verified live); the specification allows
-`url` to be `null`.
+`heartbeatUrl`, `null` for every other type. A third-party service monitor
+reports the status page of its provider as `url` (verified live); the
+specification allows `url` to be `null`.
 
-### Dependency monitors
+### Third-party service monitors
 
 ```php
+// The catalog of the providers, by the name of a provider or a component.
+foreach ($uptimeRobot->thirdPartyProviders->search('github') as $provider) {
+    echo $provider->id, ' ', $provider->name, $provider->isTracked ? ' (tracked)' : '', PHP_EOL;
+}
+
+// One provider with its tree of components, whose IDs go into trackedComponentIds.
+$provider = $uptimeRobot->thirdPartyProviders->get(4317);
+
 // operational, minor, major or maintenance: a partial degradation (minor) is
 // no longer the same as a full outage (major), unlike the monitor status.
-$state = $uptimeRobot->monitors->dependencyStatus($monitor->id)->currentState;
+$state = $uptimeRobot->monitors->thirdPartyServiceStatus($monitor->id)->currentState;
 
 // Every incident of the provider, newest first, with its published updates.
-foreach ($uptimeRobot->monitors->dependencyIncidents($monitor->id) as $incident) {
+foreach ($uptimeRobot->monitors->thirdPartyServiceIncidents($monitor->id) as $incident) {
     echo $incident->startedAt?->format('Y-m-d'), ' ', $incident->severity?->value, ' ', $incident->title, PHP_EOL;
 }
+
+// One incident with the affected components, and the alerts sent about it.
+$incident = $uptimeRobot->monitors->thirdPartyServiceIncident($monitor->id, '361887720743641106');
+$alerts = $uptimeRobot->monitors->thirdPartyServiceAlerts($monitor->id, '361887720743641106');
 ```
 
-Both only answer for dependency monitors; for any other monitor, the API raises
-a `NotFoundException` (verified live, as were both responses on a monitor
-tracking bunny.net).
+These only answer for third-party service monitors; for any other monitor, the
+API raised a `NotFoundException` when the type was still called `DEPENDENCY`
+(verified live then, as were the state and the incidents on a monitor tracking
+bunny.net). The catalog, a single incident and its alerts follow the
+specification of November 9, 2026.
 
 ### Reading and filtering
 
@@ -525,7 +537,10 @@ echo $incident->rootCause?->url, ' answered ', $incident->rootCause->httpRespons
 ```
 
 The list is sorted newest first; `monitorName` matches part of the name,
-ignoring case. `startedAfter` and `startedBefore` include an incident that
+ignoring case. Since November 9, 2026, `type` (`IncidentTypeFilter`) and
+`cause` (`IncidentCauseFilter`, e.g. `Timeout` or `Http5xx`) filter the list
+too; with them a page can be empty while more follow, which `all()` pages past
+(according to the specification). `startedAfter` and `startedBefore` include an incident that
 started exactly at the given time, to the millisecond (verified live): to list
 only the incidents after one you have seen, pass its `startedAt` plus one
 millisecond. The items of the list carry the `type` (e.g. `Downtime`,
@@ -766,12 +781,12 @@ tags, so only the empty list was verified live.
 $user = $uptimeRobot->user->me();
 
 printf(
-    "%s, %s plan: %d of %d monitors, %d of %d dependencies\n",
+    "%s, %s plan: %d of %d monitors, %d of %d third-party services\n",
     $user->email,
     $user->activeSubscription->plan,
     $user->monitorsCount,
     $user->monitorLimit,
-    $user->dependencyMonitorsCount,  // a separate allowance
+    $user->dependencyMonitorsCount,  // a separate allowance for third-party services
     $user->dependencyMonitorLimit,
 );
 
@@ -865,9 +880,10 @@ foreach ($uptimeRobot->monitors->all(name: 'shop') as $monitor) {
 }
 ```
 
-The cursor is an `int`, and a string of digits for incidents. `all()` asks for
-200 monitors per page, the most the API allows, and 100 comments, the most the
-specification allows; the other lists have no page size. Breaking out of the
+The cursor is an `int`, and an opaque string for incidents. `all()` asks for
+200 monitors per page, the most the API allows, and 200 incidents and 100
+comments, the most the specification allows; the other lists have no page
+size. Breaking out of the
 loop early saves the remaining requests. The monitor list reports a next page
 after every full page, even when nothing follows, so the last request of
 `all()` may return an empty page (verified live). The activity log, the alerts

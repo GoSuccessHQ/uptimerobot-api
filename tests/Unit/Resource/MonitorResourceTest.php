@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace GoSuccess\UptimeRobot\Tests\Unit\Resource;
 
 use DateTimeImmutable;
-use GoSuccess\UptimeRobot\Enum\DependencyIncidentSeverity;
-use GoSuccess\UptimeRobot\Enum\DependencyNotificationSeverity;
-use GoSuccess\UptimeRobot\Enum\DependencyState;
+use GoSuccess\UptimeRobot\Enum\AlertDeliveryStatus;
 use GoSuccess\UptimeRobot\Enum\HttpAuthType;
 use GoSuccess\UptimeRobot\Enum\HttpMethod;
 use GoSuccess\UptimeRobot\Enum\IpVersion;
@@ -20,19 +18,23 @@ use GoSuccess\UptimeRobot\Enum\PostValueType;
 use GoSuccess\UptimeRobot\Enum\Region;
 use GoSuccess\UptimeRobot\Enum\RegionInfrastructure;
 use GoSuccess\UptimeRobot\Enum\ResponseTimeRegion;
+use GoSuccess\UptimeRobot\Enum\ThirdPartyServiceIncidentSeverity;
+use GoSuccess\UptimeRobot\Enum\ThirdPartyServiceNotificationSeverity;
+use GoSuccess\UptimeRobot\Enum\ThirdPartyServiceState;
 use GoSuccess\UptimeRobot\Enum\UptimeLogType;
 use GoSuccess\UptimeRobot\Enum\UptimeTimeFrame;
 use GoSuccess\UptimeRobot\Exception\BadRequestException;
 use GoSuccess\UptimeRobot\Exception\NotFoundException;
 use GoSuccess\UptimeRobot\Http\Response;
-use GoSuccess\UptimeRobot\Model\DependencyMonitorConfig;
-use GoSuccess\UptimeRobot\Model\DependencyMonitorCreate;
-use GoSuccess\UptimeRobot\Model\DependencySettings;
 use GoSuccess\UptimeRobot\Model\HttpMonitorConfig;
 use GoSuccess\UptimeRobot\Model\KeywordMonitorCreate;
 use GoSuccess\UptimeRobot\Model\MonitorConfigUpdate;
 use GoSuccess\UptimeRobot\Model\MonitorUpdate;
 use GoSuccess\UptimeRobot\Model\RegionalData;
+use GoSuccess\UptimeRobot\Model\ThirdPartyServiceMonitorConfig;
+use GoSuccess\UptimeRobot\Model\ThirdPartyServiceMonitorCreate;
+use GoSuccess\UptimeRobot\Model\ThirdPartyServiceNotificationSettings;
+use GoSuccess\UptimeRobot\Model\ThirdPartyServiceSettings;
 use GoSuccess\UptimeRobot\Resource\MonitorResource;
 use GoSuccess\UptimeRobot\Tests\Support\MockHttpClient;
 use GoSuccess\UptimeRobot\UptimeRobot;
@@ -409,30 +411,30 @@ final class MonitorResourceTest extends TestCase
     }
 
     /**
-     * The dependency monitor of the test account, which tracks bunny.net
-     * (verified live on September 28, 2026): UptimeRobot resolves the URL to
-     * the status page of the provider itself, and a monitor that tracks every
-     * component sends null for trackedComponentIds.
+     * A third party service monitor as the specification of November 9, 2026
+     * describes it. Until then the type was DEPENDENCY; the URL, the state and
+     * the null for trackedComponentIds were verified live on such a monitor
+     * tracking bunny.net (September 28, 2026), the providerId is not.
      */
-    public function testReadsADependencyMonitorAsTheApiSendsIt(): void
+    public function testReadsAThirdPartyServiceMonitor(): void
     {
-        $http = new MockHttpClient(new Response(200, '{"id":804093942,"type":"DEPENDENCY","friendlyName":"bunny.net","url":"https://status.bunnycdn.com/",'
-            . '"heartbeatUrl":null,"interval":300,"timeout":30,"status":"UP","config":{"dependency":{"providerUrlname":"bunny-net","trackedComponentIds":null,'
+        $http = new MockHttpClient(new Response(200, '{"id":804093942,"type":"THIRD_PARTY_SERVICE","friendlyName":"bunny.net","url":"https://status.bunnycdn.com/",'
+            . '"heartbeatUrl":null,"interval":300,"timeout":30,"status":"UP","config":{"thirdPartyService":{"providerId":4317,"trackedComponentIds":null,'
             . '"currentState":"operational","needsReview":false,"notify":{"severity":"all","incrementalUpdates":false},"maintenanceNotificationsEnabled":true}}}'));
 
         $monitor = self::client($http)->monitors->get(804093942);
 
-        self::assertSame(MonitorType::Dependency, $monitor->type);
+        self::assertSame(MonitorType::ThirdPartyService, $monitor->type);
         self::assertSame('https://status.bunnycdn.com/', $monitor->url);
         self::assertNull($monitor->heartbeatUrl);
         self::assertNotNull($monitor->config);
-        self::assertSame('bunny-net', $monitor->config->dependency->providerUrlname);
+        self::assertSame(4317, $monitor->config->thirdPartyService->providerId);
         // null on the wire: every component; lists are never null when read.
-        self::assertSame([], $monitor->config->dependency->trackedComponentIds);
-        self::assertSame(DependencyState::Operational, $monitor->config->dependency->currentState);
-        self::assertSame(DependencyNotificationSeverity::All, $monitor->config->dependency->notify->severity);
-        self::assertFalse($monitor->config->dependency->notify->incrementalUpdates);
-        self::assertTrue($monitor->config->dependency->maintenanceNotificationsEnabled);
+        self::assertSame([], $monitor->config->thirdPartyService->trackedComponentIds);
+        self::assertSame(ThirdPartyServiceState::Operational, $monitor->config->thirdPartyService->currentState);
+        self::assertSame(ThirdPartyServiceNotificationSeverity::All, $monitor->config->thirdPartyService->notify->severity);
+        self::assertFalse($monitor->config->thirdPartyService->notify->incrementalUpdates);
+        self::assertTrue($monitor->config->thirdPartyService->maintenanceNotificationsEnabled);
     }
 
     /**
@@ -440,57 +442,64 @@ final class MonitorResourceTest extends TestCase
      */
     public function testReadsAMonitorWithoutAUrl(): void
     {
-        $monitor = self::client(new MockHttpClient(new Response(200, '{"id":1,"type":"DEPENDENCY","url":null}')))->monitors->get(1);
+        $monitor = self::client(new MockHttpClient(new Response(200, '{"id":1,"type":"THIRD_PARTY_SERVICE","url":null}')))->monitors->get(1);
 
         self::assertNull($monitor->url);
     }
 
-    public function testCreatesADependencyMonitorForAProviderOfTheCatalog(): void
+    /**
+     * Since November 9, 2026, a third party service monitor names its provider
+     * by the ID of the catalog and takes neither name, interval nor URL.
+     */
+    public function testCreatesAThirdPartyServiceMonitorForAProviderOfTheCatalog(): void
     {
-        $http = new MockHttpClient(new Response(201, '{"id":805000001,"type":"DEPENDENCY","url":null,"config":{}}'));
+        $http = new MockHttpClient(new Response(201, '{"id":805000001,"type":"THIRD_PARTY_SERVICE","url":null,"config":{}}'));
 
-        self::client($http)->monitors->create(new DependencyMonitorCreate(
-            friendlyName: 'Stripe',
-            interval: 300,
-            // Required on the wire, but discarded by the API (specification).
-            url: 'https://status.stripe.com',
-            timeout: 30,
-            config: new DependencyMonitorConfig(new DependencySettings(providerUrlname: 'stripe', trackedComponentIds: null)),
-        ));
+        self::client($http)->monitors->create(new ThirdPartyServiceMonitorCreate(new ThirdPartyServiceMonitorConfig(new ThirdPartyServiceSettings(
+            providerId: 4317,
+            trackedComponentIds: [555, 556],
+            notify: new ThirdPartyServiceNotificationSettings(ThirdPartyServiceNotificationSeverity::Major, incrementalUpdates: true),
+        ))));
 
         self::assertSame(
-            '{"type":"DEPENDENCY","friendlyName":"Stripe","interval":300,"url":"https://status.stripe.com","timeout":30,'
-            . '"config":{"dependency":{"providerUrlname":"stripe","trackedComponentIds":null}}}',
+            '{"type":"THIRD_PARTY_SERVICE","config":{"thirdPartyService":{"providerId":4317,"trackedComponentIds":[555,556],'
+            . '"notify":{"severity":"major","incrementalUpdates":true}}}}',
             $http->requests[0]->body,
         );
     }
 
     /**
-     * The state and the incidents of bunny.net as its dependency monitor
-     * reported them (verified live on September 28, 2026; the incident cut to
-     * its first update).
+     * The state and the incidents of bunny.net as its monitor reported them
+     * under the old paths (verified live on September 28, 2026; the incident
+     * cut to its first update), now under /third-party-service; a single
+     * incident and its alerts as the specification of November 9, 2026
+     * describes them.
      */
-    public function testReadsTheStateAndTheIncidentsOfATrackedProvider(): void
+    public function testReadsTheStateTheIncidentsAndTheAlertsOfATrackedProvider(): void
     {
+        $incident = '"id":"361887720743641106","title":"Degraded Optimizer Response times","severity":"minor","resolved":true,'
+            . '"startedAt":"2026-09-25T14:49:50.000Z","resolvedAt":"2026-09-25T17:16:37.000Z","updates":[{"status":"investigating",'
+            . '"description":"We are currently investigating degraded optimizer processing.","createdAt":"2026-09-25T14:49:50.706Z"}]';
         $http = new MockHttpClient(
             new Response(200, '{"currentState":"operational"}'),
-            new Response(200, '{"data":[{"id":"361887720743641106","title":"Degraded Optimizer Response times","severity":"minor","resolved":true,'
-                . '"startedAt":"2026-09-25T14:49:50.000Z","resolvedAt":"2026-09-25T17:16:37.000Z","updates":[{"status":"investigating",'
-                . '"description":"We are currently investigating degraded optimizer processing.","createdAt":"2026-09-25T14:49:50.706Z"}]}]}'),
+            new Response(200, '{"data":[{' . $incident . '}]}'),
             new Response(200, '{"data":[]}'),
+            new Response(200, '{' . $incident . ',"affectedComponents":[{"id":555,"name":"Optimizer"}]}'),
+            new Response(200, '{"data":[{"channel":"webhook","channelIdentifier":"[REDACTED]","alertContactName":"Ops","status":"NOT_DELIVERED",'
+                . '"timestamp":"2026-09-25T14:50:12.000Z"}]}'),
             new Response(404, '{"message":"Resource you were trying to access is not found.","code":"000-004"}'),
         );
         $monitors = self::client($http)->monitors;
 
-        $status = $monitors->dependencyStatus(804093942);
-        $incidents = $monitors->dependencyIncidents(804093942);
+        $status = $monitors->thirdPartyServiceStatus(804093942);
+        $incidents = $monitors->thirdPartyServiceIncidents(804093942);
 
-        self::assertSame('https://api.uptimerobot.com/v3/monitors/804093942/dependency/status', $http->requests[0]->uri);
-        self::assertSame(DependencyState::Operational, $status->currentState);
-        self::assertSame('https://api.uptimerobot.com/v3/monitors/804093942/dependency/incidents', $http->requests[1]->uri);
+        self::assertSame('https://api.uptimerobot.com/v3/monitors/804093942/third-party-service/status', $http->requests[0]->uri);
+        self::assertSame(ThirdPartyServiceState::Operational, $status->currentState);
+        self::assertSame('https://api.uptimerobot.com/v3/monitors/804093942/third-party-service/incidents', $http->requests[1]->uri);
         self::assertCount(1, $incidents);
         self::assertSame('361887720743641106', $incidents[0]->id);
-        self::assertSame(DependencyIncidentSeverity::Minor, $incidents[0]->severity);
+        self::assertSame(ThirdPartyServiceIncidentSeverity::Minor, $incidents[0]->severity);
         self::assertTrue($incidents[0]->resolved);
         self::assertEquals(new DateTimeImmutable('2026-09-25T14:49:50Z'), $incidents[0]->startedAt);
         self::assertEquals(new DateTimeImmutable('2026-09-25T17:16:37Z'), $incidents[0]->resolvedAt);
@@ -498,11 +507,28 @@ final class MonitorResourceTest extends TestCase
         self::assertSame('investigating', $incidents[0]->updates[0]->status);
         self::assertEquals(new DateTimeImmutable('2026-09-25T14:49:50.706Z'), $incidents[0]->updates[0]->createdAt);
         // "An empty history returns an empty array with a 200, never an error."
-        self::assertSame([], $monitors->dependencyIncidents(804093942));
+        self::assertSame([], $monitors->thirdPartyServiceIncidents(804093942));
 
-        // A monitor of another type has no provider (verified live on a keyword monitor).
+        // The ID stays the exact string, which a float would round.
+        $detail = $monitors->thirdPartyServiceIncident(804093942, '361887720743641106');
+        self::assertSame('https://api.uptimerobot.com/v3/monitors/804093942/third-party-service/incidents/361887720743641106', $http->requests[3]->uri);
+        self::assertSame('361887720743641106', $detail->id);
+        self::assertSame(ThirdPartyServiceIncidentSeverity::Minor, $detail->severity);
+        self::assertSame('investigating', $detail->updates[0]->status);
+        self::assertSame(555, $detail->affectedComponents[0]->id);
+        self::assertSame('Optimizer', $detail->affectedComponents[0]->name);
+
+        $alerts = $monitors->thirdPartyServiceAlerts(804093942, '361887720743641106');
+        self::assertSame('https://api.uptimerobot.com/v3/monitors/804093942/third-party-service/incidents/361887720743641106/activity-log', $http->requests[4]->uri);
+        self::assertCount(1, $alerts);
+        self::assertSame('[REDACTED]', $alerts[0]->channelIdentifier);
+        self::assertSame(AlertDeliveryStatus::NotDelivered, $alerts[0]->status);
+        self::assertEquals(new DateTimeImmutable('2026-09-25T14:50:12Z'), $alerts[0]->timestamp);
+
+        // A monitor of another type has no provider (verified live on a keyword
+        // monitor, when the type was DEPENDENCY).
         $this->expectException(NotFoundException::class);
-        $monitors->dependencyStatus(804045264);
+        $monitors->thirdPartyServiceStatus(804045264);
     }
 
     private static function client(MockHttpClient $http): UptimeRobot

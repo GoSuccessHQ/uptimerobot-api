@@ -11,7 +11,9 @@ use GoSuccess\UptimeRobot\Enum\AssertionFailureReason;
 use GoSuccess\UptimeRobot\Enum\AssertionLogic;
 use GoSuccess\UptimeRobot\Enum\AssertionSource;
 use GoSuccess\UptimeRobot\Enum\AssertionValueType;
+use GoSuccess\UptimeRobot\Enum\IncidentCauseFilter;
 use GoSuccess\UptimeRobot\Enum\IncidentStatusFilter;
+use GoSuccess\UptimeRobot\Enum\IncidentTypeFilter;
 use GoSuccess\UptimeRobot\Enum\Region;
 use GoSuccess\UptimeRobot\Exception\BadRequestException;
 use GoSuccess\UptimeRobot\Exception\NotFoundException;
@@ -122,12 +124,14 @@ final class IncidentResourceTest extends TestCase
         );
     }
 
-    public function testIteratesOverAllIncidentsWithTheIdOfTheLastIncidentAsCursor(): void
+    /**
+     * Since the specification of November 9, 2026, the cursor is an opaque
+     * string from nextLink, and all() requests the largest pages it allows.
+     */
+    public function testIteratesOverAllIncidentsInPagesOf200WithTheCursorOfNextLink(): void
     {
-        // A nextLink shaped like those of the monitors: the incidents of the test
-        // account fit on one page, so none was observed.
         $http = new MockHttpClient(
-            new Response(200, '{"data":[' . self::DOWNTIME . '],"nextLink":"https://api.uptimerobot.com/v3/incidents/?monitor_id=804005651&cursor=358532761126055015"}'),
+            new Response(200, '{"data":[' . self::DOWNTIME . '],"nextLink":"https://api.uptimerobot.com/v3/incidents?limit=200&monitor_id=804005651&cursor=MTc4OTA0NTYwMDAwMHwxNDAwfDMxOTg0OTk3MTM4MTQ2NzcxMg"}'),
             new Response(200, '{"data":[' . self::SLOW_RESPONSE . '],"nextLink":null}'),
         );
 
@@ -137,9 +141,25 @@ final class IncidentResourceTest extends TestCase
         );
 
         self::assertSame(['358532761126055015', '349291092551826516'], $ids);
-        self::assertSame('https://api.uptimerobot.com/v3/incidents?monitor_id=804005651', $http->requests[0]->uri);
-        // The cursor stays the exact string, which a float would round.
-        self::assertSame('https://api.uptimerobot.com/v3/incidents?cursor=358532761126055015&monitor_id=804005651', $http->requests[1]->uri);
+        self::assertSame('https://api.uptimerobot.com/v3/incidents?limit=200&monitor_id=804005651', $http->requests[0]->uri);
+        self::assertSame('https://api.uptimerobot.com/v3/incidents?cursor=MTc4OTA0NTYwMDAwMHwxNDAwfDMxOTg0OTk3MTM4MTQ2NzcxMg&limit=200&monitor_id=804005651', $http->requests[1]->uri);
+    }
+
+    /**
+     * A filter can leave a page empty while nextLink is set; all() goes on.
+     */
+    public function testKeepsPagingPastAnEmptyPageOfAFilter(): void
+    {
+        $http = new MockHttpClient(
+            new Response(200, '{"data":[],"nextLink":"https://api.uptimerobot.com/v3/incidents?cursor=abc&type=SlowResponse&cause=Timeout"}'),
+            new Response(200, '{"data":[' . self::SLOW_RESPONSE . '],"nextLink":null}'),
+        );
+
+        $incidents = iterator_to_array(self::client($http)->incidents->all(limit: 10, type: IncidentTypeFilter::SlowResponse, cause: IncidentCauseFilter::Timeout), false);
+
+        self::assertCount(1, $incidents);
+        self::assertSame('https://api.uptimerobot.com/v3/incidents?limit=10&type=SlowResponse&cause=Timeout', $http->requests[0]->uri);
+        self::assertSame('https://api.uptimerobot.com/v3/incidents?cursor=abc&limit=10&type=SlowResponse&cause=Timeout', $http->requests[1]->uri);
     }
 
     public function testReportsACursorThatIsNotAnIncidentId(): void

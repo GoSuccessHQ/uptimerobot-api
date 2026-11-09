@@ -22,8 +22,10 @@ Monitors: create, read, change, pause, start and delete them, and read their upt
 - [`uptimeStats()`](monitors/uptimeStats.md) — Get the uptime statistics of all monitors
 - [`uptime()`](monitors/uptime.md) — Get monitor uptime statistics
 - [`responseTimeStats()`](monitors/responseTimeStats.md) — Get monitor response time statistics
-- [`dependencyStatus()`](monitors/dependencyStatus.md) — Get the current status of a dependency monitor
-- [`dependencyIncidents()`](monitors/dependencyIncidents.md) — Get the incident history of a dependency monitor
+- [`thirdPartyServiceStatus()`](monitors/thirdPartyServiceStatus.md) — Get the current status of a third party service
+- [`thirdPartyServiceIncidents()`](monitors/thirdPartyServiceIncidents.md) — Get the incident history of a third party service
+- [`thirdPartyServiceIncident()`](monitors/thirdPartyServiceIncident.md) — Get one incident of a third party service
+- [`thirdPartyServiceAlerts()`](monitors/thirdPartyServiceAlerts.md) — Get the activity log of a third party service incident
 - [`responseTimeStatsByRegion()`](monitors/responseTimeStatsByRegion.md) — Get monitor response time statistics by region
 
 ## `bulkMonitors`
@@ -131,6 +133,13 @@ The account the API key belongs to: its plan and its alert contacts.
 - [`me()`](user/me.md) — Get current user
 - [`alertContacts()`](user/alertContacts.md) — Get alert contacts
 - [`allAlertContacts()`](user/allAlertContacts.md) — Get all alert contacts
+
+## `thirdPartyProviders`
+
+The catalog of the providers a THIRD_PARTY_SERVICE monitor can track, with their state and components.
+
+- [`search()`](thirdPartyProviders/search.md) — Search third-party providers
+- [`get()`](thirdPartyProviders/get.md) — Get a third-party provider
 
 ## `tags`
 
