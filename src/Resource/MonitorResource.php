@@ -20,6 +20,7 @@ use GoSuccess\UptimeRobot\Model\ResponseTimeStats;
 use GoSuccess\UptimeRobot\Model\ThirdPartyServiceAlert;
 use GoSuccess\UptimeRobot\Model\ThirdPartyServiceIncident;
 use GoSuccess\UptimeRobot\Model\ThirdPartyServiceIncidentDetail;
+use GoSuccess\UptimeRobot\Model\ThirdPartyServiceMaintenance;
 use GoSuccess\UptimeRobot\Model\ThirdPartyServiceStatus;
 use GoSuccess\UptimeRobot\Pagination\Cursor;
 use GoSuccess\UptimeRobot\Pagination\Page;
@@ -361,6 +362,26 @@ final class MonitorResource extends AbstractResource
         $data = $this->connection->json(Method::Get, "monitors/{$id}/third-party-service/incidents/{$this->segment($incidentId)}/activity-log");
 
         return Cast::modelList(ThirdPartyServiceAlert::class, self::expectObject($data)['data'] ?? null);
+    }
+
+    /**
+     * Get the upcoming maintenance windows of a third party service
+     *
+     * Returns the maintenance windows the provider a third party service monitor tracks has announced, earliest start first: windows in progress now and windows starting within the next 30 days. Responses are cached for 60 seconds, so a window that ended within the last minute can still appear; `window` is worked out from scheduledFor/scheduledUntil when the response is built (announced or in_progress). Nothing scheduled returns an empty array with a 200, never an error.
+     *
+     * Only for THIRD_PARTY_SERVICE monitors: the maintenance windows the tracked provider announced, earliest start first, limited to those in progress and those starting within the next 30 days; empty if there are none, never an error. The answers are cached for a minute, so a window that just ended can still appear, and window says where a window stands when the API answers (according to the specification; not verified live).
+     *
+     * `GET /monitors/{id}/third-party-service/maintenances`
+     *
+     * @param int $id
+     *
+     * @return list<ThirdPartyServiceMaintenance>
+     */
+    public function thirdPartyServiceMaintenances(int $id): array
+    {
+        $data = $this->connection->json(Method::Get, "monitors/{$id}/third-party-service/maintenances");
+
+        return Cast::modelList(ThirdPartyServiceMaintenance::class, self::expectObject($data)['data'] ?? null);
     }
 
     /**

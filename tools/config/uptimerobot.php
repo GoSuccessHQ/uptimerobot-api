@@ -14,7 +14,7 @@ declare(strict_types=1);
  * - Client properties (resources): monitors, bulkMonitors, stormProtection,
  *   monitorGroups, incidents, incidentComments, statusPages (/psps),
  *   announcements, maintenanceWindows, alertContacts, integrations, tags, user,
- *   thirdPartyProviders.
+ *   thirdPartyProviders, thirdPartyServices.
  *   Resource classes are the singular noun plus "Resource", e.g.
  *   MonitorResource, StatusPageResource.
  * - Methods: list (one page) and all (lazy paginator), get, create, update,
@@ -188,11 +188,30 @@ return [
         'ThirdPartyProviderDetailDto' => 'ThirdPartyProvider',
         'ThirdPartyProviderDetailDto.components[]' => 'ThirdPartyProviderComponent',
         'ThirdPartyProviderDetailDto.components[].children[]' => 'ThirdPartyProviderComponentChild',
+        // The components of one provider that match a search, with the tree cut
+        // down to them; the rows are those of the provider itself, which the
+        // generator reads through that model (since the specification of
+        // November 16, 2026).
+        'ThirdPartyProviderComponentsDto' => 'ThirdPartyProviderComponentSearch',
+        'ThirdPartyProviderComponentsDto.data[]' => 'ThirdPartyProviderComponent',
+        // The regions a provider has components in, and the region of a
+        // component, which is null for a global one (see 'additions' and 'types').
+        'ThirdPartyProviderRegionDto' => 'ThirdPartyProviderRegion',
+        // The maintenance windows a tracked provider announced: those of one
+        // monitor, and those of every third party service monitor of the
+        // account, whose rows name the monitor they belong to. The schemas keep
+        // the name of the former monitor type DEPENDENCY.
+        'MonitorDependencyMaintenancesDto.data[]' => 'ThirdPartyServiceMaintenance',
+        'MonitorDependencyMaintenancesDto.data[].affectedComponents[]' => 'ThirdPartyServiceMaintenanceComponent',
+        'DependencyMaintenancesDto.data[]' => 'ThirdPartyServiceMaintenanceWithMonitor',
+        'DependencyMaintenancesDto.data[].affectedComponents[]' => 'ThirdPartyServiceMaintenanceComponent',
         'MonitorDto.tags[]' => 'MonitorTag',
         'MonitorDto.tags[].monitors[]' => 'TaggedMonitor',
         'MonitorDto.lastIncident' => 'LastIncident',
         'MonitorDto.lastDayUptimes' => 'UptimeHistogram',
         'MonitorDto.lastDayUptimes.histogram[]' => 'UptimeHistogramBucket',
+        // What the automatic response time threshold knows about one region.
+        'MonitorDto.autoThresholds{}' => 'MonitorAutoThreshold',
         'UptimeStatsDto.logs[]' => 'UptimeLogEntry',
         'MonitorResponseTimeStatsDto' => 'ResponseTimeStats',
         'MonitorResponseTimeStatsDto.summary' => 'ResponseTimeSummary',
@@ -370,6 +389,16 @@ return [
         // The states of a component add unknown to those of the provider.
         'ThirdPartyProviderDetailDto.components[].status' => 'ThirdPartyProviderComponentStatus',
         'ThirdPartyProviderDetailDto.components[].children[].status' => 'ThirdPartyProviderComponentStatus',
+        // Where an announced maintenance window of a tracked provider stands;
+        // the API works it out from its start and end when it answers.
+        'MonitorDependencyMaintenancesDto.data[].window' => 'ThirdPartyServiceMaintenanceState',
+        'DependencyMaintenancesDto.data[].window' => 'ThirdPartyServiceMaintenanceState',
+        // How the slow response threshold is set, and how far the automatic
+        // mode has got in one region.
+        'MonitorDto.responseTimeThresholdMode' => 'MonitorResponseTimeThresholdMode',
+        'UpdateMonitorDto.responseTimeThresholdMode' => 'MonitorResponseTimeThresholdMode',
+        'Create*MonitorDto.responseTimeThresholdMode' => 'MonitorResponseTimeThresholdMode',
+        'MonitorDto.autoThresholds{}.status' => 'MonitorAutoThresholdStatus',
         'MonitorThirdPartyServiceIncidentActivityLogDto.data[].status' => 'AlertDeliveryStatus',
         'PublicApiAssertionCheckDto.comparison' => 'AssertionComparison',
         'VisualComparisonFieldsDto.viewport' => 'VisualComparisonViewport',
@@ -731,10 +760,25 @@ return [
         'MonitorThirdPartyServiceIncidentsDto.data[].updates[].createdAt' => $date,
         'MonitorThirdPartyServiceIncidentDetailDto.startedAt' => $date,
         'MonitorThirdPartyServiceIncidentDetailDto.resolvedAt' => $date,
-        'MonitorThirdPartyServiceIncidentActivityLogDto.data[].timestamp' => $date,
+        'MonitorThirdPartyServiceIncidentActivityLogDto.data[].timestamp' => $date,        // Strings without a format and, for the automatic thresholds, types
+        // erased to {}. Every other timestamp of these endpoints is ISO 8601 in
+        // UTC (verified live on the incidents of bunny.net); these are not
+        // verified live.
+        'MonitorDependencyMaintenancesDto.data[].scheduledFor' => $date,
+        'MonitorDependencyMaintenancesDto.data[].scheduledUntil' => $date,
+        'DependencyMaintenancesDto.data[].scheduledFor' => $date,
+        'DependencyMaintenancesDto.data[].scheduledUntil' => $date,
+        'MonitorDto.autoThresholds{}.readyAt' => $date,
+        'MonitorDto.autoThresholds{}.computedAt' => $date,
         // A string in the specification, but the id of the providers it
         // reports is an integer, as is the providerId of a monitor.
         'ThirdPartyProvidersController_getById.id' => ['type' => 'number'],
+        'ThirdPartyProvidersController_searchComponents.id' => ['type' => 'number'],
+        // Inline copies of the region (see 'additions'); null stands for a
+        // global component, which belongs to no region.
+        'ThirdPartyProviderDetailDto.regions[]' => ['$ref' => '#/components/schemas/ThirdPartyProviderRegionDto'],
+        'ThirdPartyProviderDetailDto.components[].region' => ['$ref' => '#/components/schemas/ThirdPartyProviderRegionDto'],
+        'ThirdPartyProviderDetailDto.components[].children[].region' => ['$ref' => '#/components/schemas/ThirdPartyProviderRegionDto'],
         'MonitorDto.interval' => ['type' => 'number', 'description' => 'Seconds between two checks.'],
         'MonitorDto.responseTimeThreshold' => ['type' => 'number', 'description' => 'Always 0; the thresholds are in regionalData (verified live).'],
         'MonitorDto.currentStateDuration' => ['type' => 'number', 'description' => 'Seconds since the status last changed; 0 for a new monitor.'],
@@ -1620,6 +1664,19 @@ return [
 
     'additions' => [
         'schemas' => [
+            // The regions of the provider catalog, which the specification
+            // repeats inline for the provider, for its components and for the
+            // component search; 'types' points every copy here so that they
+            // share one model.
+            'ThirdPartyProviderRegionDto' => [
+                'type' => 'object',
+                'description' => 'A region a provider has components in.',
+                'properties' => [
+                    'code' => ['type' => 'string', 'description' => 'The code of the region, as the region filter of the component search takes it, e.g. "eu-west-1".'],
+                    'name' => ['type' => 'string', 'description' => 'The name of the region as the provider publishes it.'],
+                ],
+                'required' => ['code', 'name'],
+            ],
         ],
         'properties' => [
             // In the create request and the response, but not in the update
@@ -1712,12 +1769,30 @@ return [
                     'operation' => 'MonitorsController_list',
                     'pagination' => 'monitorPages',
                     'all' => 'all',
+                    // The specification of November 16, 2026 reversed the order
+                    // of these parameters and changed nothing else about them.
+                    // The methods keep the order of 0.6.0: a positional call
+                    // would otherwise pass one filter as another, and silently
+                    // so between customField and tags, which are both
+                    // list<string>.
+                    'order' => ['customField', 'groupId', 'status', 'name', 'url', 'tags'],
                     'note' => 'Filters combine with AND; status and tags match any of their values, while every customField entry ("key:value") must match, and the groupId 0 selects the monitors in no group (verified live). all() requests pages of 200 monitors, the most the API allows.',
                 ],
                 'get' => ['operation' => 'MonitorsController_get'],
                 'create' => [
                     'operation' => 'MonitorsController_create',
                     'parameters' => ['@body' => 'monitor'],
+                    // The specification of November 16, 2026 marks the headers
+                    // x-uptimerobot-client and x-uptimerobot-command required,
+                    // without describing them, without giving a value and
+                    // without asking for them anywhere else; they look like
+                    // headers of UptimeRobot's own clients that the generator of
+                    // the specification picked up. The client does not send
+                    // them: creating a monitor without any such header was
+                    // verified live in September, and a wrong value may be
+                    // rejected. Should the API ever require them, creation fails
+                    // with a BadRequestException naming the header.
+                    'hidden' => ['x-uptimerobot-client', 'x-uptimerobot-command'],
                     'note' => 'Pass the model of the monitor type, e.g. HttpMonitorCreate, which sends its type. A new monitor is STARTED until its first check and, unless they are set, reports authType HTTP_BASIC and httpMethodType null (verified live). The deprecated region string regionalData is left out; set the regions with regionData.',
                 ],
                 'update' => [
@@ -1762,6 +1837,11 @@ return [
                     'operation' => 'MonitorsController_getThirdPartyServiceIncidentActivityLog',
                     'unwrap' => 'data',
                     'note' => 'The alerts the account sent about one incident of the tracked provider. channelIdentifier is only shown for email, SMS and voice; for every other channel it is "[REDACTED]", according to the specification (not verified live).',
+                ],
+                'thirdPartyServiceMaintenances' => [
+                    'operation' => 'MonitorsController_getThirdPartyServiceMaintenances',
+                    'unwrap' => 'data',
+                    'note' => 'Only for THIRD_PARTY_SERVICE monitors: the maintenance windows the tracked provider announced, earliest start first, limited to those in progress and those starting within the next 30 days; empty if there are none, never an error. The answers are cached for a minute, so a window that just ended can still appear, and window says where a window stands when the API answers (according to the specification; not verified live).',
                 ],
                 'responseTimeStatsByRegion' => [
                     'operation' => 'MonitorsController_getMonitorResponseTimeStatsByRegion',
@@ -2110,7 +2190,24 @@ return [
                 ],
                 'get' => [
                     'operation' => 'ThirdPartyProvidersController_getById',
-                    'note' => 'The provider with its state and its tree of components; their IDs scope a monitor through trackedComponentIds.',
+                    'note' => 'The provider with its state, the regions it has components in and its tree of components; their IDs scope a monitor through trackedComponentIds.',
+                ],
+                'searchComponents' => [
+                    'operation' => 'ThirdPartyProvidersController_searchComponents',
+                    'example' => ['search' => 'lambda oregon'],
+                    'note' => 'The components of one provider that match, each leaf under its parent, for picking trackedComponentIds of a large provider. Every word of search must match a component name, the name of a parent component, a region name or a region code; region keeps one exact region code and never global components. regionLike tells whether search reads like a region rather than a component name. Without search and region, the whole tree comes back. The answers are cached for a minute (according to the specification; not verified live).',
+                ],
+            ],
+        ],
+        // Since the specification of November 16, 2026 (not verified live).
+        'thirdPartyServices' => [
+            'class' => 'ThirdPartyServiceResource',
+            'description' => 'The THIRD_PARTY_SERVICE monitors of the account as a whole, across the providers they track.',
+            'methods' => [
+                'maintenances' => [
+                    'operation' => 'ThirdPartyServicesController_getMaintenances',
+                    'unwrap' => 'data',
+                    'note' => 'The maintenance windows every tracked provider announced, in one list ordered by start, limited to those in progress and those starting within the next 30 days; each row names the monitor it belongs to. A provider that cannot be read is left out, and the request only fails if none can be read. Nothing scheduled is an empty list, never an error (according to the specification; not verified live).',
                 ],
             ],
         ],

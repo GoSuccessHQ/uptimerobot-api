@@ -25,6 +25,7 @@ use GoSuccess\UptimeRobot\Resource\StatusPageResource;
 use GoSuccess\UptimeRobot\Resource\StormProtectionResource;
 use GoSuccess\UptimeRobot\Resource\TagResource;
 use GoSuccess\UptimeRobot\Resource\ThirdPartyProviderResource;
+use GoSuccess\UptimeRobot\Resource\ThirdPartyServiceResource;
 use GoSuccess\UptimeRobot\Resource\UserResource;
 use SensitiveParameter;
 
@@ -113,6 +114,11 @@ final class UptimeRobot
      */
     public private(set) ThirdPartyProviderResource $thirdPartyProviders {
         get => $this->thirdPartyProviders ??= new ThirdPartyProviderResource($this->connection);
+    }
+
+    /** The THIRD_PARTY_SERVICE monitors of the account as a whole, across the providers they track. */
+    public private(set) ThirdPartyServiceResource $thirdPartyServices {
+        get => $this->thirdPartyServices ??= new ThirdPartyServiceResource($this->connection);
     }
 
     /** Tags of monitors. They are created by naming them on a monitor. */

@@ -26,6 +26,7 @@ Monitors: create, read, change, pause, start and delete them, and read their upt
 - [`thirdPartyServiceIncidents()`](monitors/thirdPartyServiceIncidents.md) — Get the incident history of a third party service
 - [`thirdPartyServiceIncident()`](monitors/thirdPartyServiceIncident.md) — Get one incident of a third party service
 - [`thirdPartyServiceAlerts()`](monitors/thirdPartyServiceAlerts.md) — Get the activity log of a third party service incident
+- [`thirdPartyServiceMaintenances()`](monitors/thirdPartyServiceMaintenances.md) — Get the upcoming maintenance windows of a third party service
 - [`responseTimeStatsByRegion()`](monitors/responseTimeStatsByRegion.md) — Get monitor response time statistics by region
 
 ## `bulkMonitors`
@@ -140,6 +141,13 @@ The catalog of the providers a THIRD_PARTY_SERVICE monitor can track, with their
 
 - [`search()`](thirdPartyProviders/search.md) — Search third-party providers
 - [`get()`](thirdPartyProviders/get.md) — Get a third-party provider
+- [`searchComponents()`](thirdPartyProviders/searchComponents.md) — Search the components of a third-party provider
+
+## `thirdPartyServices`
+
+The THIRD_PARTY_SERVICE monitors of the account as a whole, across the providers they track.
+
+- [`maintenances()`](thirdPartyServices/maintenances.md) — Get the upcoming maintenance windows across all third party services
 
 ## `tags`
 

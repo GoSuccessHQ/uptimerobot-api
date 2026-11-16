@@ -123,6 +123,8 @@ final class ResourceBuilder
             throw new RuntimeException("{$context}: 'parameters' renames {$unknown}, which is neither a path or query parameter nor the body or one of its flattened properties.");
         }
 
+        $optional = $this->ordered($optional, $config, $context);
+
         // The cursor and the page size lead the optional parameters, so that
         // list($cursor) works positionally.
         $paging = array_values(array_filter([$cursor, $size]));
@@ -135,6 +137,43 @@ final class ResourceBuilder
         }
 
         return $method;
+    }
+
+    /**
+     * The optional query parameters in the configured order, which keeps a
+     * signature the specification once generated when it reorders its
+     * parameters: a positional call would otherwise pass the value of one
+     * filter as another, and silently so where they share a type.
+     *
+     * @param list<ParameterDefinition> $optional
+     *
+     * @return list<ParameterDefinition>
+     */
+    private function ordered(array $optional, MethodConfig $config, string $context): array
+    {
+        if ($config->order === []) {
+            return $optional;
+        }
+
+        $byName = [];
+
+        foreach ($optional as $parameter) {
+            $byName[$parameter->specName] = $parameter;
+        }
+
+        $missing = array_diff(array_keys($byName), $config->order);
+        $unknown = array_diff($config->order, array_keys($byName));
+
+        if ($missing !== [] || $unknown !== []) {
+            throw new RuntimeException(\sprintf(
+                "%s: 'order' must name every optional query parameter%s%s.",
+                $context,
+                $missing === [] ? '' : '; it leaves out ' . implode(', ', $missing),
+                $unknown === [] ? '' : '; it names ' . implode(', ', $unknown) . ', which the operation does not take',
+            ));
+        }
+
+        return array_values(array_map(static fn(string $name): ParameterDefinition => $byName[$name], $config->order));
     }
 
     /**

@@ -12,6 +12,7 @@ use GoSuccess\UptimeRobot\Enum\HttpMethod;
 use GoSuccess\UptimeRobot\Enum\KeywordCaseType;
 use GoSuccess\UptimeRobot\Enum\KeywordType;
 use GoSuccess\UptimeRobot\Enum\MonitorPortAlertCondition;
+use GoSuccess\UptimeRobot\Enum\MonitorResponseTimeThresholdMode;
 use GoSuccess\UptimeRobot\Enum\MonitorStatus;
 use GoSuccess\UptimeRobot\Enum\MonitorType;
 use GoSuccess\UptimeRobot\Enum\PostValueType;
@@ -78,6 +79,16 @@ final readonly class Monitor implements ResponseModel
         public ?KeywordType $keywordType = null,
         /** Always 0; the thresholds are in regionalData (verified live). */
         public int $responseTimeThreshold = 0,
+        /**
+         * How the slow-response threshold is set: 'off', 'manual' or 'auto'. Derived from the auto-threshold rows, never from the threshold value. Present on the single-monitor and list reads; absent on responses that embed monitors (groups, maintenance windows, incidents, bulk results), where absent means not loaded, not 'off'.
+         */
+        public ?MonitorResponseTimeThresholdMode $responseTimeThresholdMode = null,
+        /**
+         * Per-region auto state, keyed by region code. Present together with responseTimeThresholdMode and empty ({}) unless the monitor is in auto mode. thresholdMs mirrors regionalData.THRESHOLD; manualFallback is the value the region keeps on a switch to manual without an explicit value.
+         *
+         * @var array<array-key, MonitorAutoThreshold>
+         */
+        public array $autoThresholds = [],
         public ?MonitorConfig $config = null,
         /** The regions the checks run from. */
         public RegionalData $regionalData = new RegionalData(),
@@ -148,6 +159,8 @@ final readonly class Monitor implements ResponseModel
             keywordCaseType: Cast::intEnum(KeywordCaseType::class, $data['keywordCaseType'] ?? null),
             keywordType: Cast::stringEnum(KeywordType::class, $data['keywordType'] ?? null),
             responseTimeThreshold: Cast::int($data['responseTimeThreshold'] ?? null) ?? 0,
+            responseTimeThresholdMode: Cast::stringEnum(MonitorResponseTimeThresholdMode::class, $data['responseTimeThresholdMode'] ?? null),
+            autoThresholds: Cast::mapOf($data['autoThresholds'] ?? null, static fn(mixed $value): ?MonitorAutoThreshold => Cast::model(MonitorAutoThreshold::class, $value)),
             config: Cast::model(MonitorConfig::class, $data['config'] ?? null),
             regionalData: Cast::model(RegionalData::class, $data['regionalData'] ?? null) ?? new RegionalData(),
             heartbeatUrl: Cast::string($data['heartbeatUrl'] ?? null),

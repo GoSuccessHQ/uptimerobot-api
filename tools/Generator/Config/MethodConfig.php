@@ -36,6 +36,12 @@ final readonly class MethodConfig
      * @param list<string>          $required    Query parameters and flattened body properties to
      *                                           treat as required where the specification marks
      *                                           them optional.
+     * @param list<string>          $order       The optional query parameters in the order the
+     *                                           method takes them, where the order of the
+     *                                           specification would change a signature it once
+     *                                           generated. Must name all of them, so that a
+     *                                           parameter the specification adds later fails
+     *                                           here instead of landing somewhere by chance.
      * @param string|null           $note        Extra paragraph for the docblock.
      * @param list<string>          $ownParameters Keys of $parameters the method configures
      *                                             itself, unlike the names the resource
@@ -62,6 +68,7 @@ final readonly class MethodConfig
         public array $parameters = [],
         public array $hidden = [],
         public array $required = [],
+        public array $order = [],
         public ?string $note = null,
         public array $ownParameters = [],
         public array $example = [],
@@ -87,6 +94,7 @@ final readonly class MethodConfig
             parameters: [...$parameters, ...$own],
             hidden: $reader->stringList('hidden'),
             required: $reader->stringList('required'),
+            order: $reader->stringList('order'),
             note: $reader->optionalString('note'),
             ownParameters: array_map(strval(...), array_keys($own)),
             example: self::example($reader->map('example'), $name),

@@ -15,7 +15,8 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * The catalog of the providers a third party service monitor tracks, with the
- * payloads the specification of November 9, 2026 describes (not verified live).
+ * payloads the specifications of November 9 and 16, 2026 describe (not verified
+ * live).
  */
 #[CoversClass(ThirdPartyProviderResource::class)]
 final class ThirdPartyProviderResourceTest extends TestCase
@@ -40,10 +41,12 @@ final class ThirdPartyProviderResourceTest extends TestCase
         self::assertFalse($providers[1]->isTracked);
     }
 
-    public function testReadsAProviderWithItsComponentTree(): void
+    public function testReadsAProviderWithItsRegionsAndItsComponentTree(): void
     {
         $http = new MockHttpClient(new Response(200, '{"id":4317,"name":"GitHub","logoUrl":null,"statusPageUrl":"https://www.githubstatus.com","state":"operational",'
-            . '"components":[{"id":555,"name":"Actions","status":"unknown","children":[{"id":556,"name":"Hosted runners","status":"major"}]}]}'));
+            . '"components":[{"id":555,"name":"Actions","status":"unknown","region":null,"global":true,'
+            . '"children":[{"id":556,"name":"Hosted runners","status":"major","region":{"code":"eu-west-1","name":"Europe (Ireland)"},"global":false}]}],'
+            . '"regions":[{"code":"eu-west-1","name":"Europe (Ireland)"},{"code":"us-east-1","name":"US East (N. Virginia)"}]}'));
 
         $provider = self::client($http)->thirdPartyProviders->get(4317);
 
@@ -52,6 +55,44 @@ final class ThirdPartyProviderResourceTest extends TestCase
         self::assertSame(ThirdPartyProviderComponentStatus::Unknown, $provider->components[0]->status);
         self::assertSame(556, $provider->components[0]->children[0]->id);
         self::assertSame(ThirdPartyProviderComponentStatus::Major, $provider->components[0]->children[0]->status);
+        // A global component belongs to no region.
+        self::assertTrue($provider->components[0]->global);
+        self::assertNull($provider->components[0]->region);
+        $child = $provider->components[0]->children[0];
+        self::assertFalse($child->global);
+        self::assertNotNull($child->region);
+        self::assertSame('eu-west-1', $child->region->code);
+        self::assertSame('Europe (Ireland)', $child->region->name);
+        self::assertCount(2, $provider->regions);
+        self::assertSame('us-east-1', $provider->regions[1]->code);
+    }
+
+    public function testSearchesTheComponentsOfAProvider(): void
+    {
+        $http = new MockHttpClient(
+            new Response(200, '{"data":[{"id":555,"name":"Lambda","status":"operational","region":null,"global":true,'
+                . '"children":[{"id":556,"name":"Lambda Invocations","status":"minor","region":{"code":"us-west-2","name":"US West (Oregon)"},"global":false}]}],'
+                . '"regionLike":false}'),
+            new Response(200, '{"data":[],"regionLike":true}'),
+        );
+        $providers = self::client($http)->thirdPartyProviders;
+
+        $match = $providers->searchComponents(7, 'lambda oregon');
+
+        self::assertSame('https://api.uptimerobot.com/v3/third-party-providers/7/components?search=lambda%20oregon', $http->requests[0]->uri);
+        self::assertCount(1, $match->data);
+        self::assertSame('Lambda', $match->data[0]->name);
+        // The matching leaves come back under their parent.
+        self::assertSame(556, $match->data[0]->children[0]->id);
+        self::assertSame('us-west-2', $match->data[0]->children[0]->region?->code);
+        self::assertFalse($match->regionLike);
+
+        // A search term that reads like a region, and the region filter.
+        $region = $providers->searchComponents(7, 'oregon', 'us-west-2');
+
+        self::assertSame('https://api.uptimerobot.com/v3/third-party-providers/7/components?search=oregon&region=us-west-2', $http->requests[1]->uri);
+        self::assertSame([], $region->data);
+        self::assertTrue($region->regionLike);
     }
 
     private static function client(MockHttpClient $http): UptimeRobot

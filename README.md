@@ -47,6 +47,7 @@ A modern, strongly-typed, **dependency-free** PHP client for the
 | [Tags](#tags) | `$uptimeRobot->tags` | Listing; the account had none |
 | [Account](#account) | `$uptimeRobot->user` | Reading |
 | [Third-party providers](#third-party-service-monitors) | `$uptimeRobot->thirdPartyProviders` | No, tested with a mocked transport only |
+| [Third-party services](#third-party-service-monitors) | `$uptimeRobot->thirdPartyServices` | No, tested with a mocked transport only |
 | [Storm protection](#storm-protection) | `$uptimeRobot->stormProtection` | Reading |
 
 The checks ran against a production account on the Solo plan; the only
@@ -289,13 +290,31 @@ foreach ($uptimeRobot->monitors->thirdPartyServiceIncidents($monitor->id) as $in
 // One incident with the affected components, and the alerts sent about it.
 $incident = $uptimeRobot->monitors->thirdPartyServiceIncident($monitor->id, '361887720743641106');
 $alerts = $uptimeRobot->monitors->thirdPartyServiceAlerts($monitor->id, '361887720743641106');
+
+// Components of a large provider, cut down to what matches: every word has to
+// match a component name, the name of a parent, a region name or a region
+// code. regionLike tells whether the term reads like a region.
+$match = $uptimeRobot->thirdPartyProviders->searchComponents(4317, 'lambda oregon');
+$match = $uptimeRobot->thirdPartyProviders->searchComponents(4317, region: 'us-west-2');
+
+// The maintenance windows the provider announced: in progress, or starting
+// within the next 30 days. Of one monitor, and of every tracked provider at
+// once, where each row names its monitor.
+$windows = $uptimeRobot->monitors->thirdPartyServiceMaintenances($monitor->id);
+
+foreach ($uptimeRobot->thirdPartyServices->maintenances() as $window) {
+    echo $window->friendlyName, ' ', $window->window?->value, ' ', $window->scheduledFor?->format('Y-m-d H:i'), PHP_EOL;
+}
 ```
 
 These only answer for third-party service monitors; for any other monitor, the
 API raised a `NotFoundException` when the type was still called `DEPENDENCY`
 (verified live then, as were the state and the incidents on a monitor tracking
 bunny.net). The catalog, a single incident and its alerts follow the
-specification of November 9, 2026.
+specification of November 9, 2026, the component search, the regions of a
+provider and the maintenance windows that of November 16, 2026. Nothing
+scheduled is an empty list, never an error, and the answers are cached for a
+minute, so a window that has just ended can still appear.
 
 ### Reading and filtering
 
@@ -349,6 +368,19 @@ live):
 - `responseTimeThreshold` goes into the thresholds of the regions that have
   one (`$monitor->regionalData->threshold`); the property itself always reads
   `0`.
+- `responseTimeThresholdMode` switches how the threshold is set:
+  `MonitorResponseTimeThresholdMode::Auto` learns one threshold per region from
+  the last 28 days (send neither `responseTimeThreshold` nor
+  `regionData.THRESHOLD` with it), `Manual` restores the values the monitor had
+  before, or the ones you send, and `Off` clears every threshold. The monitor
+  reads the mode back as `responseTimeThresholdMode`, with the state of each
+  region in `$monitor->autoThresholds`, keyed by region code: its `status`
+  (`learning`, `ready` or `stale`), the learned `thresholdMs`, the `usualMs` it
+  is based on, `daysCollected` and the `manualFallback` the region keeps on a
+  switch to `Manual`. The map is empty outside the automatic mode, and the mode
+  is `null` on monitors embedded in another response, where it is not loaded
+  rather than off. Both follow the specification of November 16, 2026 and were
+  not verified live.
 - `regionData` moves the checks to the regions it names (verified live). The
   specification adds that `manualSelected: false` makes the API ignore them and
   keep the current region.
@@ -1117,6 +1149,18 @@ API. The deviations you are most likely to meet, verified live unless noted:
   [Rate limits](#rate-limits)).
 - **Maintenance windows** (not verified live): the weekday numbering follows
   the Terraform provider, and no time zone is documented.
+- **Two undocumented headers**: since November 16, 2026 the specification marks
+  the headers `x-uptimerobot-client` and `x-uptimerobot-command` of
+  `POST /monitors` required, without describing them, without naming a value
+  and without asking for them on any other endpoint. They look like headers of
+  UptimeRobot's own clients, so this client sends neither: creating a monitor
+  without any such header was verified live in September, and a value made up
+  for them may be rejected.
+- **A stable parameter order**: the same specification reversed the order of
+  the query parameters of `GET /monitors` and changed nothing else about them.
+  `monitors->list()` and `all()` keep the order they had, so that positional
+  calls keep working; `customField` and `tags` would otherwise swap places
+  silently, as both take a `list<string>`.
 
 The generator configuration lists every correction with its evidence (see
 [Development](#development)).

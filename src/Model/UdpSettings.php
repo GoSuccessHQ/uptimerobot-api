@@ -9,7 +9,9 @@ namespace GoSuccess\UptimeRobot\Model;
 /** Schema: UdpConfigFieldsDto */
 final readonly class UdpSettings implements RequestModel, ResponseModel
 {
-    /** UDP payload to send */
+    /**
+     * UDP payload to send, up to 1000 characters. A value of `0x` followed by an even number of hex digits (case-insensitive) is sent as raw bytes: `0x33444333` sends the 4 bytes 33 44 43 33. Any other value, including hex digits without the `0x` prefix, is sent as text.
+     */
     public string $payload;
 
     /** Packet loss threshold percentage */

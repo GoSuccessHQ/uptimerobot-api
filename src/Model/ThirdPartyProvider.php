@@ -19,6 +19,8 @@ final readonly class ThirdPartyProvider implements ResponseModel
         public ?ThirdPartyServiceState $state = null,
         /** @var list<ThirdPartyProviderComponent> */
         public array $components = [],
+        /** @var list<ThirdPartyProviderRegion> */
+        public array $regions = [],
     ) {}
 
     public static function fromArray(array $data): static
@@ -30,6 +32,7 @@ final readonly class ThirdPartyProvider implements ResponseModel
             statusPageUrl: Cast::string($data['statusPageUrl'] ?? null) ?? '',
             state: Cast::stringEnum(ThirdPartyServiceState::class, $data['state'] ?? null),
             components: Cast::modelList(ThirdPartyProviderComponent::class, $data['components'] ?? null),
+            regions: Cast::modelList(ThirdPartyProviderRegion::class, $data['regions'] ?? null),
         );
     }
 }

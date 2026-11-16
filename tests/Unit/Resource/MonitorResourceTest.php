@@ -11,7 +11,9 @@ use GoSuccess\UptimeRobot\Enum\HttpMethod;
 use GoSuccess\UptimeRobot\Enum\IpVersion;
 use GoSuccess\UptimeRobot\Enum\KeywordCaseType;
 use GoSuccess\UptimeRobot\Enum\KeywordType;
+use GoSuccess\UptimeRobot\Enum\MonitorAutoThresholdStatus;
 use GoSuccess\UptimeRobot\Enum\MonitorPortAlertCondition;
+use GoSuccess\UptimeRobot\Enum\MonitorResponseTimeThresholdMode;
 use GoSuccess\UptimeRobot\Enum\MonitorStatus;
 use GoSuccess\UptimeRobot\Enum\MonitorType;
 use GoSuccess\UptimeRobot\Enum\PostValueType;
@@ -19,6 +21,7 @@ use GoSuccess\UptimeRobot\Enum\Region;
 use GoSuccess\UptimeRobot\Enum\RegionInfrastructure;
 use GoSuccess\UptimeRobot\Enum\ResponseTimeRegion;
 use GoSuccess\UptimeRobot\Enum\ThirdPartyServiceIncidentSeverity;
+use GoSuccess\UptimeRobot\Enum\ThirdPartyServiceMaintenanceState;
 use GoSuccess\UptimeRobot\Enum\ThirdPartyServiceNotificationSeverity;
 use GoSuccess\UptimeRobot\Enum\ThirdPartyServiceState;
 use GoSuccess\UptimeRobot\Enum\UptimeLogType;
@@ -529,6 +532,142 @@ final class MonitorResourceTest extends TestCase
         // monitor, when the type was DEPENDENCY).
         $this->expectException(NotFoundException::class);
         $monitors->thirdPartyServiceStatus(804045264);
+    }
+
+    /**
+     * The automatic response time threshold of the specification of November 16,
+     * 2026 (not verified live).
+     */
+    public function testReadsHowTheResponseTimeThresholdIsSetAndWhatTheAutomaticModeKnows(): void
+    {
+        $http = new MockHttpClient(
+            new Response(200, '{"id":804045264,"responseTimeThreshold":0,"responseTimeThresholdMode":"auto",'
+                . '"autoThresholds":{"eu":{"status":"ready","thresholdMs":4200,"usualMs":1800,"daysCollected":28,'
+                . '"readyAt":"2026-10-19T09:10:00.000Z","computedAt":"2026-11-16T03:00:00.000Z","cappedByTimeout":false,'
+                . '"cappedBelowUsual":false,"manualFallback":5000},'
+                . '"na":{"status":"learning","thresholdMs":null,"usualMs":null,"daysCollected":3,"readyAt":null,'
+                . '"computedAt":null,"cappedByTimeout":false,"cappedBelowUsual":false,"manualFallback":0}}}'),
+            new Response(200, '{"id":804045265,"responseTimeThresholdMode":"manual","autoThresholds":{}}'),
+            new Response(200, '{"id":804045266}'),
+        );
+        $monitors = self::client($http)->monitors;
+
+        $auto = $monitors->get(804045264);
+
+        self::assertSame(MonitorResponseTimeThresholdMode::Auto, $auto->responseTimeThresholdMode);
+        self::assertSame(['eu', 'na'], array_keys($auto->autoThresholds));
+        self::assertSame(MonitorAutoThresholdStatus::Ready, $auto->autoThresholds['eu']->status);
+        self::assertSame(4200, $auto->autoThresholds['eu']->thresholdMs);
+        self::assertSame(1800, $auto->autoThresholds['eu']->usualMs);
+        self::assertSame(28, $auto->autoThresholds['eu']->daysCollected);
+        self::assertEquals(new DateTimeImmutable('2026-10-19T09:10:00Z'), $auto->autoThresholds['eu']->readyAt);
+        self::assertEquals(new DateTimeImmutable('2026-11-16T03:00:00Z'), $auto->autoThresholds['eu']->computedAt);
+        self::assertSame(5000, $auto->autoThresholds['eu']->manualFallback);
+        // A region that is still collecting has no threshold and no times yet.
+        self::assertSame(MonitorAutoThresholdStatus::Learning, $auto->autoThresholds['na']->status);
+        self::assertNull($auto->autoThresholds['na']->thresholdMs);
+        self::assertNull($auto->autoThresholds['na']->readyAt);
+
+        // Empty rows outside the automatic mode, "and empty ({}) unless the
+        // monitor is in auto mode".
+        $manual = $monitors->get(804045265);
+        self::assertSame(MonitorResponseTimeThresholdMode::Manual, $manual->responseTimeThresholdMode);
+        self::assertSame([], $manual->autoThresholds);
+
+        // "absent on responses that embed monitors ..., where absent means not
+        // loaded, not 'off'".
+        $embedded = $monitors->get(804045266);
+        self::assertNull($embedded->responseTimeThresholdMode);
+        self::assertSame([], $embedded->autoThresholds);
+    }
+
+    public function testSendsTheResponseTimeThresholdModeOnCreateAndUpdate(): void
+    {
+        $http = new MockHttpClient(new Response(201, self::MONITOR), new Response(200, self::MONITOR));
+        $monitors = self::client($http)->monitors;
+
+        $monitors->create(new KeywordMonitorCreate(
+            friendlyName: 'Shop',
+            interval: 300,
+            url: 'https://example.com',
+            timeout: 30,
+            keywordType: KeywordType::AlertExists,
+            keywordCaseType: KeywordCaseType::CaseSensitive,
+            keywordValue: 'Example Domain',
+            responseTimeThresholdMode: MonitorResponseTimeThresholdMode::Auto,
+        ));
+        $monitors->update(804045264, new MonitorUpdate(responseTimeThresholdMode: MonitorResponseTimeThresholdMode::Off));
+
+        self::assertSame(
+            '{"type":"KEYWORD","friendlyName":"Shop","interval":300,"url":"https://example.com","timeout":30,'
+            . '"keywordType":"ALERT_EXISTS","keywordCaseType":0,"keywordValue":"Example Domain","responseTimeThresholdMode":"auto"}',
+            $http->requests[0]->body,
+        );
+        self::assertSame('{"responseTimeThresholdMode":"off"}', $http->requests[1]->body);
+    }
+
+    /**
+     * The specification of November 16, 2026 marks the headers
+     * x-uptimerobot-client and x-uptimerobot-command of POST /monitors
+     * required, without describing them or giving a value; the client sends no
+     * such header, as creating a monitor without one was verified live in
+     * September.
+     */
+    public function testCreatesAMonitorWithoutTheUndocumentedClientHeaders(): void
+    {
+        $http = new MockHttpClient(new Response(201, self::MONITOR));
+
+        self::client($http)->monitors->create(new KeywordMonitorCreate(
+            friendlyName: 'Shop',
+            interval: 300,
+            url: 'https://example.com',
+            timeout: 30,
+            keywordType: KeywordType::AlertExists,
+            keywordCaseType: KeywordCaseType::CaseSensitive,
+            keywordValue: 'Example Domain',
+        ));
+
+        self::assertSame(
+            [
+                'Authorization' => 'Bearer secret',
+                'Accept' => 'application/json',
+                'User-Agent' => 'gosuccess/uptimerobot-api (+https://github.com/GoSuccessHQ/uptimerobot-api)',
+                'Content-Type' => 'application/json',
+            ],
+            $http->requests[0]->headers,
+        );
+    }
+
+    /**
+     * The maintenance windows a tracked provider announced, as the
+     * specification of November 16, 2026 describes them (not verified live).
+     */
+    public function testReadsTheAnnouncedMaintenanceWindowsOfATrackedProvider(): void
+    {
+        $http = new MockHttpClient(
+            new Response(200, '{"data":[{"id":"mnt_8821","serviceId":4317,"remoteId":"abc123",'
+                . '"url":"https://www.githubstatus.com/incidents/abc123","title":"Scheduled database upgrade",'
+                . '"description":"Actions may be unavailable.","impact":"maintenance","window":"in_progress",'
+                . '"scheduledFor":"2026-11-16T10:00:00.000Z","scheduledUntil":"2026-11-16T12:00:00.000Z",'
+                . '"affectedComponents":[{"id":556,"name":"Hosted runners","externalId":null,"parentId":555}]}]}'),
+            new Response(200, '{"data":[]}'),
+        );
+        $monitors = self::client($http)->monitors;
+
+        $maintenances = $monitors->thirdPartyServiceMaintenances(804093942);
+
+        self::assertSame('https://api.uptimerobot.com/v3/monitors/804093942/third-party-service/maintenances', $http->requests[0]->uri);
+        self::assertCount(1, $maintenances);
+        self::assertSame('mnt_8821', $maintenances[0]->id);
+        self::assertSame('Scheduled database upgrade', $maintenances[0]->title);
+        self::assertSame(ThirdPartyServiceMaintenanceState::InProgress, $maintenances[0]->window);
+        self::assertEquals(new DateTimeImmutable('2026-11-16T10:00:00Z'), $maintenances[0]->scheduledFor);
+        self::assertEquals(new DateTimeImmutable('2026-11-16T12:00:00Z'), $maintenances[0]->scheduledUntil);
+        self::assertSame(555, $maintenances[0]->affectedComponents[0]->parentId);
+        self::assertNull($maintenances[0]->affectedComponents[0]->externalId);
+
+        // "Nothing scheduled returns an empty array with a 200, never an error."
+        self::assertSame([], $monitors->thirdPartyServiceMaintenances(804093942));
     }
 
     private static function client(MockHttpClient $http): UptimeRobot

@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace GoSuccess\UptimeRobot\Model;
 
+use GoSuccess\UptimeRobot\Enum\MonitorResponseTimeThresholdMode;
 use stdClass;
 
 /** Schema: CreateUdpMonitorDto */
@@ -53,6 +54,10 @@ final readonly class UdpMonitorCreate implements MonitorCreate
          * Response time threshold in milliseconds. When provided, the value is applied to all active regions as regionData.THRESHOLD. Always returns 0 — use regionData.THRESHOLD for per-region control.
          */
         public int|Undefined $responseTimeThreshold = Undefined::Value,
+        /**
+         * How the slow-response threshold is set. 'auto' learns a per-region threshold from the last 28 days of response times (responseTimeThreshold and regionData.THRESHOLD must then be omitted); 'manual' restores the values the monitor had before auto, or the ones sent; 'off' clears every threshold. Read back as responseTimeThresholdMode, with per-region details in autoThresholds.
+         */
+        public MonitorResponseTimeThresholdMode|Undefined $responseTimeThresholdMode = Undefined::Value,
         /** Monitor group ID to assign the monitor to. Default is 0 (no group). */
         public int|Undefined $groupId = Undefined::Value,
         /**
@@ -91,6 +96,10 @@ final readonly class UdpMonitorCreate implements MonitorCreate
 
         if (!$this->responseTimeThreshold instanceof Undefined) {
             $data['responseTimeThreshold'] = $this->responseTimeThreshold;
+        }
+
+        if (!$this->responseTimeThresholdMode instanceof Undefined) {
+            $data['responseTimeThresholdMode'] = $this->responseTimeThresholdMode->value;
         }
 
         if (!$this->groupId instanceof Undefined) {

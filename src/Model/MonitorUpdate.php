@@ -11,6 +11,7 @@ use GoSuccess\UptimeRobot\Enum\HttpMethod;
 use GoSuccess\UptimeRobot\Enum\KeywordCaseType;
 use GoSuccess\UptimeRobot\Enum\KeywordType;
 use GoSuccess\UptimeRobot\Enum\MonitorPortAlertCondition;
+use GoSuccess\UptimeRobot\Enum\MonitorResponseTimeThresholdMode;
 use GoSuccess\UptimeRobot\Enum\MonitorType;
 use GoSuccess\UptimeRobot\Enum\PostValueType;
 use stdClass;
@@ -102,6 +103,10 @@ final readonly class MonitorUpdate implements RequestModel
          * Response time threshold in milliseconds, stored in regionalData THRESHOLD; the property itself keeps reading 0 (verified live).
          */
         public int|Undefined $responseTimeThreshold = Undefined::Value,
+        /**
+         * How the slow-response threshold is set. 'auto' learns a per-region threshold from the last 28 days of response times (responseTimeThreshold and regionData.THRESHOLD must then be omitted); 'manual' restores the values the monitor had before auto, or the ones sent; 'off' clears every threshold. Read back as responseTimeThresholdMode, with per-region details in autoThresholds.
+         */
+        public MonitorResponseTimeThresholdMode|Undefined $responseTimeThresholdMode = Undefined::Value,
         /**
          * Regional data for monitoring. Omit it, or send it without REGION, and the region is assigned automatically (currently NA or EU, one region per organization) and never changed on edit.
          */
@@ -230,6 +235,10 @@ final readonly class MonitorUpdate implements RequestModel
 
         if (!$this->responseTimeThreshold instanceof Undefined) {
             $data['responseTimeThreshold'] = $this->responseTimeThreshold;
+        }
+
+        if (!$this->responseTimeThresholdMode instanceof Undefined) {
+            $data['responseTimeThresholdMode'] = $this->responseTimeThresholdMode->value;
         }
 
         if (!$this->regionData instanceof Undefined) {

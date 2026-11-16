@@ -6,7 +6,7 @@ Get a third-party provider
 
 Returns one third-party provider by its numeric id, with its current state and its component tree. Components carry their own id, name and status, and list their children.
 
-The provider with its state and its tree of components; their IDs scope a monitor through trackedComponentIds.
+The provider with its state, the regions it has components in and its tree of components; their IDs scope a monitor through trackedComponentIds.
 
 ## Signature
 

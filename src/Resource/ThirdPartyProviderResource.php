@@ -9,6 +9,7 @@ namespace GoSuccess\UptimeRobot\Resource;
 use GoSuccess\UptimeRobot\Http\Method;
 use GoSuccess\UptimeRobot\Model\Cast;
 use GoSuccess\UptimeRobot\Model\ThirdPartyProvider;
+use GoSuccess\UptimeRobot\Model\ThirdPartyProviderComponentSearch;
 use GoSuccess\UptimeRobot\Model\ThirdPartyProviderMatch;
 
 /**
@@ -43,7 +44,7 @@ final class ThirdPartyProviderResource extends AbstractResource
      *
      * Returns one third-party provider by its numeric id, with its current state and its component tree. Components carry their own id, name and status, and list their children.
      *
-     * The provider with its state and its tree of components; their IDs scope a monitor through trackedComponentIds.
+     * The provider with its state, the regions it has components in and its tree of components; their IDs scope a monitor through trackedComponentIds.
      *
      * `GET /third-party-providers/{id}`
      *
@@ -54,5 +55,28 @@ final class ThirdPartyProviderResource extends AbstractResource
         $data = $this->connection->json(Method::Get, "third-party-providers/{$id}");
 
         return self::toModel(ThirdPartyProvider::class, $data);
+    }
+
+    /**
+     * Search the components of a third-party provider
+     *
+     * Returns the component tree of one third-party provider reduced to the components that match search and region, each leaf under its parent. regionLike tells whether the search term looks like a region rather than a component name. Results are cached for a minute.
+     *
+     * The components of one provider that match, each leaf under its parent, for picking trackedComponentIds of a large provider. Every word of search must match a component name, the name of a parent component, a region name or a region code; region keeps one exact region code and never global components. regionLike tells whether search reads like a region rather than a component name. Without search and region, the whole tree comes back. The answers are cached for a minute (according to the specification; not verified live).
+     *
+     * `GET /third-party-providers/{id}/components`
+     *
+     * @param int         $id     The numeric id of the third-party provider.
+     * @param string|null $search Words matched against component names, parent component names, region names and region codes. Every word must match.
+     * @param string|null $region Keep only the components of this exact region code. Global components are never returned for a region.
+     */
+    public function searchComponents(int $id, ?string $search = null, ?string $region = null): ThirdPartyProviderComponentSearch
+    {
+        $data = $this->connection->json(Method::Get, "third-party-providers/{$id}/components", [
+            'search' => $search,
+            'region' => $region,
+        ]);
+
+        return self::toModel(ThirdPartyProviderComponentSearch::class, $data);
     }
 }

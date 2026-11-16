@@ -15,6 +15,9 @@ final readonly class ThirdPartyProviderComponentChild implements ResponseModel
         public int $id = 0,
         public string $name = '',
         public ?ThirdPartyProviderComponentStatus $status = null,
+        /** A region a provider has components in. */
+        public ?ThirdPartyProviderRegion $region = null,
+        public bool $global = false,
     ) {}
 
     public static function fromArray(array $data): static
@@ -23,6 +26,8 @@ final readonly class ThirdPartyProviderComponentChild implements ResponseModel
             id: Cast::int($data['id'] ?? null) ?? 0,
             name: Cast::string($data['name'] ?? null) ?? '',
             status: Cast::stringEnum(ThirdPartyProviderComponentStatus::class, $data['status'] ?? null),
+            region: Cast::model(ThirdPartyProviderRegion::class, $data['region'] ?? null),
+            global: Cast::bool($data['global'] ?? null) ?? false,
         );
     }
 }
