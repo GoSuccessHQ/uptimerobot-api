@@ -973,7 +973,7 @@ rules of that section are worth knowing.
 
 - A listed code never changes its meaning and is never removed; it can only be
   deprecated.
-- New codes are added at any time. That is why `$errorCode` stays a string
+- New codes may be added at any time. That is why `$errorCode` stays a string
   here instead of an enum, which would turn every code the package has not
   seen yet into `null`.
 - A code you do not know is handled by its HTTP status, and a case is better
@@ -1171,8 +1171,9 @@ API. The deviations you are most likely to meet, verified live unless noted:
   `013-010` for `customSettings.monitorNames` and `memberMoves` of a status
   page, and defines neither field in any schema. The client therefore cannot
   send them. `013-011` answers an unknown key of `customSettings` as well as a
-  value of the wrong type or range; only the second half can reach a caller
-  here, whose status page settings are typed models with a fixed set of keys.
+  value of the wrong type or range. A caller here reaches only the range, with
+  a value the API refuses: the status page settings are typed models, so PHP
+  already rules out an unknown key and a wrong type.
 
 The generator configuration lists every correction with its evidence (see
 [Development](#development)).
