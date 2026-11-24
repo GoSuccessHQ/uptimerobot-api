@@ -964,19 +964,24 @@ try {
 ```
 
 The specification publishes the vocabulary `$errorCode` comes from and extends
-it with almost every release; `resources/specs/uptimerobot.json` holds the
-codes of the current snapshot. What a code means is not documented, so
-`$errorCode` stays a string here instead of an enum that would turn every new
-code into `null`. These meanings were seen live:
+it with almost every release. Every code of the current snapshot is documented
+with its meaning and its HTTP status in the `info.description` of
+[resources/specs/uptimerobot.json](resources/specs/uptimerobot.json), and
+`ApiErrorResponseDto.code` of the same file lists exactly those codes. Read
+them there, not here: a copy would go stale with the next specification. Three
+rules of that section are worth knowing.
 
-| Code | Status | Meaning |
-| --- | --- | --- |
-| `000-003` | 403 | The plan lacks the feature, e.g. incident comments or announcements |
-| `000-004` | 404 | Not found |
-| `000-006` | 403 | The resource belongs to another account |
-| `003-005` | 401 | The API key is invalid or missing |
-| `021-003` | 403 | The plan lacks the integration type |
-| `021-005` | 404 | No integration with this ID, e.g. the ID of a personal alert contact |
+- A listed code never changes its meaning and is never removed; it can only be
+  deprecated.
+- New codes are added at any time. That is why `$errorCode` stays a string
+  here instead of an enum, which would turn every code the package has not
+  seen yet into `null`.
+- A code you do not know is handled by its HTTP status, and a case is better
+  branched on the code than on the message text.
+
+The codes this client met live, among them `000-003` for a feature the plan
+lacks and `021-005` for the ID of a personal alert contact passed to the
+integrations, mean what the specification says they mean.
 
 A `400` from the validator carries no code but a list of messages, which the
 exception message joins with `; ` and `decodedBody()['message']` returns as
@@ -1165,7 +1170,9 @@ API. The deviations you are most likely to meet, verified live unless noted:
   November 23, 2026 the specification documents the error codes `013-009` and
   `013-010` for `customSettings.monitorNames` and `memberMoves` of a status
   page, and defines neither field in any schema. The client therefore cannot
-  send them, and `013-011` reports an unknown key of `customSettings`.
+  send them. `013-011` answers an unknown key of `customSettings` as well as a
+  value of the wrong type or range; only the second half can reach a caller
+  here, whose status page settings are typed models with a fixed set of keys.
 
 The generator configuration lists every correction with its evidence (see
 [Development](#development)).
