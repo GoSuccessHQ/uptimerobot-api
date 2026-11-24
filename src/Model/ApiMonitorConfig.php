@@ -23,7 +23,7 @@ final readonly class ApiMonitorConfig implements RequestModel
         /** IP version preference. Omit for default behavior (IPv4 priority, falls back to IPv6) */
         public IpVersion|Undefined $ipVersion = Undefined::Value,
         /**
-         * Number of retries on application errors (HTTP 4xx/5xx). 0-3. Connection errors always retry 3 times regardless of this setting.
+         * Number of retries on application errors (HTTP 4xx/5xx). 0-3. When not set, UptimeRobot applies its default, currently 3. Connection errors always retry 3 times regardless of this setting.
          */
         public int|Undefined $applicationErrorRetries = Undefined::Value,
     ) {}

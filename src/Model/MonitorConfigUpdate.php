@@ -31,7 +31,7 @@ final readonly class MonitorConfigUpdate implements RequestModel
          */
         public IpVersion|Undefined|null $ipVersion = Undefined::Value,
         /**
-         * Number of retries on application errors (HTTP 4xx/5xx). 0-3. Connection errors always retry 3 times regardless of this setting. HTTP, Keyword and API monitors only. Send null to remove.
+         * Number of retries on application errors (HTTP 4xx/5xx). 0-3. When not set, UptimeRobot applies its default, currently 3. Connection errors always retry 3 times regardless of this setting. HTTP, Keyword and API monitors only. Send null to remove.
          */
         public int|Undefined|null $applicationErrorRetries = Undefined::Value,
         /** Visual comparison configuration. Visual Comparison monitors only. Send null to remove. */

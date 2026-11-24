@@ -1161,6 +1161,11 @@ API. The deviations you are most likely to meet, verified live unless noted:
   `monitors->list()` and `all()` keep the order they had, so that positional
   calls keep working; `customField` and `tags` would otherwise swap places
   silently, as both take a `list<string>`.
+- **Fields only an error message knows** (not verified live): since
+  November 23, 2026 the specification documents the error codes `013-009` and
+  `013-010` for `customSettings.monitorNames` and `memberMoves` of a status
+  page, and defines neither field in any schema. The client therefore cannot
+  send them, and `013-011` reports an unknown key of `customSettings`.
 
 The generator configuration lists every correction with its evidence (see
 [Development](#development)).
