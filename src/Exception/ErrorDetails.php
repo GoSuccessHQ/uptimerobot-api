@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace GoSuccess\UptimeRobot\Exception;
 
 /**
- * Normalizes the error bodies of the UptimeRobot API, which the specification
- * does not describe at all. Observed live:
+ * Normalizes the error bodies of the UptimeRobot API. The specification
+ * describes the JSON body as the schema ApiErrorResponseDto: a required `code`,
+ * a `message` that is a string or a list of strings, and `error` and
+ * `statusCode` on validation failures. These forms were observed live:
  *
  * - API errors: `{"message": "Monitor not found", "code": "000-004"}`
  * - Validation errors and unknown routes (NestJS defaults):
  *   `{"message": ["name must be a string", …], "error": "Bad Request", "statusCode": 400}`
  *   or `{"message": "Cannot GET /v3/x", "error": "Not Found", "statusCode": 404}`
- * - Plain text or HTML, e.g. from the CDN in front of the API
+ * - Plain text or HTML, e.g. from the CDN in front of the API, which no schema
+ *   of the specification describes
  *
  * A list of messages is joined with "; ". Without a message, `error` is used.
  *

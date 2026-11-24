@@ -24,8 +24,9 @@ class ApiException extends RuntimeException implements UptimeRobotException
      * @param string      $responseBody Raw response body.
      * @param string|null $errorCode    UptimeRobot's error code, e.g. `003-005` for an
      *                                  invalid API key or `000-004` for a missing monitor.
-     *                                  The codes are not documented; only some errors
-     *                                  carry one.
+     *                                  The specification documents what every code
+     *                                  means and which HTTP status it comes with;
+     *                                  only some errors carry one.
      */
     public function __construct(
         string $message,
